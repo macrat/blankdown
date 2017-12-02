@@ -15,7 +15,7 @@
 				margin: 0;
 				height: 100vh;
 			}
-			main {
+			.nav-content-area {
 				height: 100vh;
 				overflow: auto;
 				display: flex;
@@ -40,15 +40,13 @@
 			}
 
 			.nav-drawer {
-				background-color: #333;
-				color: white;
-				padding: .5em;
+				background-color: rgba(255, 255, 255, 0.8);
+				padding: 0 .5em;
 				position: absolute;
 				top: 0;
 				bottom: 0;
 				left: 0;
 				width: 15em;
-				box-sizing: border-box;
 				z-index: 2;
 			}
 
@@ -60,13 +58,13 @@
 			
 			.nav-drawer-title {
 				font-size: 150%;
-				margin: .2em 0;
+				margin: .5em 0;
 				border-bottom: 1px solid #666;
 				user-select: none;
 			}
 
 			.nav-drawer-link {
-				color: white;
+				color: black;
 				text-decoration: none;
 				display: block;
 				margin: .7em 0;
@@ -78,23 +76,23 @@
 				right: 0;
 				bottom: 0;
 				left: 0;
-				background-color: black;
-				opacity: .3;
-				z-index: 1;
 			}
 
 			.nav-slide-enter-active, .nav-slide-leave-active {
-				transition: left .5s;
+				transition: left .3s, opacity .3s;
 			}
 			.nav-slide-enter, .nav-slide-leave-to {
 				left: -15em;
+				opacity: 0.5;
 			}
 
-			.nav-fade-enter-active, .nav-fade-leave-active {
-				transition: opacity .5s;
+			.nav-show-content {
+				transition: filter .3s;
+				filter: none;
 			}
-			.nav-fade-enter, .nav-fade-leave-to {
-				opacity: 0;
+			.nav-hide-content {
+				transition: filter .3s;
+				filter: blur(5px) grayscale(80%);
 			}
 		</style>
 	</head>
@@ -133,9 +131,13 @@ Vue.directive('focus', {
 });
 
 
-Vue.component('nav-drawer', {
+Vue.component('nav-wrapper', {
 	computed: {
 		groups() {
+			this.$slots.default.forEach(slot => {
+				console.log(slot.componentOptions, slot);
+			});
+
 			return this.$slots.default.filter(slot => slot.componentOptions).map(slot => {
 				return {
 					slot: slot,
@@ -144,16 +146,31 @@ Vue.component('nav-drawer', {
 			});
 		},
 	},
+	data() {
+		return {
+			opened: false,
+		};
+	},
 	template: `
-		<div>
-			<nav class="nav-header">
-				<a href class="nav-header-link" v-for="group in groups" @click.prevent="open(group.slot.componentInstance)">{{ group.name }}</a>
-			</nav>
+		<div class="nav-wrapper">
+			<div class="nav-content-area" :class="{ 'nav-show-content': !opened, 'nav-hide-content': opened }">
+				<nav class="nav-header">
+					<a href class="nav-header-link" v-for="group in groups" @click.prevent="open(group.slot.componentInstance)">{{ group.name }}</a>
+				</nav>
+				<div class="nav-blind" v-if=opened @click=closeAll></div>
+				<slot name=content />
+			</div>
 			<div>
 				<slot />
 			</div>
 		</div>
 	`,
+	mounted() {
+		this.groups.forEach(x => x.slot.componentInstance.$on('opened', opened => {
+			this.opened = opened;
+			this.$emit('opened', opened);
+		}));
+	},
 	methods: {
 		closeAll() {
 			this.groups.forEach(slot => {
@@ -168,7 +185,7 @@ Vue.component('nav-drawer', {
 });
 
 
-Vue.component('nav-group', {
+Vue.component('nav-drawer', {
 	props: ['name'],
 	data() {
 		return {
@@ -176,24 +193,21 @@ Vue.component('nav-group', {
 		};
 	},
 	template: `
-		<div>
-			<transition name=nav-slide>
-				<div class="nav-drawer" v-if=opened>
-					<h1 class="nav-drawer-title" @click=close>{{ name }}</h1>
-					<slot />
-				</div>
-			</transition>
-			<transition name=nav-fade>
-				<div class="nav-blind" v-if=opened @click=close></div>
-			</transition>
-		</div>
+		<transition name=nav-slide>
+			<div class="nav-drawer" v-if=opened>
+				<h1 class="nav-drawer-title" @click=close>{{ name }}</h1>
+				<slot />
+			</div>
+		</transition>
 	`,
 	methods: {
 		open() {
 			this.opened = true;
+			this.$emit('opened', true);
 		},
 		close() {
 			this.opened = false;
+			this.$emit('opened', false);
 		},
 	},
 });
@@ -316,8 +330,8 @@ const vm = new Vue({
 	el: '#app',
 	template: `
 		<main>
-			<nav-drawer>
-				<nav-group name="FILE">
+			<nav-wrapper>
+				<nav-drawer name="FILE">
 					<nav-button @click=saveFile>save</nav-button>
 					<nav-button @click=exportFile>export</nav-button>
 					<nav-button @click=selectFile>load</nav-button>
@@ -327,17 +341,19 @@ const vm = new Vue({
 					<nav-button>recent file</nav-button>
 					<nav-button>recent file</nav-button>
 					<nav-button>recent file</nav-button>
-				</nav-group>
-				<nav-group name="EDIT">
+				</nav-drawer>
+
+				<nav-drawer name="EDIT">
 					<nav-button>insert header</nav-button>
 					<nav-button>insert table</nav-button>
-				</nav-group>
-				<nav-group name="HELP">
-					<nav-button>about</nav-button>
-				</nav-group>
-			</nav-drawer>
+				</nav-drawer>
 
-			<markdown-writer style="flex: 1 1 0" v-model="markdown"></markdown-writer>
+				<nav-drawer name="HELP">
+					<nav-button>about</nav-button>
+				</nav-drawer>
+
+				<markdown-writer slot="content" style="flex: 1 1 0" v-model="markdown"></markdown-writer>
+			</nav-wrapper>
 
 			<div style="display: none;">
 				<input id=input-file @change="loadFile(this.event.target.files)" type=file accept="text/*">
