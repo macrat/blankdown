@@ -6,7 +6,7 @@
 
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/routeros.min.css">
 
-		<script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+		<script src="https://unpkg.com/vue/dist/vue.js"></script>
 		<script src="https://unpkg.com/marked/marked.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 
@@ -42,6 +42,7 @@
 
 			.nav-drawer {
 				background-color: rgba(255, 255, 255, 0.5);
+				border-right: 1px solid rgba(0, 0, 0, 0.05);
 				padding: 0 .5em;
 				position: absolute;
 				top: 0;
@@ -77,6 +78,7 @@
 				right: 0;
 				bottom: 0;
 				left: 0;
+				z-index: 1;
 			}
 
 			.nav-slide-enter-active, .nav-slide-leave-active {
@@ -93,7 +95,43 @@
 			}
 			.nav-hide-content {
 				transition: filter .3s;
-				filter: blur(5px) grayscale(80%);
+				filter: blur(5px) grayscale(50%);
+			}
+		</style>
+
+		<style>
+			.dialog-show-content {
+				transition: filter .3s;
+				filter: none;
+			}
+			.dialog-hide-content {
+				transition: filter .3s;
+				filter: blur(5px) grayscale(50%);
+			}
+
+			.dialog-backboard {
+				position: fixed;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.dialog-window {
+				background-color: rgba(255, 255, 255, 0.5);;
+				border: 1px solid rgba(0, 0, 0, 0.05);
+				text-align: center;
+				padding: 3em 5em;
+			}
+
+			.dialog-enter-active, .dialog-leave-active {
+				transition: opacity .3s;
+			}
+			.dialog-enter, .dialog-leave-to {
+				opacity: 0;
 			}
 		</style>
 	</head>
@@ -135,10 +173,6 @@ Vue.directive('focus', {
 Vue.component('nav-wrapper', {
 	computed: {
 		groups() {
-			this.$slots.default.forEach(slot => {
-				console.log(slot.componentOptions, slot);
-			});
-
 			return this.$slots.default.filter(slot => slot.componentOptions).map(slot => {
 				return {
 					slot: slot,
@@ -219,7 +253,6 @@ Vue.component('nav-button', {
 	methods: {
 		click() {
 			this.$emit('click');
-			this.$parent.close();
 		},
 	},
 });
@@ -327,77 +360,205 @@ Vue.component('markdown-viewer', {
 });
 
 
+Vue.component('dialog-window', {
+	props: ['opened'],
+	model: {
+		prop: 'opened',
+		event: 'switch',
+	},
+	template: `
+		<div class="dialog-wrapper">
+			<div :class="{ 'dialog-show-content': !opened, 'dialog-hide-content': opened }">
+				<slot />
+			</div>
+
+			<transition name=dialog>
+				<div class=dialog-backboard v-if=opened @click="$emit('switch', !opened)">
+					<div class=dialog-window @click.stop>
+						<slot name=dialog />
+					</div>
+				</div>
+			</transition>
+		</div>
+	`,
+});
+
+
+Vue.component('markdown-filemanager', {
+	props: ['markdown'],
+	model: {
+		prop: 'markdown',
+		event: 'loaded',
+	},
+	data() {
+		return {
+			opened: false,
+			current: '',
+		};
+	},
+	template: `
+		<dialog-window v-model=opened>
+			<slot />
+
+			<component slot=dialog :is=current :markdown=markdown ref=dialog />
+		</dialog-window>
+	`,
+	components: {
+		save: {
+			props: ['markdown'],
+			data() {
+				return {
+					linkStyle: {
+						'display': 'block',
+						'color': 'black',
+						'text-decoration': 'none',
+						'margin': '1em 0',
+						'font-size': '150%',
+					},
+				};
+			},
+			template: `
+				<div>
+					<a :style=linkStyle href @click.prevent=saveToFile>save to file</a>
+					<a :style=linkStyle href @click.prevent=exportToFile>export as HTML</a>
+					<a class=filemanager-download-link style="display: none;"></a>
+				</div>
+			`,
+			methods: {
+				startDownload(filename, mimetype, data) {
+					const elm = this.$el.querySelector('.filemanager-download-link')
+					elm.href = URL.createObjectURL(new Blob([ data ], { type: mimetype }));
+					elm.download = filename;
+					this.$el.querySelector('.filemanager-download-link').click();
+				},
+				saveToFile() {
+					this.startDownload('blankdown.md', 'text/markdown', this.markdown);
+					this.$emit('close');
+				},
+				exportToFile() {
+					this.startDownload(
+						'blankdown.html',
+						'text/html',
+						process_markdown(this.markdown),
+					);
+					this.$emit('close');
+				},
+			},
+		},
+		load: {
+			data() {
+				return {
+					linkStyle: {
+						'display': 'block',
+						'color': 'black',
+						'text-decoration': 'none',
+						'margin': '1em 0',
+						'font-size': '150%',
+					},
+				};
+			},
+			template: `
+				<div>
+					<a :style=linkStyle href @click.prevent=selectFile>load from file</a>
+
+					<input class=filemanager-input-file @change="loadFile(this.event.target.files)" type=file accept="text/*" style="display: none;">
+				</div>
+			`,
+			methods: {
+				selectFile() {
+					this.$el.querySelector('.filemanager-input-file').click();
+				},
+				loadFile(files) {
+					if (!files) {
+						this.$emit('close');
+						return;
+					}
+
+					const reader = new FileReader();
+					reader.addEventListener('load', () => {
+						this.$emit('loaded', reader.result);
+					});
+					reader.readAsText(files[0]);
+				},
+			},
+		},
+	},
+	created() {
+		this.$on('load', this.load);
+		this.$on('save', this.save);
+
+		this.$watch('opened', () => {
+			if (this.opened) {
+				Vue.nextTick(() => {
+					console.log('change current', this.$refs.dialog);
+					this.$refs.dialog.$on('close', () => {
+						this.opened = false;
+					});
+
+					this.$refs.dialog.$on('loaded', markdown => {
+						this.$emit('loaded', markdown);
+						this.opened = false;
+					});
+				});
+			}
+		});
+	},
+	methods: {
+		load() {
+			this.current = 'load';
+			this.opened = true;
+		},
+		save() {
+			this.current = 'save';
+			this.opened = true;
+		},
+		close() {
+			this.opened = false;
+		},
+	},
+});
+
+
 const vm = new Vue({
 	el: '#app',
 	template: `
 		<main>
-			<nav-wrapper>
-				<nav-drawer name="FILE">
-					<nav-button @click=saveFile>save</nav-button>
-					<nav-button @click=exportFile>export</nav-button>
-					<nav-button @click=selectFile>load</nav-button>
-					<hr>
-					<nav-button>recent file</nav-button>
-					<nav-button>recent file</nav-button>
-					<nav-button>recent file</nav-button>
-					<nav-button>recent file</nav-button>
-					<nav-button>recent file</nav-button>
-				</nav-drawer>
+			<markdown-filemanager v-model=markdown ref=filemanager>
+				<nav-wrapper>
+					<nav-drawer name="FILE">
+						<nav-button @click=save>save</nav-button>
+						<nav-button @click=load>load</nav-button>
+						<hr>
+						<nav-button>recent file</nav-button>
+						<nav-button>recent file</nav-button>
+						<nav-button>recent file</nav-button>
+						<nav-button>recent file</nav-button>
+						<nav-button>recent file</nav-button>
+					</nav-drawer>
 
-				<nav-drawer name="EDIT">
-					<nav-button>insert header</nav-button>
-					<nav-button>insert table</nav-button>
-				</nav-drawer>
+					<nav-drawer name="EDIT">
+						<nav-button>insert header</nav-button>
+						<nav-button>insert table</nav-button>
+					</nav-drawer>
 
-				<nav-drawer name="HELP">
-					<nav-button>about</nav-button>
-				</nav-drawer>
+					<nav-drawer name="HELP">
+						<nav-button>about</nav-button>
+					</nav-drawer>
 
-				<markdown-writer slot="content" style="flex: 1 1 0" v-model="markdown"></markdown-writer>
-			</nav-wrapper>
-
-			<div style="display: none;">
-				<input id=input-file @change="loadFile(this.event.target.files)" type=file accept="text/*">
-				<a id=download-link :href=downloadURL :download=downloadName></a>
-			</div>
+					<markdown-writer slot="content" style="flex: 1 1 0" v-model="markdown"></markdown-writer>
+				</nav-wrapper>
+			</markdown-filemanager>
 		</main>
 	`,
 	data: {
 		markdown: "# hello world\nwelcome to **blankdown**!\n\n```\nprint('this is ', end='')\n\nwhile True:\n    print('yet ', end='')\n\nprint('another markdown editor')\n```\n",
-		downloadURL: '',
-		downloadName: '',
 	},
 	methods: {
-		startDownload(filename, mimetype, data) {
-			this.downloadURL = URL.createObjectURL(new Blob([ data ], { type: mimetype }));
-			this.downloadName = filename;
-			Vue.nextTick(() => {
-				this.$el.querySelector('#download-link').click();
-			});
+		save() {
+			this.$refs.filemanager.$emit('save');
 		},
-		saveFile() {
-			this.startDownload('markdown.md', this.markdown, 'text/markdown');
-		},
-		exportFile() {
-			this.startDownload(
-				'markdown.html',
-				'text/html',
-				process_markdown(this.markdown),
-			);
-		},
-		selectFile() {
-			this.$el.querySelector('#input-file').click();
-		},
-		loadFile(files) {
-			if (!files) {
-				return;
-			}
-
-			const reader = new FileReader();
-			reader.addEventListener('load', () => {
-				this.markdown = reader.result;
-			});
-			reader.readAsText(files[0]);
+		load() {
+			this.$refs.filemanager.$emit('load');
 		},
 	},
 });
