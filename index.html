@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<title>blankdown - yet yet yet another markdown editor</title>
+
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/routeros.min.css">
+
+		<script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+		<script src="https://unpkg.com/marked/marked.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+		<style>
+			body {
+				margin: 0;
+				height: 100vh;
+			}
+			main {
+				height: 100vh;
+				overflow: auto;
+				display: flex;
+				flex-direction: column;
+			}
+			nav {
+				flex: 0 0 auto;
+			}
+		</style>
+
+		<style>
+			.nav-header {
+				background-color: #666;
+				padding: .3em .5em;
+			}
+
+			.nav-header-link {
+				color: white;
+				text-decoration: none;
+				margin: 0 .5em;
+				user-select: none;
+			}
+
+			.nav-drawer {
+				background-color: #333;
+				color: white;
+				padding: .5em;
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				left: 0;
+				width: 15em;
+				box-sizing: border-box;
+				z-index: 2;
+			}
+
+			.nav-drawer hr {
+				background-color: #666;
+				border: none;
+				height: 1px;
+			}
+			
+			.nav-drawer-title {
+				font-size: 150%;
+				margin: .2em 0;
+				border-bottom: 1px solid #666;
+				user-select: none;
+			}
+
+			.nav-drawer-link {
+				color: white;
+				text-decoration: none;
+				display: block;
+				margin: .7em 0;
+			}
+
+			.nav-blind {
+				position: fixed;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				background-color: black;
+				opacity: .3;
+				z-index: 1;
+			}
+
+			.nav-slide-enter-active, .nav-slide-leave-active {
+				transition: left .5s;
+			}
+			.nav-slide-enter, .nav-slide-leave-to {
+				left: -15em;
+			}
+
+			.nav-fade-enter-active, .nav-fade-leave-active {
+				transition: opacity .5s;
+			}
+			.nav-fade-enter, .nav-fade-leave-to {
+				opacity: 0;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id=app></div>
+	</body>
+
+	<script>
+marked.setOptions({
+	highlight(code, lang) {
+		try {
+			if (lang) {
+				return hljs.highlight(lang, code, true).value;
+			} else {
+				return hljs.highlightAuto(code).value;
+			}
+		} catch(e) {
+			return code;
+		}
+	},
+});
+
+
+function process_markdown(markdown) {
+	return marked(markdown, {
+		sanitize: true,
+	});
+}
+
+
+Vue.directive('focus', {
+	inserted(el) {
+		el.focus();
+	},
+});
+
+
+Vue.component('nav-drawer', {
+	computed: {
+		groups() {
+			return this.$slots.default.filter(slot => slot.componentOptions).map(slot => {
+				return {
+					slot: slot,
+					name: slot.componentOptions.propsData.name,
+				};
+			});
+		},
+	},
+	template: `
+		<div>
+			<nav class="nav-header">
+				<a href class="nav-header-link" v-for="group in groups" @click.prevent="open(group.slot.componentInstance)">{{ group.name }}</a>
+			</nav>
+			<div>
+				<slot />
+			</div>
+		</div>
+	`,
+	methods: {
+		closeAll() {
+			this.groups.forEach(slot => {
+				slot.slot.componentInstance.close();
+			});
+		},
+		open(component) {
+			this.closeAll();
+			component.open();
+		},
+	},
+});
+
+
+Vue.component('nav-group', {
+	props: ['name'],
+	data() {
+		return {
+			opened: false,
+		};
+	},
+	template: `
+		<div>
+			<transition name=nav-slide>
+				<div class="nav-drawer" v-if=opened>
+					<h1 class="nav-drawer-title" @click=close>{{ name }}</h1>
+					<slot />
+				</div>
+			</transition>
+			<transition name=nav-fade>
+				<div class="nav-blind" v-if=opened @click=close></div>
+			</transition>
+		</div>
+	`,
+	methods: {
+		open() {
+			this.opened = true;
+		},
+		close() {
+			this.opened = false;
+		},
+	},
+});
+
+
+Vue.component('nav-button', {
+	template: '<a href @click.prevent=click class="nav-drawer-link"><slot /></a>',
+	methods: {
+		click() {
+			this.$emit('click');
+			this.$parent.close();
+		},
+	},
+});
+
+
+Vue.component('synchronize-scroll', {
+	template: `<div><slot /></div>`,
+	computed: {
+		elements() {
+			return this.$slots.default.filter(x => x.componentInstance).map(x => x.componentInstance.$el);
+		},
+	},
+	mounted() {
+		this.elements.forEach(elm => {
+			elm.addEventListener('scroll', () => {
+				Vue.nextTick(() => {
+					const rate = Math.round(elm.scrollTop / (elm.scrollHeight - elm.clientHeight) * 1000) / 1000;
+					this.elements.forEach(e => {
+						if (e != elm) {
+							e.scrollTo(0, (e.scrollHeight - e.clientHeight) * rate);
+						}
+					});
+				});
+			});
+		});
+	},
+});
+
+
+Vue.component('markdown-writer', {
+	props: ['value'],
+	data() {
+		return {
+			markdown: this.value,
+			childStyle: {
+				'flex': '1 1 0',
+			},
+		};
+	},
+	created() {
+		this.$watch('value', function() {
+			this.markdown = this.value;
+		});
+	},
+	template: `
+		<synchronize-scroll style="display: flex;">
+			<markdown-editor
+				:style=childStyle
+				style="outline: none; border: 0; resize: none;"
+				v-model=markdown
+				@input=update
+				v-focus>
+			</markdown-editor>
+
+			<markdown-viewer
+				:style=childStyle
+				style="padding-left: 1em; border-left: 1px solid gray;"
+				:value=markdown>
+			</markdown-viewer>
+		</synchronize-scroll>
+	`,
+	methods: {
+		update(value) {
+			this.$emit('input', value);
+		},
+	},
+});
+
+
+Vue.component('markdown-editor', {
+	props: ['value'],
+	template: `
+		<textarea
+			style="box-sizing: border-box;"
+			@keydown.tab.prevent=indent
+			@input="update($event.target.value)"
+			:value=value></textarea>
+	`,
+	methods: {
+		indent() {
+			const elm = this.$el;
+			const start = elm.selectionStart;
+			const diff = start != elm.selectionEnd;
+
+			elm.value = this.value.slice(0, elm.selectionStart) + '    ' + this.value.slice(elm.selectionEnd);
+			elm.selectionStart = elm.selectionEnd = start + 4;
+
+			this.update(elm.value);
+		},
+		update(value) {
+			this.$emit('input', value);
+		},
+	},
+});
+
+
+Vue.component('markdown-viewer', {
+	props: ['value'],
+	template: '<div v-html=html style="box-sizing: border-box; overflow: auto;"></div>',
+	computed: {
+		html() {
+			return process_markdown(this.value);
+		},
+	},
+});
+
+
+const vm = new Vue({
+	el: '#app',
+	template: `
+		<main>
+			<nav-drawer>
+				<nav-group name="FILE">
+					<nav-button @click=saveFile>save</nav-button>
+					<nav-button @click=exportFile>export</nav-button>
+					<nav-button @click=selectFile>load</nav-button>
+					<hr>
+					<nav-button>recent file</nav-button>
+					<nav-button>recent file</nav-button>
+					<nav-button>recent file</nav-button>
+					<nav-button>recent file</nav-button>
+					<nav-button>recent file</nav-button>
+				</nav-group>
+				<nav-group name="EDIT">
+					<nav-button>insert header</nav-button>
+					<nav-button>insert table</nav-button>
+				</nav-group>
+				<nav-group name="HELP">
+					<nav-button>about</nav-button>
+				</nav-group>
+			</nav-drawer>
+
+			<markdown-writer style="flex: 1 1 0" v-model="markdown"></markdown-writer>
+
+			<div style="display: none;">
+				<input id=input-file @change="loadFile(this.event.target.files)" type=file accept="text/*">
+				<a id=download-link :href=downloadURL :download=downloadName></a>
+			</div>
+		</main>
+	`,
+	data: {
+		markdown: "# hello world\nwelcome to **blankdown**!\n\n```\nprint('this is ', end='')\n\nwhile True:\n    print('yet ', end='')\n\nprint('another markdown editor')\n```\n",
+		downloadURL: '',
+		downloadName: '',
+	},
+	methods: {
+		startDownload(filename, mimetype, data) {
+			this.downloadURL = URL.createObjectURL(new Blob([ data ], { type: mimetype }));
+			this.downloadName = filename;
+			Vue.nextTick(() => {
+				this.$el.querySelector('#download-link').click();
+			});
+		},
+		saveFile() {
+			this.startDownload('markdown.md', this.markdown, 'text/markdown');
+		},
+		exportFile() {
+			this.startDownload(
+				'markdown.html',
+				'text/html',
+				process_markdown(this.markdown),
+			);
+		},
+		selectFile() {
+			this.$el.querySelector('#input-file').click();
+		},
+		loadFile(files) {
+			if (!files) {
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.addEventListener('load', () => {
+				this.markdown = reader.result;
+			});
+			reader.readAsText(files[0]);
+		},
+	},
+});
+	</script>
+</html>
