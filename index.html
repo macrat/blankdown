@@ -28,19 +28,20 @@
 
 		<style>
 			.nav-header {
-				background-color: #666;
-				padding: .3em .5em;
+				background-color: white;
+				padding: .3em .5em .5em;
 			}
 
 			.nav-header-link {
-				color: white;
+				color: #333;
 				text-decoration: none;
 				margin: 0 .5em;
 				user-select: none;
+				font-size: 120%;
 			}
 
 			.nav-drawer {
-				background-color: rgba(255, 255, 255, 0.8);
+				background-color: rgba(255, 255, 255, 0.5);
 				padding: 0 .5em;
 				position: absolute;
 				top: 0;
@@ -51,7 +52,7 @@
 			}
 
 			.nav-drawer hr {
-				background-color: #666;
+				background-color: #ccc;
 				border: none;
 				height: 1px;
 			}
@@ -59,7 +60,7 @@
 			.nav-drawer-title {
 				font-size: 150%;
 				margin: .5em 0;
-				border-bottom: 1px solid #666;
+				border-bottom: 1px solid #ccc;
 				user-select: none;
 			}
 
@@ -275,7 +276,7 @@ Vue.component('markdown-writer', {
 
 			<markdown-viewer
 				:style=childStyle
-				style="padding-left: 1em; border-left: 1px solid gray;"
+				style="padding-left: 1em;"
 				:value=markdown>
 			</markdown-viewer>
 		</synchronize-scroll>
