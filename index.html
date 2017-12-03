@@ -587,7 +587,7 @@ Vue.component('nav-drawer', {
 	template: `
 		<transition name=nav-slide>
 			<div class=nav-drawer v-if=opened>
-				<h1 class=nav-drawer-title @click=close>{{ name }}</h1>
+				<h1 class=nav-drawer-title @click=close style="cursor: default">{{ name }}</h1>
 				<slot />
 			</div>
 		</transition>
@@ -611,7 +611,7 @@ Vue.component('nav-drawer', {
 
 Vue.component('nav-button', {
 	props: ['disabled', 'href'],
-	template: `<a draggable=false :href=href @click.prevent=click class="nav-drawer-link" :class="{ 'nav-drawer-link-disabled': disabled }"><slot /></a>`,
+	template: `<a draggable=false :href=href @click.prevent=click class="nav-drawer-link" :class="{ 'nav-drawer-link-disabled': disabled }" style="cursor: pointer"><slot /></a>`,
 	methods: {
 		click() {
 			if (!this.disabled) {
@@ -859,8 +859,7 @@ const vm = new Vue({
 		dialogContent: null,
 	},
 	template: `
-		<main>
-
+		<main :style="{ cursor: $store.state.saving ? 'progress' : 'auto' }">
 			<nav-wrapper ref=nav>
 				<nav-drawer name="FILE">
 					<nav-button @click="$store.dispatch('create')">new</nav-button>
