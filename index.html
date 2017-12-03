@@ -179,28 +179,12 @@ marked.setOptions({
 });
 
 
+function get_name_by_markdown(markdown) {
+	return markdown.slice(0, markdown.indexOf('\n')).trim().replace(/^#+ /, '').trim();
+}
+
+
 const storageManager = store => {
-	function push_recents(state) {
-		if (state.current.readonly) {
-			return;
-		}
-
-		let recent_files = JSON.parse(localStorage.getItem('state::recent_files'));
-		if (!recent_files) {
-			recent_files = [];
-		}
-
-		recent_files = recent_files.filter(x => x.id !== state.current.id && localStorage.getItem('file::' + x.id) !== null);
-
-		recent_files.unshift({
-			id: state.current.id,
-			name: store.getters.current_name,
-		});
-
-		localStorage.setItem('state::recent_files', JSON.stringify(recent_files));
-		store.commit('changed_recent_files', recent_files);
-	}
-
 	function save_data(file) {
 		if (!file.readonly) {
 			localStorage.setItem('file::' + file.id, JSON.stringify({
@@ -214,67 +198,90 @@ const storageManager = store => {
 	}, 1000);
 
 	store.subscribeAction((action, state) => {
-		Vue.nextTick(() => {
-			switch (action.type) {
-			case 'save':
-				if (state.current.markdown) {
-					save_data(state.current);
-					push_recents(state);
-					Vue.nextTick(() => {
-						store.commit('saved');
-					});
-				}
-				break;
-
-			case 'load':
+		switch (action.type) {
+		case 'save':
+			if (state.current.markdown) {
 				save_data(state.current);
-				const data = JSON.parse(localStorage.getItem('file::' + action.payload));
+				store.commit('push_recent_file', state.current);
+				Vue.nextTick(() => {
+					store.commit('saved');
+				});
+			}
+			break;
+
+		case 'load':
+			save_data(state.current);
+			const data = JSON.parse(localStorage.getItem('file::' + action.payload));
+			if (data) {
+				store.commit('loaded', {
+					id: action.payload,
+					markdown: data.markdown,
+					readonly: false,
+				});
+			}
+			break;
+
+		case 'create':
+			store.commit('created', {
+				id: (new Date()).getTime().toString(36),
+				markdown: '',
+				readonly: false,
+			});
+			break;
+
+		case 'remove':
+			localStorage.removeItem('file::' + state.current.id);
+			store.commit('removed', state.current);
+			store.commit('remove_recent_file', state.current);
+			for (let i=0; i<state.recent.length; i++) {
+				const data = JSON.parse(localStorage.getItem('file::' + state.recent[i].id));
 				if (data) {
-					store.commit('loaded_markdown', {
-						id: action.payload,
+					store.commit('loaded', {
+						id: state.recent[i].id,
 						markdown: data.markdown,
 						readonly: false,
 					});
+					return;
 				}
-				break;
-
-			case 'create':
-				store.commit('loaded_markdown', {
-					id: (new Date()).getTime().toString(36),
-					markdown: '',
-					readonly: false,
-				});
-				push_recents(state);
-				break;
-
-			case 'update_markdown':
-				push_recents(state);
-				autosave();
-				break;
-
-			case 'import_markdown':
-				store.commit('loaded_markdown', {
-					id: (new Date()).getTime().toString(36),
-					markdown: action.payload,
-					readonly: false,
-				});
-				break;
 			}
-		});
+			store.dispatch('create');
+			break;
+
+		case 'update_markdown':
+			store.commit('push_recent_file', state.current);
+			autosave();
+			break;
+
+		case 'import_markdown':
+			store.commit('loaded', {
+				id: (new Date()).getTime().toString(36),
+				markdown: action.payload,
+				readonly: false,
+			});
+			break;
+		}
 	});
 
 	store.subscribe((mutation, state) => {
-		Vue.nextTick(() => {
-			switch (mutation.type) {
-			case 'loaded_markdown':
-				if (!mutation.payload.readonly && mutation.payload.id) {
-					localStorage.setItem('state::most_recent_file', mutation.payload.id);
-					push_recents(state);
-				}
-				break;
+		switch (mutation.type) {
+		case 'changed_recent_files':
+		case 'push_recent_file':
+		case 'remove_recent_file':
+			const recent = state.recent.filter(x => localStorage.getItem('file::' + x.id) != null);
+			localStorage.setItem('state::recent_files', JSON.stringify(recent));
+			break;
+
+		case 'created':
+		case 'loaded':
+			if (!mutation.payload.readonly && mutation.payload.id) {
+				localStorage.setItem('state::most_recent_file', mutation.payload.id);
+				store.commit('push_recent_file', mutation.payload);
 			}
-		});
+			break;
+		}
 	});
+
+	store.commit('changed_recent_files', JSON.parse(localStorage.getItem('state::recent_files')) || []);
 
 	let most_recent_id = localStorage.getItem('state::most_recent_file');
 	let most_recent = JSON.parse(localStorage.getItem('file::' + most_recent_id));
@@ -284,7 +291,7 @@ const storageManager = store => {
 			markdown: "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
 		};
 	}
-	store.commit('loaded_markdown', {
+	store.commit('loaded', {
 		id: most_recent_id,
 		markdown: most_recent.markdown,
 		readonly: false,
@@ -308,11 +315,32 @@ const store = new Vuex.Store({
 		saving: false,
 	},
 	mutations: {
-		loaded_markdown(state, data) {
-			state.current = data;
+		loaded(state, data) {
+			state.current.id = data.id;
+			state.current.markdown = data.markdown;
+			state.current.readonly = data.readonly;
 		},
 		changed_recent_files(state, files) {
 			state.recent = files;
+		},
+		push_recent_file(state, file) {
+			if (file.readonly) {
+				return;
+			}
+
+			state.recent = state.recent.filter(x => x.id !== file.id);
+
+			state.recent.unshift({
+				id: file.id,
+				name: get_name_by_markdown(file.markdown),
+			});
+		},
+		remove_recent_file(state, file) {
+			if (file.readonly) {
+				return;
+			}
+
+			state.recent = state.recent.filter(x => x.id !== file.id);
 		},
 		start_save(state) {
 			state.saving = true;
@@ -324,11 +352,23 @@ const store = new Vuex.Store({
 			state.current.markdown = markdown;
 		},
 		open_readonly(state, markdown) {
-			this.commit('loaded_markdown', {
+			this.commit('loaded', {
 				id: null,
 				markdown: markdown,
 				readonly: true,
 			});
+		},
+		created(state, data) {
+			state.current.id = data.id;
+			state.current.markdown = data.markdown;
+			state.current.readonly = data.readonly;
+		},
+		removed(state) {
+			this.current = {
+				id: '',
+				markdown: '',
+				readonly: false,
+			};
 		},
 	},
 	actions: {
@@ -344,6 +384,8 @@ const store = new Vuex.Store({
 		},
 		load(context, id) {
 		},
+		remove() {
+		},
 	},
 	getters: {
 		html(state) {
@@ -352,7 +394,7 @@ const store = new Vuex.Store({
 			});
 		},
 		current_name(state) {
-			return state.current.markdown.slice(0, state.current.markdown.indexOf('\n')).trim().replace(/^#+ /, '').trim();
+			return get_name_by_markdown(state.current.markdown);
 		},
 	},
 });
@@ -662,6 +704,7 @@ const vm = new Vue({
 				<nav-drawer name="FILE">
 					<nav-button @click="$store.dispatch('create')">new</nav-button>
 					<nav-button @click="$store.dispatch('save')">save</nav-button>
+					<nav-button @click="$store.dispatch('remove')">remove</nav-button>
 					<hr>
 					<nav-button @click="$refs.importAndExporter.$emit('import')">import</nav-button>
 					<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown</nav-button>
