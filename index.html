@@ -8,6 +8,7 @@
 
 		<script src="https://unpkg.com/vue/dist/vue.js"></script>
 		<script src="https://unpkg.com/vuex/dist/vuex.min.js"></script>
+		<script src="https://unpkg.com/lodash/lodash.min.js"></script>
 		<script src="https://unpkg.com/marked/marked.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
 
@@ -73,6 +74,10 @@
 				margin: .7em 0;
 			}
 
+			.nav-drawer-link-disabled {
+				color: #999;
+			}
+
 			.nav-blind {
 				position: fixed;
 				top: 0;
@@ -135,6 +140,15 @@
 				opacity: 0;
 			}
 		</style>
+
+		<style>
+			.saving-indicator-enter-active, .saving-indicator-leave-active {
+				transition: opacity .5s;
+			}
+			.saving-indicator-enter, .saving-indicator-leave-to {
+				opacity: 0;
+			}
+		</style>
 	</head>
 
 	<body>
@@ -157,20 +171,165 @@ marked.setOptions({
 });
 
 
+const storageManager = store => {
+	function push_recents(state) {
+		let recent_files = JSON.parse(localStorage.getItem('state::recent_files'));
+		if (!recent_files) {
+			recent_files = [];
+		}
+
+		for (var i=0; i<recent_files.length; i++) {
+			if (recent_files[i].id === state.current.id) {
+				recent_files.splice(i, 1);
+				break;
+			}
+		}
+
+		recent_files.unshift({
+			id: state.current.id,
+			name: store.getters.current_name,
+		});
+
+		localStorage.setItem('state::recent_files', JSON.stringify(recent_files));
+		store.commit('changed_recent_files', recent_files);
+	}
+
+	function save_data(file) {
+		localStorage.setItem('file::' + file.id, JSON.stringify({
+			markdown: file.markdown,
+		}));
+	}
+
+	autosave = _.debounce(() => {
+		store.dispatch('save');
+	}, 1000);
+
+	store.subscribeAction((action, state) => {
+		Vue.nextTick(() => {
+			switch (action.type) {
+			case 'save':
+				if (state.current.markdown) {
+					save_data(state.current);
+					push_recents(state);
+					Vue.nextTick(() => {
+						store.commit('saved');
+					});
+				}
+				break;
+
+			case 'load':
+				save_data(state.current);
+				const data = JSON.parse(localStorage.getItem('file::' + action.payload));
+				if (data) {
+					store.commit('loaded_markdown', {
+						id: action.payload,
+						markdown: data.markdown,
+					});
+				}
+				break;
+
+			case 'create':
+				store.commit('loaded_markdown', {
+					id: (new Date()).getTime().toString(36),
+					markdown: '',
+				});
+				push_recents(state);
+				break;
+
+			case 'update_markdown':
+				push_recents(state);
+				autosave();
+				break;
+
+			case 'import_markdown':
+				store.commit('loaded_markdown', {
+					id: (new Date()).getTime().toString(36),
+					markdown: action.payload,
+				});
+				break;
+			}
+		});
+	});
+
+	store.subscribe((mutation, state) => {
+		Vue.nextTick(() => {
+			switch (mutation.type) {
+			case 'loaded_markdown':
+				localStorage.setItem('state::most_recent_file', mutation.payload.id);
+				push_recents(state);
+				break;
+			}
+		});
+	});
+
+	let most_recent_id = localStorage.getItem('state::most_recent_file');
+	let most_recent = JSON.parse(localStorage.getItem('file::' + most_recent_id));
+	if (!most_recent) {
+		most_recent_id = (new Date()).getTime().toString(36);
+		most_recent = {
+			markdown: "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
+		};
+	}
+	store.commit('loaded_markdown', {
+		id: most_recent_id,
+		markdown: most_recent.markdown,
+	});
+
+	window.addEventListener('beforeunload', () => {
+		store.dispatch('save');
+	});
+};
+
+
 const store = new Vuex.Store({
+	plugins: [storageManager],
 	state: {
-		markdown: "# hello world\nwelcome to **blankdown**!\n\n```\nprint('this is ', end='')\n\nwhile True:\n    print('yet ', end='')\n\nprint('another markdown editor')\n```\n",
+		current: {
+			id: '',
+			markdown: '',
+		},
+		recent: [],
+		saving: false,
 	},
 	mutations: {
-		update_markdown(state, markdown) {
-			state.markdown = markdown;
+		loaded_markdown(state, data) {
+			state.current = data;
+		},
+		changed_recent_files(state, files) {
+			state.recent = files;
+		},
+		start_save(state) {
+			state.saving = true;
+		},
+		saved(state) {
+			state.saving = false;
+		},
+		change_markdown(state, markdown) {
+			state.current.markdown = markdown;
+		}
+	},
+	actions: {
+		update_markdown(context, markdown) {
+			this.commit('change_markdown', markdown);
+		},
+		import_markdown(context, markdown) {
+		},
+		create() {
+		},
+		save() {
+			this.commit('start_save');
+		},
+		load(context, id) {
 		},
 	},
 	getters: {
 		html(state) {
-			return marked(state.markdown, {
+			return marked(state.current.markdown, {
 				sanitize: true,
 			});
+		},
+		current_name(state) {
+			return state.current.markdown.slice(0, state.current.markdown.indexOf('\n')).trim().replace(/^#+ /, '').trim();
 		},
 	},
 });
@@ -203,7 +362,7 @@ Vue.component('nav-wrapper', {
 		<div class=nav-wrapper>
 			<div class=nav-content-area :class="{ 'nav-show-content': !opened, 'nav-hide-content': opened }">
 				<nav class=nav-header>
-					<a href class=nav-header-link v-for="group in groups" @click.prevent="open(group.slot.componentInstance)">{{ group.name }}</a>
+					<a draggable=false href class=nav-header-link v-for="group in groups" @click.prevent="open(group.slot.componentInstance)">{{ group.name }}</a>
 				</nav>
 				<div class=nav-blind v-if=opened @click=closeAll></div>
 				<slot name=content />
@@ -262,10 +421,14 @@ Vue.component('nav-drawer', {
 
 
 Vue.component('nav-button', {
-	template: '<a href @click.prevent=click class="nav-drawer-link"><slot /></a>',
+	props: ['disabled'],
+	template: `<a draggable=false href @click.prevent=click class="nav-drawer-link" :class="{ 'nav-drawer-link-disabled': disabled }"><slot /></a>`,
 	methods: {
 		click() {
-			this.$emit('click');
+			if (!this.disabled) {
+				this.$emit('click');
+				this.$parent.close();
+			}
 		},
 	},
 });
@@ -284,7 +447,7 @@ Vue.component('synchronize-scroll', {
 				Vue.nextTick(() => {
 					const rate = Math.round(elm.scrollTop / (elm.scrollHeight - elm.clientHeight) * 1000) / 1000;
 					this.elements.forEach(e => {
-						if (e != elm) {
+						if (e !== elm) {
 							e.scrollTo(0, (e.scrollHeight - e.clientHeight) * rate);
 						}
 					});
@@ -308,10 +471,10 @@ Vue.component('markdown-writer', {
 Vue.component('markdown-editor', {
 	template: `
 		<textarea
-			style="box-sizing: border-box;"
+			style="box-sizing: border-box; padding: .5em;"
 			@keydown.tab.prevent=indent
 			@input="update($event.target.value)"
-			:value="$store.state.markdown"></textarea>
+			:value="$store.state.current.markdown"></textarea>
 	`,
 	methods: {
 		indent() {
@@ -324,7 +487,7 @@ Vue.component('markdown-editor', {
 			this.update(elm.value);
 		},
 		update(markdown) {
-			this.$store.commit('update_markdown', markdown);
+			this.$store.dispatch('update_markdown', markdown);
 		},
 	},
 });
@@ -359,128 +522,83 @@ Vue.component('dialog-window', {
 });
 
 
-Vue.component('markdown-filemanager', {
+Vue.component('import-and-exporter', {
+	template: `
+		<div style="display: none;">
+			<input
+				class=import-and-exporter--input-file
+				@change="importFromFiles(this.event.target.files)"
+				type=file
+				accept="*.md"
+				style="display: none;" />
+
+			<a class=import-and-exporter--download-link></a>
+		</div>
+	`,
+	created() {
+		this.$on('import', this.importMarkdown);
+		this.$on('export-markdown', this.exportMarkdown);
+		this.$on('export-html', this.exportHTML);
+	},
+	methods: {
+		importMarkdown() {
+			this.$el.querySelector('.import-and-exporter--input-file').click();
+		},
+		importFromFiles(files) {
+			if (!files) {
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.addEventListener('load', () => {
+				this.$store.dispatch('import_markdown', reader.result);
+			});
+			reader.readAsText(files[0]);
+		},
+
+		startDownload(filename, mimetype, data) {
+			const elm = this.$el.querySelector('.import-and-exporter--download-link')
+			elm.href = URL.createObjectURL(new Blob([ data ], { type: mimetype }));
+			elm.download = filename;
+			this.$el.querySelector('.import-and-exporter--download-link').click();
+		},
+		exportMarkdown() {
+			this.startDownload(this.$store.getters.current_name + '.md', 'text/markdown', this.$store.state.current.markdown);
+		},
+		exportHTML() {
+			this.startDownload(this.$store.getters.current_name + '.html', 'text/html', this.$store.getters.html);
+		},
+	},
+});
+
+
+Vue.component('saving-indicator', {
 	data() {
 		return {
-			opened: false,
-			current: '',
+			shown: false,
 		};
 	},
-	template: `
-		<dialog-window v-model=opened>
-			<slot />
-
-			<component slot=dialog :is=current ref=dialog />
-		</dialog-window>
-	`,
-	components: {
-		save: {
-			data() {
-				return {
-					linkStyle: {
-						'display': 'block',
-						'color': 'black',
-						'text-decoration': 'none',
-						'margin': '1em 0',
-						'font-size': '150%',
-					},
-				};
-			},
-			template: `
-				<div>
-					<a :style=linkStyle href @click.prevent=saveToFile>save to file</a>
-					<a :style=linkStyle href @click.prevent=exportToFile>export as HTML</a>
-
-					<a class=filemanager-download-link style="display: none;"></a>
-				</div>
-			`,
-			methods: {
-				startDownload(filename, mimetype, data) {
-					const elm = this.$el.querySelector('.filemanager-download-link')
-					elm.href = URL.createObjectURL(new Blob([ data ], { type: mimetype }));
-					elm.download = filename;
-					this.$el.querySelector('.filemanager-download-link').click();
-				},
-				saveToFile() {
-					this.startDownload('blankdown.md', 'text/markdown', this.$store.state.markdown);
-					this.$emit('close');
-				},
-				exportToFile() {
-					this.startDownload(
-						'blankdown.html',
-						'text/html',
-						this.$store.getters.html,
-					);
-					this.$emit('close');
-				},
-			},
-		},
-		load: {
-			data() {
-				return {
-					linkStyle: {
-						'display': 'block',
-						'color': 'black',
-						'text-decoration': 'none',
-						'margin': '1em 0',
-						'font-size': '150%',
-					},
-				};
-			},
-			template: `
-				<div>
-					<a :style=linkStyle href @click.prevent=selectFile>load from file</a>
-
-					<input class=filemanager-input-file @change="loadFile(this.event.target.files)" type=file accept="text/*" style="display: none;">
-				</div>
-			`,
-			methods: {
-				selectFile() {
-					this.$el.querySelector('.filemanager-input-file').click();
-				},
-				loadFile(files) {
-					if (!files) {
-						this.$emit('close');
-						return;
-					}
-
-					const reader = new FileReader();
-					reader.addEventListener('load', () => {
-						this.$store.commit('update_markdown', reader.result);
-						this.$emit('close');
-					});
-					reader.readAsText(files[0]);
-				},
-			},
+	computed: {
+		saving() {
+			return this.$store.state.saving;
 		},
 	},
 	created() {
-		this.$on('load', this.load);
-		this.$on('save', this.save);
-
-		this.$watch('opened', () => {
-			if (this.opened) {
-				Vue.nextTick(() => {
-					this.$refs.dialog.$on('close', () => {
-						this.opened = false;
-					});
-				});
+		this.$watch('saving', saving => {
+			if (saving) {
+				this.shown = true;
+			} else {
+				setTimeout(() => {
+					this.shown = false;
+				}, 800);
 			}
 		});
 	},
-	methods: {
-		load() {
-			this.current = 'load';
-			this.opened = true;
-		},
-		save() {
-			this.current = 'save';
-			this.opened = true;
-		},
-		close() {
-			this.opened = false;
-		},
-	},
+	template: `
+		<transition name=saving-indicator>
+			<div v-if=shown style="position: fixed; right: 0; bottom: 0; background-color: rgba(255, 255, 255, 0.8); padding: .5em 2em; border: 1px solid rgba(0, 0, 0, 0.05); color: #666;">saving...</div>
+		</transition>
+	`,
 });
 
 
@@ -488,32 +606,38 @@ const vm = new Vue({
 	el: '#app',
 	store: store,
 	template: `
-		<main>
-			<markdown-filemanager ref=filemanager>
-				<nav-wrapper>
-					<nav-drawer name="FILE">
-						<nav-button @click="$refs.filemanager.$emit('save')">save</nav-button>
-						<nav-button @click="$refs.filemanager.$emit('load')">load</nav-button>
-						<hr>
-						<nav-button>recent file</nav-button>
-						<nav-button>recent file</nav-button>
-						<nav-button>recent file</nav-button>
-						<nav-button>recent file</nav-button>
-						<nav-button>recent file</nav-button>
-					</nav-drawer>
+		<main @keydown.ctrl.s.prevent="$store.dispatch('save')">
+			<nav-wrapper>
+				<nav-drawer name="FILE">
+					<nav-button @click="$store.dispatch('create')">new</nav-button>
+					<nav-button @click="$store.dispatch('save')">save</nav-button>
+					<hr>
+					<nav-button @click="$refs.importAndExporter.$emit('import')">import</nav-button>
+					<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown</nav-button>
+					<nav-button @click="$refs.importAndExporter.$emit('export-html')">export as HTML</nav-button>
+					<hr>
+					<nav-button
+						v-for="file in $store.state.recent"
+						:key="file.id"
+						@click="$store.dispatch('load', file.id)"
+						:disabled="file.id === $store.state.current.id">{{ file.name }}</nav-button>
+				</nav-drawer>
 
-					<nav-drawer name="EDIT">
-						<nav-button>insert header</nav-button>
-						<nav-button>insert table</nav-button>
-					</nav-drawer>
+				<nav-drawer name="EDIT">
+					<nav-button>insert header</nav-button>
+					<nav-button>insert table</nav-button>
+				</nav-drawer>
 
-					<nav-drawer name="HELP">
-						<nav-button>about</nav-button>
-					</nav-drawer>
+				<nav-drawer name="HELP">
+					<nav-button>about</nav-button>
+				</nav-drawer>
 
-					<markdown-writer slot=content style="flex: 1 1 0"></markdown-writer>
-				</nav-wrapper>
-			</markdown-filemanager>
+				<markdown-writer slot=content style="flex: 1 1 0"></markdown-writer>
+			</nav-wrapper>
+
+			<saving-indicator />
+
+			<import-and-exporter ref=importAndExporter />
 		</main>
 	`,
 });
