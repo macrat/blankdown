@@ -303,10 +303,14 @@ const storageManager = store => {
 			markdown: "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
 		};
 	}
-	store.commit('loaded', {
+	store.commit('created', {
 		id: most_recent_id,
 		markdown: most_recent.markdown,
 		readonly: false,
+	});
+
+	Vue.nextTick(() => {
+		store.dispatch('save');
 	});
 
 	window.addEventListener('beforeunload', () => {
