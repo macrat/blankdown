@@ -739,6 +739,18 @@ Vue.component('import-and-exporter', {
 		this.$on('import', this.importMarkdown);
 		this.$on('export-markdown', this.exportMarkdown);
 		this.$on('export-html', this.exportHTML);
+
+		window.addEventListener('dragover', ev => {
+			ev.stopPropagation();
+			ev.preventDefault();
+			ev.dataTransfer.dropEffect = 'copy';
+		});
+		window.addEventListener('drop', ev => {
+			ev.stopPropagation();
+			ev.preventDefault();
+
+			this.importFromFiles(ev.dataTransfer.files);
+		});
 	},
 	methods: {
 		importMarkdown() {
