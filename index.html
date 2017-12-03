@@ -347,8 +347,7 @@ const storageManager = store => {
 	let id;
 	let loaded = false;
 
-	for (id of [location.pathname.slice(1), ...(localStorage.getItem('state::recent_files') || [])]) {
-		console.log(id);
+	for (id of [location.pathname.slice(1), ...(JSON.parse(localStorage.getItem('state::recent_files')) || []).map(x => x.id)]) {
 		if (load_data(id)) {
 			loaded = true;
 			break;
@@ -365,7 +364,11 @@ const storageManager = store => {
 	}
 
 	if (location.pathname.slice(1) !== id) {
-		history.pushState(null, '', '/' + id);
+		if (loaded) {
+			history.replaceState(null, '', '/' + id);
+		} else {
+			history.pushState(null, '', '/' + id);
+		}
 	}
 
 	Vue.nextTick(() => {
@@ -543,6 +546,7 @@ Vue.component('nav-wrapper', {
 				};
 			});
 		});
+		this.$on('close', this.closeAll);
 	},
 	methods: {
 		closeAll() {
@@ -615,8 +619,8 @@ Vue.component('nav-button', {
 	methods: {
 		click() {
 			if (!this.disabled) {
-				this.$emit('click');
 				this.$parent.close();
+				this.$emit('click');
 			}
 		},
 	},
@@ -928,21 +932,25 @@ const vm = new Vue({
 		});
 
 		this.$watch('currentID', id => {
-			if (this.$refs.nav.opened) {
-				history.pushState(null, '', `/${id}#${this.$refs.nav.current.name}`);
-			} else {
-				history.pushState(null, '', '/' + id);
+			if (id && id !== location.pathname.slice(1)) {
+				if (this.$refs.nav.opened) {
+					history.pushState(null, '', `/${id}#${this.$refs.nav.current.name}`);
+				} else {
+					history.pushState(null, '', '/' + id);
+				}
 			}
 		});
 		window.addEventListener('popstate', () => {
 			const id = location.pathname.slice(1);
-			if (id && id !== this.$store.current.id) {
+			if (id && id !== this.$store.state.current.id) {
 				this.$store.dispatch('load', id);
 			}
 
 			const pane = location.hash.slice(1);
 			if (pane) {
 				this.$refs.nav.$emit('open', pane);
+			} else {
+				this.$refs.nav.$emit('close');
 			}
 		});
 	},
