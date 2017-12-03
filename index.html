@@ -184,7 +184,12 @@ marked.setOptions({
 
 
 function get_name_by_markdown(markdown) {
-	return markdown.slice(0, markdown.indexOf('\n')).trim().replace(/^#+ /, '').trim();
+	const idx = markdown.indexOf('\n');
+	if (idx >= 0) {
+		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
+	} else {
+		return markdown.trim().replace(/^#+ /, '').trim();
+	}
 }
 
 
@@ -235,8 +240,8 @@ const storageManager = store => {
 
 		case 'remove':
 			localStorage.removeItem('file::' + state.current.id);
-			store.commit('removed', state.current);
 			store.commit('remove_recent_file', state.current);
+			store.commit('removed', state.current);
 			for (let i=0; i<state.recent.length; i++) {
 				const data = JSON.parse(localStorage.getItem('file::' + state.recent[i].id));
 				if (data) {
@@ -796,7 +801,7 @@ const vm = new Vue({
 					<hr>
 					<nav-button
 						v-for="file in $store.state.recent"
-						:key="file.id"
+						:key=file.id
 						@click="$store.dispatch('load', file.id)"
 						:disabled="file.id === $store.state.current.id">{{ file.name }}</nav-button>
 				</nav-drawer>
