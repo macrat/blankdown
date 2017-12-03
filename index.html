@@ -529,7 +529,7 @@ Vue.component('nav-wrapper', {
 		</div>
 	`,
 	mounted() {
-		this.groups.forEach(x => x.slot.componentInstance.$on('opened', opened => {
+		this.groups.forEach(x => x.slot.componentInstance.$on('change_opened', opened => {
 			this.opened = opened;
 			this.current = opened ? x.slot.componentInstance : null;
 
@@ -600,13 +600,13 @@ Vue.component('nav-drawer', {
 		open() {
 			if (!this.opened) {
 				this.opened = true;
-				this.$emit('opened', true);
+				this.$emit('change_opened', true);
 			}
 		},
 		close() {
 			if (this.opened) {
 				this.opened = false;
-				this.$emit('opened', false);
+				this.$emit('change_opened', false);
 			}
 		},
 	},
@@ -654,10 +654,15 @@ Vue.component('synchronize-scroll', {
 Vue.component('markdown-writer', {
 	template: `
 		<synchronize-scroll style="display: flex;" class=markdown-writer>
-			<markdown-editor style="flex: 1 1 0; outline: none; border: 0; resize: none;" v-focus />
+			<markdown-editor ref=editor style="flex: 1 1 0; outline: none; border: 0; resize: none;" v-focus />
 			<markdown-viewer style="flex: 1 1 0; padding-left: 1em;" />
 		</synchronize-scroll>
 	`,
+	methods: {
+		focus() {
+			this.$refs.editor.$el.focus();
+		},
+	},
 });
 
 
@@ -892,7 +897,7 @@ const vm = new Vue({
 					<nav-button @click="$store.dispatch('load', 'about')">about</nav-button>
 				</nav-drawer>
 
-				<markdown-writer slot=content style="flex: 1 1 0"></markdown-writer>
+				<markdown-writer ref=writer slot=content style="flex: 1 1 0" />
 			</nav-wrapper>
 
 			<saving-indicator />
@@ -960,6 +965,8 @@ const vm = new Vue({
 		});
 		this.$refs.nav.$on('closed', () => {
 			history.replaceState(null, '', `/${this.currentID}`);
+
+			this.$refs.writer.focus();
 		});
 
 		const pane = location.hash.slice(1);
