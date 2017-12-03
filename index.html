@@ -284,10 +284,7 @@ const storageManager = store => {
 		case 'loaded':
 		case 'restored':
 			if (!mutation.payload.readonly && mutation.payload.id) {
-				localStorage.setItem('state::most_recent_file', mutation.payload.id);
-				Vue.nextTick(() => {
-					store.commit('push_recent_file', mutation.payload);
-				});
+				store.commit('push_recent_file', mutation.payload);
 			}
 			break;
 		}
@@ -295,35 +292,27 @@ const storageManager = store => {
 
 	store.commit('changed_recent_files', JSON.parse(localStorage.getItem('state::recent_files')) || []);
 
-	let most_recent_id = location.pathname.slice(1);
-	let most_recent = JSON.parse(localStorage.getItem('file::' + most_recent_id));
-	if (most_recent) {
-		store.commit('loaded', {
-			id: most_recent_id,
-			markdown: most_recent.markdown,
-			readonly: false,
-		});
-	} else {
-		most_recent_id = localStorage.getItem('state::most_recent_file');
-		most_recent = JSON.parse(localStorage.getItem('file::' + most_recent_id));
-
-		if (most_recent) {
+	let loaded = false;
+	for (var most_recent_id of [location.pathname.slice(1), ...(localStorage.getItem('state::recent_files') || [])]) {
+		const data = JSON.parse(localStorage.getItem('file::' + most_recent_id));
+		if (data) {
 			store.commit('loaded', {
 				id: most_recent_id,
-				markdown: most_recent.markdown,
-				readonly: false,
+				markdown: data.markdown,
+				readonly: data.readonly,
 			});
-		} else {
-			most_recent_id = (new Date()).getTime().toString(36);
-			most_recent = {
-				markdown: "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
-			};
-			store.commit('created', {
-				id: most_recent_id,
-				markdown: most_recent.markdown,
-				readonly: false,
-			});
+			loaded = true;
+			break;
 		}
+	}
+
+	if (!loaded) {
+		most_recent_id = (new Date()).getTime().toString(36);
+		store.commit('created', {
+			id: most_recent_id,
+			markdown:  "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
+			readonly: false,
+		});
 	}
 
 	if (location.pathname.slice(1) !== most_recent_id) {
