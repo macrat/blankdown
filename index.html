@@ -26,6 +26,14 @@
 			nav {
 				flex: 0 0 auto;
 			}
+
+			.markdown-viewer table, .markdown-viewer tr, .markdown-viewer th, .markdown-viewer td {
+				border-collapse: collapse;
+				border: 1px solid #ccc;
+			}
+			.markdown-viewer th, .markdown-viewer td {
+				padding: .5em 1em;
+			}
 		</style>
 
 		<style>
@@ -173,17 +181,16 @@ marked.setOptions({
 
 const storageManager = store => {
 	function push_recents(state) {
+		if (state.current.readonly) {
+			return;
+		}
+
 		let recent_files = JSON.parse(localStorage.getItem('state::recent_files'));
 		if (!recent_files) {
 			recent_files = [];
 		}
 
-		for (var i=0; i<recent_files.length; i++) {
-			if (recent_files[i].id === state.current.id) {
-				recent_files.splice(i, 1);
-				break;
-			}
-		}
+		recent_files = recent_files.filter(x => x.id !== state.current.id && localStorage.getItem('file::' + x.id) !== null);
 
 		recent_files.unshift({
 			id: state.current.id,
@@ -195,9 +202,11 @@ const storageManager = store => {
 	}
 
 	function save_data(file) {
-		localStorage.setItem('file::' + file.id, JSON.stringify({
-			markdown: file.markdown,
-		}));
+		if (!file.readonly) {
+			localStorage.setItem('file::' + file.id, JSON.stringify({
+				markdown: file.markdown,
+			}));
+		}
 	}
 
 	autosave = _.debounce(() => {
@@ -224,6 +233,7 @@ const storageManager = store => {
 					store.commit('loaded_markdown', {
 						id: action.payload,
 						markdown: data.markdown,
+						readonly: false,
 					});
 				}
 				break;
@@ -232,6 +242,7 @@ const storageManager = store => {
 				store.commit('loaded_markdown', {
 					id: (new Date()).getTime().toString(36),
 					markdown: '',
+					readonly: false,
 				});
 				push_recents(state);
 				break;
@@ -245,6 +256,7 @@ const storageManager = store => {
 				store.commit('loaded_markdown', {
 					id: (new Date()).getTime().toString(36),
 					markdown: action.payload,
+					readonly: false,
 				});
 				break;
 			}
@@ -255,8 +267,10 @@ const storageManager = store => {
 		Vue.nextTick(() => {
 			switch (mutation.type) {
 			case 'loaded_markdown':
-				localStorage.setItem('state::most_recent_file', mutation.payload.id);
-				push_recents(state);
+				if (!mutation.payload.readonly && mutation.payload.id) {
+					localStorage.setItem('state::most_recent_file', mutation.payload.id);
+					push_recents(state);
+				}
 				break;
 			}
 		});
@@ -273,6 +287,7 @@ const storageManager = store => {
 	store.commit('loaded_markdown', {
 		id: most_recent_id,
 		markdown: most_recent.markdown,
+		readonly: false,
 	});
 
 	window.addEventListener('beforeunload', () => {
@@ -287,6 +302,7 @@ const store = new Vuex.Store({
 		current: {
 			id: '',
 			markdown: '',
+			readonly: false,
 		},
 		recent: [],
 		saving: false,
@@ -306,7 +322,14 @@ const store = new Vuex.Store({
 		},
 		change_markdown(state, markdown) {
 			state.current.markdown = markdown;
-		}
+		},
+		open_readonly(state, markdown) {
+			this.commit('loaded_markdown', {
+				id: null,
+				markdown: markdown,
+				readonly: true,
+			});
+		},
 	},
 	actions: {
 		update_markdown(context, markdown) {
@@ -404,6 +427,9 @@ Vue.component('nav-wrapper', {
 						}
 					}
 				});
+			} else if (ev.key == 'Escape' && this.opened) {
+				ev.preventDefault();
+				this.closeAll();
 			}
 		},
 	},
@@ -478,7 +504,7 @@ Vue.component('synchronize-scroll', {
 
 Vue.component('markdown-writer', {
 	template: `
-		<synchronize-scroll style="display: flex;">
+		<synchronize-scroll style="display: flex;" class=markdown-writer>
 			<markdown-editor style="flex: 1 1 0; outline: none; border: 0; resize: none;" v-focus />
 			<markdown-viewer style="flex: 1 1 0; padding-left: 1em;" />
 		</synchronize-scroll>
@@ -489,10 +515,12 @@ Vue.component('markdown-writer', {
 Vue.component('markdown-editor', {
 	template: `
 		<textarea
+			class=markdown-editor
 			style="box-sizing: border-box; padding: .5em;"
 			@keydown.tab.prevent=indent
 			@input="update($event.target.value)"
-			:value="$store.state.current.markdown"></textarea>
+			:value=$store.state.current.markdown
+			:disabled=$store.state.current.readonly></textarea>
 	`,
 	methods: {
 		indent() {
@@ -512,18 +540,18 @@ Vue.component('markdown-editor', {
 
 
 Vue.component('markdown-viewer', {
-	template: '<div v-html="$store.getters.html" style="box-sizing: border-box; overflow: auto;" />',
+	template: '<div class=markdown-viewer v-html="$store.getters.html" style="box-sizing: border-box; overflow: auto;" />',
 });
 
 
-Vue.component('dialog-window', {
+Vue.component('dialog-wrapper', {
 	props: ['opened'],
 	model: {
 		prop: 'opened',
 		event: 'switch',
 	},
 	template: `
-		<div class="dialog-wrapper">
+		<div class=dialog-wrapper>
 			<div :class="{ 'dialog-show-content': !opened, 'dialog-hide-content': opened }">
 				<slot />
 			</div>
@@ -623,20 +651,20 @@ Vue.component('saving-indicator', {
 const vm = new Vue({
 	el: '#app',
 	store: store,
+	data: {
+		dialogOpened: false,
+		dialogContent: null,
+	},
 	template: `
-		<main
-			@keydown.ctrl.m.prevent="$store.dispatch('create')"
-			@keydown.ctrl.s.prevent="$store.dispatch('save')"
-			@keydown.ctrl.shift.s.prevent="$refs.importAndExporter.$emit('export-markdown')"
-			@keydown.ctrl.shift.o.prevent="$refs.importAndExporter.$emit('import')">
+		<main>
 
 			<nav-wrapper>
 				<nav-drawer name="FILE">
-					<nav-button @click="$store.dispatch('create')">new<small>(Ctrl-M)</small></nav-button>
-					<nav-button @click="$store.dispatch('save')">save<small>(Ctrl-S)</small></nav-button>
+					<nav-button @click="$store.dispatch('create')">new</nav-button>
+					<nav-button @click="$store.dispatch('save')">save</nav-button>
 					<hr>
-					<nav-button @click="$refs.importAndExporter.$emit('import')">import<small>(Ctrl-Shift-O)</small></nav-button>
-					<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown<small>(Ctrl-Shift-S)</small></nav-button>
+					<nav-button @click="$refs.importAndExporter.$emit('import')">import</nav-button>
+					<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown</nav-button>
 					<nav-button @click="$refs.importAndExporter.$emit('export-html')">export as HTML</nav-button>
 					<hr>
 					<nav-button
@@ -652,7 +680,8 @@ const vm = new Vue({
 				</nav-drawer>
 
 				<nav-drawer name="HELP">
-					<nav-button>about</nav-button>
+					<nav-button @click="open_shortcuts">shortcuts</nav-button>
+					<nav-button @click="open_about">about</nav-button>
 				</nav-drawer>
 
 				<markdown-writer slot=content style="flex: 1 1 0"></markdown-writer>
@@ -663,6 +692,70 @@ const vm = new Vue({
 			<import-and-exporter ref=importAndExporter />
 		</main>
 	`,
+	created() {
+		window.addEventListener('keydown', ev => {
+			if (ev.ctrlKey) {
+				if (ev.shiftKey) {
+					switch (ev.key) {
+					case 's':
+						ev.preventDefault();
+						this.$refs.importAndExporter.$emit('export-markdown');
+						break;
+
+					case 'o':
+						ev.preventDefault();
+						this.$refs.importAndExporter.$emit('import');
+						break;
+					}
+				} else {
+					switch (ev.key) {
+					case 'm':
+						ev.preventDefault();
+						this.$store.dispatch('create');
+						break;
+					case 's':
+						ev.preventDefault();
+						this.$store.dispatch('save');
+						break;
+					}
+				}
+			}
+		});
+	},
+	methods: {
+		open_shortcuts() {
+			this.$store.commit('open_readonly', shortcuts_document);
+		},
+		open_about() {
+			this.$store.commit('open_readonly', about_document);
+		},
+	},
 });
+
+
+const shortcuts_document = `# Shortcuts
+
+## main menu
+|key combination|what do        |
+|:--------------|:--------------|
+|Alt-F          |Open FILE pane |
+|Alt-E          |Open EDIT pane |
+|Alt-H          |Open HELP pane |
+|Escape         |Close side pane|
+
+## file
+|key combination|what do                        |
+|:--------------|:------------------------------|
+|Ctrl-M         |Make new file                  |
+|Ctrl-S         |Save current file              |
+|Ctrl-Shift-S   |Export current file as markdown|
+|Ctrl-Shift-O   |Import markdown file from disk |
+`;
+
+
+const about_document = `# About blankdown
+
+not yet wrote.
+`;
 	</script>
 </html>
