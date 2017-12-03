@@ -193,6 +193,32 @@ function get_name_by_markdown(markdown) {
 }
 
 
+const shortcuts_document = `# Shortcuts
+
+## main menu
+|key combination|what do        |
+|:--------------|:--------------|
+|Alt-F          |Open FILE pane |
+|Alt-E          |Open EDIT pane |
+|Alt-H          |Open HELP pane |
+|Escape         |Close side pane|
+
+## file
+|key combination|what do                        |
+|:--------------|:------------------------------|
+|Ctrl-M         |Make new file                  |
+|Ctrl-S         |Save current file              |
+|Ctrl-Shift-S   |Export current file as markdown|
+|Ctrl-Shift-O   |Import markdown file from disk |
+`;
+
+
+const about_document = `# About blankdown
+
+not yet wrote.
+`;
+
+
 const storageManager = store => {
 	function save_data(file) {
 		if (!file.readonly) {
@@ -200,6 +226,34 @@ const storageManager = store => {
 				markdown: file.markdown,
 			}));
 		}
+	}
+
+	function load_data(id) {
+		const readonly_document = ({
+			shortcuts: shortcuts_document,
+			about: about_document,
+		})[id];
+
+		if (readonly_document) {
+			store.commit('loaded', {
+				id: id,
+				markdown: readonly_document,
+				readonly: true,
+			});
+			return 'document';
+		}
+
+		const data = JSON.parse(localStorage.getItem('file::' + id));
+		if (data) {
+			store.commit('loaded', {
+				id: id,
+				markdown: data.markdown,
+				readonly: false,
+			});
+			return 'normal';
+		}
+
+		return null;
 	}
 
 	autosave = _.debounce(() => {
@@ -220,14 +274,7 @@ const storageManager = store => {
 
 		case 'load':
 			save_data(state.current);
-			const data = JSON.parse(localStorage.getItem('file::' + action.payload));
-			if (data) {
-				store.commit('loaded', {
-					id: action.payload,
-					markdown: data.markdown,
-					readonly: false,
-				});
-			}
+			load_data(action.payload);
 			break;
 
 		case 'create':
@@ -292,31 +339,28 @@ const storageManager = store => {
 
 	store.commit('changed_recent_files', JSON.parse(localStorage.getItem('state::recent_files')) || []);
 
+	let id;
 	let loaded = false;
-	for (var most_recent_id of [location.pathname.slice(1), ...(localStorage.getItem('state::recent_files') || [])]) {
-		const data = JSON.parse(localStorage.getItem('file::' + most_recent_id));
-		if (data) {
-			store.commit('loaded', {
-				id: most_recent_id,
-				markdown: data.markdown,
-				readonly: data.readonly,
-			});
+
+	for (id of [location.pathname.slice(1), ...(localStorage.getItem('state::recent_files') || [])]) {
+		console.log(id);
+		if (load_data(id)) {
 			loaded = true;
 			break;
 		}
 	}
 
 	if (!loaded) {
-		most_recent_id = (new Date()).getTime().toString(36);
+		id = (new Date()).getTime().toString(36);
 		store.commit('created', {
-			id: most_recent_id,
+			id: id,
 			markdown:  "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
 			readonly: false,
 		});
 	}
 
-	if (location.pathname.slice(1) !== most_recent_id) {
-		history.pushState(null, '', '/' + most_recent_id);
+	if (location.pathname.slice(1) !== id) {
+		history.pushState(null, '', '/' + id);
 	}
 
 	Vue.nextTick(() => {
@@ -381,13 +425,6 @@ const store = new Vuex.Store({
 		},
 		change_markdown(state, markdown) {
 			state.current.markdown = markdown;
-		},
-		open_readonly(state, markdown) {
-			this.commit('loaded', {
-				id: null,
-				markdown: markdown,
-				readonly: true,
-			});
 		},
 		created(state, data) {
 			state.current.id = data.id;
@@ -843,8 +880,8 @@ const vm = new Vue({
 				</nav-drawer>
 
 				<nav-drawer name="HELP">
-					<nav-button @click="open_shortcuts">shortcuts</nav-button>
-					<nav-button @click="open_about">about</nav-button>
+					<nav-button @click="$store.dispatch('load', 'shortcuts')">shortcuts</nav-button>
+					<nav-button @click="$store.dispatch('load', 'about')">about</nav-button>
 				</nav-drawer>
 
 				<markdown-writer slot=content style="flex: 1 1 0"></markdown-writer>
@@ -923,40 +960,6 @@ const vm = new Vue({
 			return this.$store.state.current.id;
 		},
 	},
-	methods: {
-		open_shortcuts() {
-			this.$store.commit('open_readonly', shortcuts_document);
-		},
-		open_about() {
-			this.$store.commit('open_readonly', about_document);
-		},
-	},
 });
-
-
-const shortcuts_document = `# Shortcuts
-
-## main menu
-|key combination|what do        |
-|:--------------|:--------------|
-|Alt-F          |Open FILE pane |
-|Alt-E          |Open EDIT pane |
-|Alt-H          |Open HELP pane |
-|Escape         |Close side pane|
-
-## file
-|key combination|what do                        |
-|:--------------|:------------------------------|
-|Ctrl-M         |Make new file                  |
-|Ctrl-S         |Save current file              |
-|Ctrl-Shift-S   |Export current file as markdown|
-|Ctrl-Shift-O   |Import markdown file from disk |
-`;
-
-
-const about_document = `# About blankdown
-
-not yet wrote.
-`;
 	</script>
 </html>
