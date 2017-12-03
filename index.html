@@ -295,19 +295,40 @@ const storageManager = store => {
 
 	store.commit('changed_recent_files', JSON.parse(localStorage.getItem('state::recent_files')) || []);
 
-	let most_recent_id = localStorage.getItem('state::most_recent_file');
+	let most_recent_id = location.pathname.slice(1);
 	let most_recent = JSON.parse(localStorage.getItem('file::' + most_recent_id));
-	if (!most_recent) {
-		most_recent_id = (new Date()).getTime().toString(36);
-		most_recent = {
-			markdown: "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
-		};
+	if (most_recent) {
+		store.commit('loaded', {
+			id: most_recent_id,
+			markdown: most_recent.markdown,
+			readonly: false,
+		});
+	} else {
+		most_recent_id = localStorage.getItem('state::most_recent_file');
+		most_recent = JSON.parse(localStorage.getItem('file::' + most_recent_id));
+
+		if (most_recent) {
+			store.commit('loaded', {
+				id: most_recent_id,
+				markdown: most_recent.markdown,
+				readonly: false,
+			});
+		} else {
+			most_recent_id = (new Date()).getTime().toString(36);
+			most_recent = {
+				markdown: "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
+			};
+			store.commit('created', {
+				id: most_recent_id,
+				markdown: most_recent.markdown,
+				readonly: false,
+			});
+		}
 	}
-	store.commit('created', {
-		id: most_recent_id,
-		markdown: most_recent.markdown,
-		readonly: false,
-	});
+
+	if (location.pathname.slice(1) !== most_recent_id) {
+		history.pushState(null, '', '/' + most_recent_id);
+	}
 
 	Vue.nextTick(() => {
 		store.dispatch('save');
@@ -463,7 +484,7 @@ Vue.component('nav-wrapper', {
 		<div class=nav-wrapper>
 			<div class=nav-content-area :class="{ 'nav-show-content': !opened, 'nav-hide-content': opened }">
 				<nav class=nav-header>
-					<a draggable=false href class=nav-header-link v-for="group in groups" @click.prevent="open(group.slot.componentInstance)">{{ group.name }}</a>
+					<a draggable=false :href="'#' + group.name.toLowerCase()" class=nav-header-link v-for="group in groups" @click.prevent="open(group.slot.componentInstance)">{{ group.name }}</a>
 				</nav>
 				<div class=nav-blind v-if=opened @click=closeAll></div>
 				<slot name=content />
@@ -477,9 +498,20 @@ Vue.component('nav-wrapper', {
 		this.groups.forEach(x => x.slot.componentInstance.$on('opened', opened => {
 			this.opened = opened;
 			this.current = opened ? x.slot.componentInstance : null;
-			this.$emit('opened', opened);
+
+			if (!opened) {
+				this.$emit('closed');
+			}
 		}));
 		window.addEventListener('keydown', this.shortcut);
+
+		this.$on('open', name => {
+			this.groups.forEach(x => {
+				if (x.name.toLowerCase() === name.toLowerCase()) {
+					this.open(x.slot.componentInstance);
+				};
+			});
+		});
 	},
 	methods: {
 		closeAll() {
@@ -490,6 +522,7 @@ Vue.component('nav-wrapper', {
 		open(component) {
 			this.closeAll();
 			component.open();
+			this.$emit('opened', component.name);
 		},
 		shortcut(ev) {
 			if (ev.altKey) {
@@ -530,20 +563,24 @@ Vue.component('nav-drawer', {
 	`,
 	methods: {
 		open() {
-			this.opened = true;
-			this.$emit('opened', true);
+			if (!this.opened) {
+				this.opened = true;
+				this.$emit('opened', true);
+			}
 		},
 		close() {
-			this.opened = false;
-			this.$emit('opened', false);
+			if (this.opened) {
+				this.opened = false;
+				this.$emit('opened', false);
+			}
 		},
 	},
 });
 
 
 Vue.component('nav-button', {
-	props: ['disabled'],
-	template: `<a draggable=false href @click.prevent=click class="nav-drawer-link" :class="{ 'nav-drawer-link-disabled': disabled }"><slot /></a>`,
+	props: ['disabled', 'href'],
+	template: `<a draggable=false :href=href @click.prevent=click class="nav-drawer-link" :class="{ 'nav-drawer-link-disabled': disabled }"><slot /></a>`,
 	methods: {
 		click() {
 			if (!this.disabled) {
@@ -793,7 +830,7 @@ const vm = new Vue({
 	template: `
 		<main>
 
-			<nav-wrapper>
+			<nav-wrapper ref=nav>
 				<nav-drawer name="FILE">
 					<nav-button @click="$store.dispatch('create')">new</nav-button>
 					<nav-button @click="$store.dispatch('save')">save</nav-button>
@@ -807,7 +844,8 @@ const vm = new Vue({
 						v-for="file in $store.state.recent"
 						:key=file.id
 						@click="$store.dispatch('load', file.id)"
-						:disabled="file.id === $store.state.current.id">{{ file.name }}</nav-button>
+						:disabled="file.id === $store.state.current.id"
+						:href="'/' + file.id">{{ file.name }}</nav-button>
 				</nav-drawer>
 
 				<nav-drawer name="EDIT">
@@ -858,6 +896,43 @@ const vm = new Vue({
 				}
 			}
 		});
+
+		this.$watch('currentID', id => {
+			if (this.$refs.nav.opened) {
+				history.pushState(null, '', `/${id}#${this.$refs.nav.current.name}`);
+			} else {
+				history.pushState(null, '', '/' + id);
+			}
+		});
+		window.addEventListener('popstate', () => {
+			const id = location.pathname.slice(1);
+			if (id && id !== this.$store.current.id) {
+				this.$store.dispatch('load', id);
+			}
+
+			const pane = location.hash.slice(1);
+			if (pane) {
+				this.$refs.nav.$emit('open', pane);
+			}
+		});
+	},
+	mounted() {
+		this.$refs.nav.$on('opened', name => {
+			history.replaceState(null, '', `/${this.currentID}#${name.toLowerCase()}`);
+		});
+		this.$refs.nav.$on('closed', () => {
+			history.replaceState(null, '', `/${this.currentID}`);
+		});
+
+		const pane = location.hash.slice(1);
+		if (pane) {
+			this.$refs.nav.$emit('open', pane);
+		}
+	},
+	computed: {
+		currentID() {
+			return this.$store.state.current.id;
+		},
 	},
 	methods: {
 		open_shortcuts() {
