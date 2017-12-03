@@ -356,6 +356,7 @@ Vue.component('nav-wrapper', {
 	data() {
 		return {
 			opened: false,
+			current: null,
 		};
 	},
 	template: `
@@ -375,8 +376,10 @@ Vue.component('nav-wrapper', {
 	mounted() {
 		this.groups.forEach(x => x.slot.componentInstance.$on('opened', opened => {
 			this.opened = opened;
+			this.current = opened ? x.slot.componentInstance : null;
 			this.$emit('opened', opened);
 		}));
+		window.addEventListener('keydown', this.shortcut);
 	},
 	methods: {
 		closeAll() {
@@ -387,6 +390,21 @@ Vue.component('nav-wrapper', {
 		open(component) {
 			this.closeAll();
 			component.open();
+		},
+		shortcut(ev) {
+			if (ev.altKey) {
+				this.groups.forEach(slot => {
+					if (ev.key === slot.name[0].toLowerCase()) {
+						ev.preventDefault();
+
+						if (this.current === slot.slot.componentInstance) {
+							this.closeAll();
+						} else {
+							this.open(slot.slot.componentInstance);
+						}
+					}
+				});
+			}
 		},
 	},
 });
@@ -606,14 +624,19 @@ const vm = new Vue({
 	el: '#app',
 	store: store,
 	template: `
-		<main @keydown.ctrl.s.prevent="$store.dispatch('save')">
+		<main
+			@keydown.ctrl.m.prevent="$store.dispatch('create')"
+			@keydown.ctrl.s.prevent="$store.dispatch('save')"
+			@keydown.ctrl.shift.s.prevent="$refs.importAndExporter.$emit('export-markdown')"
+			@keydown.ctrl.shift.o.prevent="$refs.importAndExporter.$emit('import')">
+
 			<nav-wrapper>
 				<nav-drawer name="FILE">
-					<nav-button @click="$store.dispatch('create')">new</nav-button>
-					<nav-button @click="$store.dispatch('save')">save</nav-button>
+					<nav-button @click="$store.dispatch('create')">new<small>(Ctrl-M)</small></nav-button>
+					<nav-button @click="$store.dispatch('save')">save<small>(Ctrl-S)</small></nav-button>
 					<hr>
-					<nav-button @click="$refs.importAndExporter.$emit('import')">import</nav-button>
-					<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown</nav-button>
+					<nav-button @click="$refs.importAndExporter.$emit('import')">import<small>(Ctrl-Shift-O)</small></nav-button>
+					<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown<small>(Ctrl-Shift-S)</small></nav-button>
 					<nav-button @click="$refs.importAndExporter.$emit('export-html')">export as HTML</nav-button>
 					<hr>
 					<nav-button
