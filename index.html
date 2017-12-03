@@ -150,10 +150,14 @@
 		</style>
 
 		<style>
-			.saving-indicator-enter-active, .saving-indicator-leave-active {
+			.indicator {
+				z-index: 10;
+			}
+
+			.indicator-enter-active, .indicator-leave-active {
 				transition: opacity .5s;
 			}
-			.saving-indicator-enter, .saving-indicator-leave-to {
+			.indicator-enter, .indicator-leave-to {
 				opacity: 0;
 			}
 		</style>
@@ -273,9 +277,12 @@ const storageManager = store => {
 
 		case 'created':
 		case 'loaded':
+		case 'restored':
 			if (!mutation.payload.readonly && mutation.payload.id) {
 				localStorage.setItem('state::most_recent_file', mutation.payload.id);
-				store.commit('push_recent_file', mutation.payload);
+				Vue.nextTick(() => {
+					store.commit('push_recent_file', mutation.payload);
+				});
 			}
 			break;
 		}
@@ -307,12 +314,17 @@ const store = new Vuex.Store({
 	plugins: [storageManager],
 	state: {
 		current: {
-			id: '',
+			id: null,
 			markdown: '',
-			readonly: false,
+			readonly: true,
 		},
 		recent: [],
 		saving: false,
+		lastRemoved: {
+			id: null,
+			markdown: '',
+			readonly: true,
+		},
 	},
 	mutations: {
 		loaded(state, data) {
@@ -364,11 +376,22 @@ const store = new Vuex.Store({
 			state.current.readonly = data.readonly;
 		},
 		removed(state) {
-			this.current = {
-				id: '',
-				markdown: '',
-				readonly: false,
-			};
+			state.lastRemoved.id = state.current.id;
+			state.lastRemoved.markdown = state.current.markdown;
+			state.lastRemoved.readonly = state.current.readonly;
+
+			state.current.id = null;
+			state.current.markdown = '';
+			state.current.readonly = true;
+		},
+		restored(state, file) {
+			state.current.id = file.id;
+			state.current.markdown = file.markdown;
+			state.current.readonly = file.readonly;
+
+			state.lastRemoved.id = null;
+			state.lastRemoved.markdown = '';
+			state.lastRemoved.readonly = true;
 		},
 	},
 	actions: {
@@ -385,6 +408,9 @@ const store = new Vuex.Store({
 		load(context, id) {
 		},
 		remove() {
+		},
+		restoreRemoved(context) {
+			this.commit('restored', context.state.lastRemoved);
 		},
 	},
 	getters: {
@@ -683,10 +709,68 @@ Vue.component('saving-indicator', {
 		});
 	},
 	template: `
-		<transition name=saving-indicator>
-			<div v-if=shown style="position: fixed; right: 0; bottom: 0; background-color: rgba(255, 255, 255, 0.8); padding: .5em 2em; border: 1px solid rgba(0, 0, 0, 0.05); color: #666;">saving...</div>
+		<transition name=indicator>
+			<div v-if=shown class=indicator style="position: fixed; right: .5em; bottom: .5em; background-color: rgba(245, 245, 245, 0.8); padding: .5em 2em; border: 1px solid rgba(0, 0, 0, 0.05); color: #666;">saving...</div>
 		</transition>
 	`,
+});
+
+
+Vue.component('remove-indicator', {
+	data() {
+		return {
+			removed: false,
+			restored: false,
+			style: {
+				'position': 'fixed',
+				'left': '1em',
+				'bottom': '1em',
+				'background-color': 'rgba(245, 245, 245, 0.8)',
+				'padding': '.5em 2em',
+				'border': '1px solid rgba(0, 0, 0, 0.05)',
+				'color': '#666',
+			},
+		};
+	},
+	computed: {
+		lastestID() {
+			return this.$store.state.lastRemoved.id;
+		},
+		lastestName() {
+			return get_name_by_markdown(this.$store.state.lastRemoved.markdown);
+		},
+		willHide() {
+			return _.debounce(() => this.removed = false, 5000);
+		},
+	},
+	created() {
+		this.$watch('lastestID', newID => {
+			if (newID) {
+				this.removed = true;
+				this.willHide();
+			}
+		});
+	},
+	template: `
+		<div>
+			<transition name=indicator>
+				<div v-if=removed class=indicator :style=style>removed <b>{{ lastestName }}</b> <a draggable=false href @click.prevent=dismiss>dismiss</a></div>
+			</transition>
+			<transition name=indicator>
+				<div v-if=restored class=indicator :style=style>restored</div>
+			</transition>
+		</div>
+	`,
+	methods: {
+		dismiss() {
+			this.$store.dispatch('restoreRemoved');
+			this.removed = false;
+			setTimeout(() => {
+				this.restored = true;
+				setTimeout(() => this.restored = false, 1000);
+			}, 200);
+		},
+	},
 });
 
 
@@ -731,6 +815,7 @@ const vm = new Vue({
 			</nav-wrapper>
 
 			<saving-indicator />
+			<remove-indicator />
 
 			<import-and-exporter ref=importAndExporter />
 		</main>
