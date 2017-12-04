@@ -8,8 +8,12 @@ import Vue from 'vue';
 
 export default {
 	props: ['html'],
+	watch: {
+		html() {
+			this.makeLinkReceiver();
+		},
+	},
 	created() {
-		this.$watch('html', () => this.makeLinkReceiver());
 		this.makeLinkReceiver();
 	},
 	methods: {

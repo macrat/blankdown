@@ -8,13 +8,8 @@ import ToastIndicator from './ToastIndicator.vue';
 
 export default {
 	components: { ToastIndicator },
-	computed: {
-		saving() {
-			return this.$store.state.saving;
-		},
-	},
 	created() {
-		this.$watch('saving', saving => {
+		this.$watch('$store.state.saving', saving => {
 			if (saving) {
 				this.$refs.indicator.$emit('show');
 			} else {

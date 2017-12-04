@@ -128,15 +128,6 @@ export default {
 			}
 		});
 
-		this.$watch('currentID', id => {
-			if (id && id !== location.pathname.slice(1)) {
-				if (this.$refs.nav.opened) {
-					history.pushState(null, '', `/${id}?${this.$refs.nav.current.name}`);
-				} else {
-					history.pushState(null, '', '/' + id);
-				}
-			}
-		});
 		this.$root.$on('open-address', url => {
 			const address = new URL(url);
 
@@ -186,6 +177,17 @@ export default {
 	computed: {
 		currentID() {
 			return this.$store.state.current.id;
+		},
+	},
+	watch: {
+		currentID(id) {
+			if (id && id !== location.pathname.slice(1)) {
+				if (this.$refs.nav.opened) {
+					history.pushState(null, '', `/${id}?${this.$refs.nav.current.name}`);
+				} else {
+					history.pushState(null, '', '/' + id);
+				}
+			}
 		},
 	},
 };
