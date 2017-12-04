@@ -48,7 +48,7 @@ h1 {
 
 <script>
 export default {
-	props: ['name'],
+	props: ['name', 'shortName'],
 	data() {
 		return {
 			opened: false,

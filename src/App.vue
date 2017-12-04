@@ -13,6 +13,14 @@ nav {
 .markdown-writer {
 	flex: 1 1 0;
 }
+
+.toc-pane ul {
+	line-height: 1.3em;
+}
+.toc-pane a {
+	color: black;
+	text-decoration: none;
+}
 </style>
 
 <template>
@@ -35,8 +43,8 @@ nav {
 					:href="'/' + file.id">{{ file.name }}</nav-button>
 			</nav-drawer>
 
-			<nav-drawer name="Tabble of Contents">
-				<div v-html=$store.getters.toc_html />
+			<nav-drawer name="Tabble of Contents" shortName="ToC">
+				<html-viewer :html=$store.getters.toc_html class=toc-pane />
 			</nav-drawer>
 
 			<nav-drawer name="HELP">
@@ -61,6 +69,8 @@ import NavButton from './NavButton.vue';
 
 import MarkdownWriter from './MarkdownWriter.vue';
 
+import HTMLViewer from './HTMLViewer.vue';
+
 import ImportAndExporter from './ImportAndExporter.vue';
 
 import SavingIndicator from './SavingIndicator.vue';
@@ -74,6 +84,8 @@ export default {
 		NavButton: NavButton,
 
 		MarkdownWriter: MarkdownWriter,
+
+		'html-viewer': HTMLViewer,
 
 		ImportAndExporter: ImportAndExporter,
 
@@ -125,10 +137,19 @@ export default {
 				}
 			}
 		});
-		this.$root.$on('open-address', address => {
+		this.$root.$on('open-address', url => {
+			const address = new URL(url);
+
 			const id = address.pathname.slice(1);
 			if (id && id !== this.$store.state.current.id) {
 				this.$store.dispatch('load', id);
+			}
+
+			if (address.hash) {
+				try {
+					this.$refs.writer.$el.querySelector(address.hash).scrollIntoView();
+				} catch (e) {
+				}
 			}
 
 			const pane = address.search.slice(1);
@@ -139,7 +160,7 @@ export default {
 			}
 		});
 		window.addEventListener('popstate', () => {
-			this.$root.$emit('open-address', new URL(location));
+			this.$root.$emit('open-address', location.href);
 		});
 	},
 	mounted() {
@@ -148,8 +169,6 @@ export default {
 		});
 		this.$refs.nav.$on('closed', () => {
 			history.replaceState(null, '', `/${this.currentID}${location.hash}`);
-
-			this.$refs.writer.focus();
 		});
 
 		if (location.hash) {

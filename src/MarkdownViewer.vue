@@ -6,34 +6,17 @@
 </style>
 
 <template>
-	<div
+	<html-viewer
 		class=markdown-viewer
-		v-html="$store.getters.html" />
+		:html="$store.getters.html" />
 </template>
 
 <script>
-import Vue from 'vue';
+import HTMLViewer from './HTMLViewer.vue';
 
 
 export default {
-	created() {
-		this.$watch('$store.getters.html', () => this.makeLinkReceiver());
-		this.makeLinkReceiver();
-	},
-	methods: {
-		makeLinkReceiver() {
-			Vue.nextTick(() => {
-				this.$el.querySelectorAll('a').forEach(elm => {
-					elm.addEventListener('click', ev => {
-						if (elm.origin == location.origin) {
-							ev.preventDefault();
-							this.$root.$emit('open-address', new URL(elm));
-						}
-					});
-				});
-			});
-		},
-	},
+	components: { 'html-viewer': HTMLViewer },
 };
 </script>
 

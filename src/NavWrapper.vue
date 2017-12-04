@@ -58,7 +58,7 @@ export default {
 			return this.$slots.default.filter(slot => slot.componentOptions).map(slot => {
 				return {
 					slot: slot,
-					name: slot.componentOptions.propsData.name,
+					name: slot.componentOptions.propsData.shortName || slot.componentOptions.propsData.name,
 				};
 			});
 		},
@@ -98,7 +98,7 @@ export default {
 		open(component) {
 			this.closeAll();
 			component.open();
-			this.$emit('opened', component.name);
+			this.$emit('opened', component.shortName || component.name);
 		},
 		shortcut(ev) {
 			if (ev.altKey) {
