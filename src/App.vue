@@ -1,4 +1,4 @@
-<style scoped>
+<style>
 .nav-content-area {
 	height: 100vh;
 	overflow: auto;
@@ -8,6 +8,10 @@
 
 nav {
 	flex: 0 0 auto;
+}
+
+.markdown-writer {
+	flex: 1 1 0;
 }
 </style>
 
@@ -40,7 +44,7 @@ nav {
 				<nav-button @click="$store.dispatch('load', 'about')">about</nav-button>
 			</nav-drawer>
 
-			<markdown-writer ref=writer slot=content style="flex: 1 1 0" />
+			<markdown-writer ref=writer slot=content />
 		</nav-wrapper>
 
 		<saving-indicator />

@@ -1,8 +1,14 @@
+<style scoped>
+.markdown-viewer {
+	box-sizing: border-box;
+	overflow: auto;
+}
+</style>
+
 <template>
 	<div
 		class=markdown-viewer
-		v-html="$store.getters.html"
-		style="box-sizing: border-box; overflow: auto;" />
+		v-html="$store.getters.html" />
 </template>
 
 <style>

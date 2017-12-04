@@ -1,4 +1,8 @@
-<style>
+<style scoped>
+.markdown-editor {
+	box-sizing: border-box;
+	padding: .5em;
+}
 .markdown-editor:disabled {
 	background-color: transparent;
 	color: #999;
@@ -8,7 +12,6 @@
 <template>
 	<textarea
 		class=markdown-editor
-		style="box-sizing: border-box; padding: .5em;"
 		@keydown.tab.prevent=indent
 		@input="update($event.target.value)"
 		:value=$store.state.current.markdown

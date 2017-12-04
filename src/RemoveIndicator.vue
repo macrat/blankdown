@@ -1,6 +1,13 @@
 <style scoped>
 .indicator {
 	z-index: 10;
+	position: fixed;
+	left: 1em;
+	bottom: 1em;
+	background-color: rgba(245, 245, 245, 0.8);
+	padding: .5em 2em;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	color: #666;
 }
 
 .indicator-enter-active, .indicator-leave-active {
@@ -14,10 +21,10 @@
 <template>
 	<div>
 		<transition name=indicator>
-			<div v-if=removed class=indicator :style=style>removed <b>{{ lastestName }}</b> <a draggable=false href @click.prevent=dismiss>dismiss</a></div>
+			<div v-if=removed class=indicator>removed <b>{{ lastestName }}</b> <a draggable=false href @click.prevent=dismiss>dismiss</a></div>
 		</transition>
 		<transition name=indicator>
-			<div v-if=restored class=indicator :style=style>restored</div>
+			<div v-if=restored class=indicator>restored</div>
 		</transition>
 	</div>
 </template>
@@ -31,15 +38,6 @@ export default {
 		return {
 			removed: false,
 			restored: false,
-			style: {
-				'position': 'fixed',
-				'left': '1em',
-				'bottom': '1em',
-				'background-color': 'rgba(245, 245, 245, 0.8)',
-				'padding': '.5em 2em',
-				'border': '1px solid rgba(0, 0, 0, 0.05)',
-				'color': '#666',
-			},
 		};
 	},
 	computed: {

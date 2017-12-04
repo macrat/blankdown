@@ -1,6 +1,13 @@
 <style scoped>
 .indicator {
 	z-index: 10;
+	position: fixed;
+	right: .5em;
+	bottom: .5em;
+	background-color: rgba(245, 245, 245, 0.8);
+	padding: .5em 2em;
+	border: 1px solid rgba(0, 0, 0, 0.05);
+	color: #666;
 }
 
 .indicator-enter-active, .indicator-leave-active {
@@ -13,7 +20,7 @@
 
 <template>
 	<transition name=indicator>
-		<div v-if=shown class=indicator style="position: fixed; right: .5em; bottom: .5em; background-color: rgba(245, 245, 245, 0.8); padding: .5em 2em; border: 1px solid rgba(0, 0, 0, 0.05); color: #666;">saving...</div>
+		<div v-if=shown class=indicator>saving...</div>
 	</transition>
 </template>
 

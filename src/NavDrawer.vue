@@ -24,17 +24,6 @@
 	user-select: none;
 }
 
-.nav-drawer-link {
-	color: black;
-	text-decoration: none;
-	display: block;
-	margin: .7em 0;
-}
-
-.nav-drawer-link-disabled {
-	color: #999;
-}
-
 .nav-slide-enter-active, .nav-slide-leave-active {
 	transition: left .3s, opacity .3s;
 }
@@ -42,12 +31,16 @@
 	left: -15em;
 	opacity: 0.5;
 }
+
+h1 {
+	cursor: default;
+}
 </style>
 
 <template>
 	<transition name=nav-slide>
 		<div class=nav-drawer v-if=opened>
-			<h1 class=nav-drawer-title @click=close style="cursor: default">{{ name }}</h1>
+			<h1 class=nav-drawer-title @click=close>{{ name }}</h1>
 			<slot />
 		</div>
 	</transition>

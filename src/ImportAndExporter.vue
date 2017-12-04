@@ -1,11 +1,16 @@
+<style scoped>
+* {
+	display: none;
+}
+</style>
+
 <template>
-	<div style="display: none;">
+	<div>
 		<input
 			class=import-and-exporter--input-file
 			@change="importFromFiles(this.event.target.files)"
 			type=file
-			accept="*.md"
-			style="display: none;" />
+			accept="*.md" />
 
 		<a class=import-and-exporter--download-link></a>
 	</div>

@@ -1,7 +1,25 @@
+<style scoped>
+.markdown-writer {
+	display: flex;
+}
+
+.markdown-editor {
+	flex: 1 1 0;
+	outline: none;
+	border: 0;
+	resize: none;
+}
+
+.markdown-viewer {
+	 flex: 1 1 0;
+	 padding-left: 1em;
+}
+</style>
+
 <template>
-	<synchronize-scroll style="display: flex;" class=markdown-writer>
-		<markdown-editor ref=editor style="flex: 1 1 0; outline: none; border: 0; resize: none;" v-focus />
-		<markdown-viewer style="flex: 1 1 0; padding-left: 1em;" />
+	<synchronize-scroll class=markdown-writer>
+		<markdown-editor ref=editor v-focus />
+		<markdown-viewer />
 	</synchronize-scroll>
 </template>
 
