@@ -50,7 +50,7 @@ const store = new Vuex.Store({
 		},
 		recent: [],
 		saving: false,
-		lastRemoved: {
+		removed: {
 			id: null,
 			markdown: '',
 			readonly: true,
@@ -90,7 +90,7 @@ const store = new Vuex.Store({
 		saved(state) {
 			state.saving = false;
 		},
-		change_markdown(state, markdown) {
+		updated(state, markdown) {
 			state.current.markdown = markdown;
 		},
 		created(state, data) {
@@ -99,9 +99,9 @@ const store = new Vuex.Store({
 			state.current.readonly = data.readonly;
 		},
 		removed(state) {
-			state.lastRemoved.id = state.current.id;
-			state.lastRemoved.markdown = state.current.markdown;
-			state.lastRemoved.readonly = state.current.readonly;
+			state.removed.id = state.current.id;
+			state.removed.markdown = state.current.markdown;
+			state.removed.readonly = state.current.readonly;
 
 			state.current.id = null;
 			state.current.markdown = '';
@@ -112,18 +112,18 @@ const store = new Vuex.Store({
 			state.current.markdown = file.markdown;
 			state.current.readonly = file.readonly;
 
-			state.lastRemoved.id = null;
-			state.lastRemoved.markdown = '';
-			state.lastRemoved.readonly = true;
+			state.removed.id = null;
+			state.removed.markdown = '';
+			state.removed.readonly = true;
 		},
 	},
 	actions: {
-		update_markdown(context, markdown) {
-			this.commit('change_markdown', markdown);
-		},
-		import_markdown(context, markdown) {
-		},
 		create() {
+		},
+		'import': function(context, markdown) {
+		},
+		update(context, markdown) {
+			this.commit('updated', markdown);
 		},
 		save() {
 			this.commit('start_save');
@@ -132,8 +132,8 @@ const store = new Vuex.Store({
 		},
 		remove() {
 		},
-		restoreRemoved(context) {
-			this.commit('restored', context.state.lastRemoved);
+		restore(context) {
+			this.commit('restored', context.state.removed);
 		},
 	},
 	getters: {
@@ -178,7 +178,7 @@ const store = new Vuex.Store({
 			return get_name_by_markdown(state.current.markdown);
 		},
 		removed_name(state) {
-			return get_name_by_markdown(state.lastRemoved.markdown);
+			return get_name_by_markdown(state.removed.markdown);
 		},
 	},
 });

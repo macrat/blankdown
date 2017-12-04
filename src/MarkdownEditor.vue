@@ -42,7 +42,7 @@ export default {
 			this.update(elm.value);
 		},
 		update(markdown) {
-			this.$store.dispatch('update_markdown', markdown);
+			this.$store.dispatch('update', markdown);
 		},
 	},
 };

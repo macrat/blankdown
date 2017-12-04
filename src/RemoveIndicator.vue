@@ -13,7 +13,7 @@ import ToastIndicator from './ToastIndicator.vue';
 export default {
 	components: { ToastIndicator },
 	created() {
-		this.$watch('$store.state.lastRemoved.id', newID => {
+		this.$watch('$store.state.removed.id', newID => {
 			if (newID) {
 				this.$refs.removed.$emit('popup');
 			} else {
@@ -23,7 +23,7 @@ export default {
 	},
 	methods: {
 		dismiss() {
-			this.$store.dispatch('restoreRemoved');
+			this.$store.dispatch('restore');
 			this.$refs.removed.$emit('hide-now');
 		},
 	},

@@ -111,12 +111,12 @@ export default store => {
 			store.dispatch('create');
 			break;
 
-		case 'update_markdown':
+		case 'update':
 			store.commit('push_recent_file', state.current);
 			autosave();
 			break;
 
-		case 'import_markdown':
+		case 'import':
 			store.commit('loaded', {
 				id: (new Date()).getTime().toString(36),
 				markdown: action.payload,

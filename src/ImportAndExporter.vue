@@ -47,7 +47,7 @@ export default {
 			if (files[0].type.startsWith('text/')) {
 				const reader = new FileReader();
 				reader.addEventListener('load', () => {
-					this.$store.dispatch('import_markdown', reader.result);
+					this.$store.dispatch('import', reader.result);
 				});
 				reader.readAsText(files[0]);
 			}
