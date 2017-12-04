@@ -18,7 +18,7 @@
 
 <template>
 	<synchronize-scroll class=markdown-writer>
-		<markdown-editor ref=editor v-focus />
+		<markdown-editor ref=editor />
 		<markdown-viewer />
 	</synchronize-scroll>
 </template>
@@ -39,6 +39,9 @@ export default {
 		focus() {
 			this.$refs.editor.$el.focus();
 		},
+	},
+	mounted() {
+		this.focus();
 	},
 };
 </script>
