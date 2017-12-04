@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 import marked from 'marked';
 import hljs from 'highlight.js';
 
-import StorageManager from './StorageManager.js';
+import StorageManagerPlugin from './StorageManagerPlugin.js';
 
 Vue.use(Vuex);
 
@@ -35,7 +35,7 @@ function get_name_by_markdown(markdown) {
 
 const store = new Vuex.Store({
 	plugins: [
-		StorageManager,
+		StorageManagerPlugin,
 		store => {
 			window.addEventListener('beforeunload', () => {
 				store.dispatch('save');
