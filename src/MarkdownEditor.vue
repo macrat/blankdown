@@ -20,6 +20,17 @@
 
 <script>
 export default {
+	created() {
+		this.$root.$on('insert-image', data => {
+			const elm = this.$el;
+			const start = elm.selectionStart;
+
+			elm.value = elm.value.slice(0, start) + `![${data.name}](${data.url})` + elm.value.slice(elm.selectionEnd);
+			elm.selectionStart = elm.selectionEnd = start + 4;
+
+			this.update(elm.value);
+		});
+	},
 	methods: {
 		indent() {
 			const elm = this.$el;

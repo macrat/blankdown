@@ -44,11 +44,21 @@ export default {
 				return;
 			}
 
-			const reader = new FileReader();
-			reader.addEventListener('load', () => {
-				this.$store.dispatch('import_markdown', reader.result);
-			});
-			reader.readAsText(files[0]);
+			if (files[0].type.startsWith('text/')) {
+				const reader = new FileReader();
+				reader.addEventListener('load', () => {
+					this.$store.dispatch('import_markdown', reader.result);
+				});
+				reader.readAsText(files[0]);
+			}
+
+			if (files[0].type.startsWith('image/')) {
+				const reader = new FileReader();
+				reader.addEventListener('load', () => {
+					this.$root.$emit('insert-image', { name: files[0].name, url: reader.result });
+				});
+				reader.readAsDataURL(files[0]);
+			}
 		},
 
 		startDownload(filename, mimetype, data) {
