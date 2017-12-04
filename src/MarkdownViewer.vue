@@ -25,9 +25,13 @@ export default {
 		border-collapse: collapse;
 		border: 1px solid #ccc;
 	}
-
 	.markdown-viewer th, .markdown-viewer td {
 		padding: .5em 1em;
+	}
+
+	.markdown-viewer img {
+		max-width: 100%;
+		height: auto;
 	}
 
 	.hljs {
