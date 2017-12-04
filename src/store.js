@@ -34,7 +34,14 @@ function get_name_by_markdown(markdown) {
 
 
 const store = new Vuex.Store({
-	plugins: [StorageManager],
+	plugins: [
+		StorageManager,
+		store => {
+			window.addEventListener('beforeunload', () => {
+				store.dispatch('save');
+			});
+		},
+	],
 	state: {
 		current: {
 			id: null,

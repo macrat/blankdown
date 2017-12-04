@@ -173,12 +173,4 @@ export default store => {
 			history.pushState(null, '', '/' + id + location.search);
 		}
 	}
-
-	Vue.nextTick(() => {
-		store.dispatch('save');
-	});
-
-	window.addEventListener('beforeunload', () => {
-		store.dispatch('save');
-	});
 };
