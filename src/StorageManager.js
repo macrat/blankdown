@@ -5,11 +5,11 @@ import { debounce } from 'lodash-es';
 const shortcuts_document = `# Shortcuts
 
 ## main menu
-|key combination|what do                |
-|:--------------|:----------------------|
-|Alt-F          |Open [FILE pane](#file)|
-|Alt-H          |Open [HELP pane](#help)|
-|Escape         |Close side pane        |
+|key combination|what do                          |
+|:--------------|:--------------------------------|
+|Alt-F          |Open [FILE pane](/shortcuts?file)|
+|Alt-H          |Open [HELP pane](/shortcuts?help)|
+|Escape         |Close side pane                  |
 
 ## file
 |key combination|what do                        |
@@ -168,9 +168,9 @@ export default store => {
 
 	if (location.pathname.slice(1) !== id) {
 		if (loaded) {
-			history.replaceState(null, '', '/' + id);
+			history.replaceState(null, '', '/' + id + location.search);
 		} else {
-			history.pushState(null, '', '/' + id);
+			history.pushState(null, '', '/' + id + location.search);
 		}
 	}
 

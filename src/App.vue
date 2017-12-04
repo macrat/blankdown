@@ -119,7 +119,7 @@ export default {
 		this.$watch('currentID', id => {
 			if (id && id !== location.pathname.slice(1)) {
 				if (this.$refs.nav.opened) {
-					history.pushState(null, '', `/${id}#${this.$refs.nav.current.name}`);
+					history.pushState(null, '', `/${id}?${this.$refs.nav.current.name}`);
 				} else {
 					history.pushState(null, '', '/' + id);
 				}
@@ -131,7 +131,7 @@ export default {
 				this.$store.dispatch('load', id);
 			}
 
-			const pane = location.hash.slice(1);
+			const pane = location.search.slice(1);
 			if (pane) {
 				this.$refs.nav.$emit('open', pane);
 			} else {
@@ -141,15 +141,22 @@ export default {
 	},
 	mounted() {
 		this.$refs.nav.$on('opened', name => {
-			history.replaceState(null, '', `/${this.currentID}#${name.toLowerCase()}`);
+			history.replaceState(null, '', `/${this.currentID}?${name.toLowerCase()}${location.hash}`);
 		});
 		this.$refs.nav.$on('closed', () => {
-			history.replaceState(null, '', `/${this.currentID}`);
+			history.replaceState(null, '', `/${this.currentID}${location.hash}`);
 
 			this.$refs.writer.focus();
 		});
 
-		const pane = location.hash.slice(1);
+		if (location.hash) {
+			try {
+				this.$refs.writer.$el.querySelector(location.hash).scrollIntoView();
+			} catch (e) {
+			}
+		}
+
+		const pane = decodeURIComponent(location.search.slice(1));
 		if (pane) {
 			this.$refs.nav.$emit('open', pane);
 		}
