@@ -482,6 +482,38 @@ const store = new Vuex.Store({
 				sanitize: true,
 			});
 		},
+		toc(state) {
+			const lexer = new marked.Lexer({ sanitize: true });
+			const result = [];
+
+			function get(stack, depth) {
+				if (depth === 1) {
+					return stack;
+				}
+				if (!stack[stack.length - 1] || !stack[stack.length - 1].push) {
+					stack.push([]);
+				}
+				return get(stack[stack.length - 1], depth - 1);
+			}
+
+			for (var x of lexer.lex(state.current.markdown).filter(x => x.type == 'heading')) {
+				get(result, x.depth).push(x.text);
+			}
+
+			return result;
+		},
+		toc_html(state) {
+			function make_html_by(toc) {
+				return '<ul>\n' + toc.map(x => {
+					if (typeof x === 'string') {
+						return `<li>${ x }</li>`;
+					} else {
+						return make_html_by(x);
+					}
+				}).join('\n') + '\n</ul>';
+			}
+			return make_html_by(store.getters.toc);
+		},
 		current_name(state) {
 			return get_name_by_markdown(state.current.markdown);
 		},
@@ -896,6 +928,10 @@ const vm = new Vue({
 						@click="$store.dispatch('load', file.id)"
 						:disabled="file.id === $store.state.current.id"
 						:href="'/' + file.id">{{ file.name }}</nav-button>
+				</nav-drawer>
+
+				<nav-drawer name="Tabble of Contents">
+					<div v-html=$store.getters.toc_html />
 				</nav-drawer>
 
 				<nav-drawer name="HELP">
