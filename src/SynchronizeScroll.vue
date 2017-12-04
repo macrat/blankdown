@@ -18,7 +18,7 @@ export default {
 				const rate = Math.round(elm.scrollTop / (elm.scrollHeight - elm.clientHeight) * 1000) / 1000;
 				this.elements.forEach(e => {
 					if (e !== elm) {
-						e.scrollTo(0, (e.scrollHeight - e.clientHeight) * rate);
+						e.scrollTo(e.scrollLeft, (e.scrollHeight - e.clientHeight) * rate);
 					}
 				});
 			}, 25);
