@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import Vue from 'vue';
+import { throttle } from 'lodash-es';
 
 
 export default {
@@ -13,17 +13,18 @@ export default {
 		},
 	},
 	mounted() {
-		this.elements.forEach(elm => {
-			elm.addEventListener('scroll', () => {
-				Vue.nextTick(() => {
-					const rate = Math.round(elm.scrollTop / (elm.scrollHeight - elm.clientHeight) * 1000) / 1000;
-					this.elements.forEach(e => {
-						if (e !== elm) {
-							e.scrollTo(0, (e.scrollHeight - e.clientHeight) * rate);
-						}
-					});
+		const scroll_manage = throttle(elm => {
+			setTimeout(() => {
+				const rate = Math.round(elm.scrollTop / (elm.scrollHeight - elm.clientHeight) * 1000) / 1000;
+				this.elements.forEach(e => {
+					if (e !== elm) {
+						e.scrollTo(0, (e.scrollHeight - e.clientHeight) * rate);
+					}
 				});
-			});
+			}, 25);
+		}, 50);
+		this.elements.forEach(elm => {
+			elm.addEventListener('scroll', () => scroll_manage(elm));
 		});
 	},
 };
