@@ -171,6 +171,9 @@ const store = new Vuex.Store({
 		current_name(state) {
 			return get_name_by_markdown(state.current.markdown);
 		},
+		removed_name(state) {
+			return get_name_by_markdown(state.lastRemoved.markdown);
+		},
 	},
 });
 

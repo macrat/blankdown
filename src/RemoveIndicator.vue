@@ -1,72 +1,38 @@
-<style scoped>
-.indicator {
-	z-index: 10;
-	position: fixed;
-	left: 1em;
-	bottom: 1em;
-	background-color: rgba(245, 245, 245, 0.8);
-	padding: .5em 2em;
-	border: 1px solid rgba(0, 0, 0, 0.05);
-	color: #666;
-}
-
-.indicator-enter-active, .indicator-leave-active {
-	transition: opacity .5s;
-}
-.indicator-enter, .indicator-leave-to {
-	opacity: 0;
-}
-</style>
-
 <template>
 	<div>
-		<transition name=indicator>
-			<div v-if=removed class=indicator>removed <b>{{ lastestName }}</b> <a draggable=false href @click.prevent=dismiss>dismiss</a></div>
-		</transition>
-		<transition name=indicator>
-			<div v-if=restored class=indicator>restored</div>
-		</transition>
+		<toast-indicator ref=removed :duration=5000 :left=true>removed <b>{{ lastestName }}</b> <a draggable=false href @click.prevent=dismiss>dismiss</a></toast-indicator>
+
+		<toast-indicator ref=restored :duration=1000 :left=true>restored</toast-indicator>
 	</div>
 </template>
 
 <script>
-import { debounce } from 'lodash-es';
+import ToastIndicator from './ToastIndicator.vue';
 
 
 export default {
-	data() {
-		return {
-			removed: false,
-			restored: false,
-		};
-	},
+	components: { ToastIndicator },
 	computed: {
 		lastestID() {
 			return this.$store.state.lastRemoved.id;
 		},
 		lastestName() {
-			return get_name_by_markdown(this.$store.state.lastRemoved.markdown);
-		},
-		willHide() {
-			return debounce(() => this.removed = false, 5000);
+			return this.$store.getters.removed_name;
 		},
 	},
 	created() {
 		this.$watch('lastestID', newID => {
 			if (newID) {
-				this.removed = true;
-				this.willHide();
+				this.$refs.removed.$emit('popup');
+			} else {
+				this.$refs.restored.$emit('popup');
 			}
 		});
 	},
 	methods: {
 		dismiss() {
 			this.$store.dispatch('restoreRemoved');
-			this.removed = false;
-			setTimeout(() => {
-				this.restored = true;
-				setTimeout(() => this.restored = false, 1000);
-			}, 200);
+			this.$refs.removed.$emit('hide-now');
 		},
 	},
 };
