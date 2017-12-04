@@ -204,7 +204,6 @@ const shortcuts_document = `# Shortcuts
 |key combination|what do                |
 |:--------------|:----------------------|
 |Alt-F          |Open [FILE pane](#file)|
-|Alt-E          |Open [EDIT pane](#edit)|
 |Alt-H          |Open [HELP pane](#help)|
 |Escape         |Close side pane        |
 
@@ -897,11 +896,6 @@ const vm = new Vue({
 						@click="$store.dispatch('load', file.id)"
 						:disabled="file.id === $store.state.current.id"
 						:href="'/' + file.id">{{ file.name }}</nav-button>
-				</nav-drawer>
-
-				<nav-drawer name="EDIT">
-					<nav-button>insert header</nav-button>
-					<nav-button>insert table</nav-button>
 				</nav-drawer>
 
 				<nav-drawer name="HELP">
