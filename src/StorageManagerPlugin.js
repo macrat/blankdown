@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import { debounce } from 'lodash-es';
 
+import storage from './LocalStorageManager.js';
+
 
 const shortcuts_document = `# Shortcuts
 
@@ -27,15 +29,17 @@ not yet wrote.
 `;
 
 
-export default store => {
-	function save_data(file) {
-		if (!file.readonly) {
-			localStorage.setItem('file::' + file.id, JSON.stringify({
-				markdown: file.markdown,
-			}));
-		}
+function get_name_by_markdown(markdown) {
+	const idx = markdown.indexOf('\n');
+	if (idx >= 0) {
+		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
+	} else {
+		return markdown.trim().replace(/^#+ /, '').trim();
 	}
+}
 
+
+export default store => {
 	function load_data(id) {
 		const readonly_document = ({
 			shortcuts: shortcuts_document,
@@ -48,20 +52,33 @@ export default store => {
 				markdown: readonly_document,
 				readonly: true,
 			});
-			return 'document';
+			return true;
 		}
 
-		const data = JSON.parse(localStorage.getItem('file::' + id));
+		const data = storage.load(id);
 		if (data) {
 			store.commit('loaded', {
 				id: id,
 				markdown: data.markdown,
-				readonly: false,
+				readonly: data.readonly,
 			});
-			return 'normal';
+			return true;
 		}
 
-		return null;
+		return false;
+	}
+
+	function save_current(state) {
+		if (!state.current.readonly) {
+			storage.save(state.current.id, {
+				id: state.current.id,
+				name: store.getters.current_name,
+				markdown: state.current.markdown,
+				readonly: state.current.readonly,
+				accessed: state.current.accessed,
+				modified: new Date().getTime() / 1000.0,
+			});
+		}
 	}
 
 	const autosave = debounce(() => {
@@ -71,54 +88,50 @@ export default store => {
 	store.subscribeAction((action, state) => {
 		switch (action.type) {
 		case 'save':
-			if (state.current.markdown) {
-				save_data(state.current);
-				store.commit('push_recent_file', state.current);
-				Vue.nextTick(() => {
-					store.commit('saved');
-				});
-			}
+			save_current(state);
+			Vue.nextTick(() => {
+				store.commit('saved');
+			});
 			break;
 
 		case 'load':
-			save_data(state.current);
+			save_current(state);
 			load_data(action.payload);
 			break;
 
 		case 'create':
 			store.commit('created', {
 				id: (new Date()).getTime().toString(36),
+				name: '',
 				markdown: '',
 				readonly: false,
 			});
 			break;
 
 		case 'remove':
-			localStorage.removeItem('file::' + state.current.id);
-			store.commit('remove_recent_file', state.current);
+			storage.remove(state.current.id);
 			store.commit('removed', state.current);
-			for (let i=0; i<state.recent.length; i++) {
-				const data = JSON.parse(localStorage.getItem('file::' + state.recent[i].id));
-				if (data) {
-					store.commit('loaded', {
-						id: state.recent[i].id,
-						markdown: data.markdown,
-						readonly: false,
-					});
-					return;
-				}
+
+			const next = storage.loadMostRecent();
+			if (!next) {
+				store.dispatch('create');
+			} else {
+				store.commit('loaded', {
+					id: next.id,
+					markdown: next.markdown,
+					readonly: next.readonly,
+				});
 			}
-			store.dispatch('create');
 			break;
 
 		case 'update':
-			store.commit('push_recent_file', state.current);
 			autosave();
 			break;
 
 		case 'import':
 			store.commit('loaded', {
 				id: (new Date()).getTime().toString(36),
+				name: get_name_by_markdown(action.payload),
 				markdown: action.payload,
 				readonly: false,
 			});
@@ -128,24 +141,18 @@ export default store => {
 
 	store.subscribe((mutation, state) => {
 		switch (mutation.type) {
-		case 'changed_recent_files':
-		case 'push_recent_file':
-		case 'remove_recent_file':
-			const recent = state.recent.filter(x => localStorage.getItem('file::' + x.id) != null);
-			localStorage.setItem('state::recent_files', JSON.stringify(recent));
-			break;
-
 		case 'created':
 		case 'loaded':
 		case 'restored':
 			if (!mutation.payload.readonly && mutation.payload.id) {
-				store.commit('push_recent_file', mutation.payload);
+				storage.markAccess(mutation.payload.id);
 			}
 			break;
 		}
 	});
 
-	store.commit('changed_recent_files', JSON.parse(localStorage.getItem('state::recent_files')) || []);
+	store.commit('changed_recent_files', storage.pages());
+	storage.$on('changed-pages', pages => store.commit('changed_recent_files', pages));
 
 	let id;
 	let loaded = false;
@@ -161,6 +168,7 @@ export default store => {
 		id = (new Date()).getTime().toString(36);
 		store.commit('created', {
 			id: id,
+			name: 'blankdown',
 			markdown:  "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
 			readonly: false,
 		});

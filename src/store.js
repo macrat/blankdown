@@ -65,25 +65,6 @@ const store = new Vuex.Store({
 		changed_recent_files(state, files) {
 			state.recent = files;
 		},
-		push_recent_file(state, file) {
-			if (file.readonly) {
-				return;
-			}
-
-			state.recent = state.recent.filter(x => x.id !== file.id);
-
-			state.recent.unshift({
-				id: file.id,
-				name: get_name_by_markdown(file.markdown),
-			});
-		},
-		remove_recent_file(state, file) {
-			if (file.readonly) {
-				return;
-			}
-
-			state.recent = state.recent.filter(x => x.id !== file.id);
-		},
 		start_save(state) {
 			state.saving = true;
 		},
