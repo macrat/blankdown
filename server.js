@@ -45,11 +45,13 @@ db.connect(err => {
 })();
 
 
-const app = require('express')();
+const express = require('express');
+const app = express();
 app.set('etag', false);
 app.set('x-powered-by', false);
 app.use(require('morgan')('combined'));
 app.use(require('body-parser').text({ type: '*/*' }));
+app.use(express.static('build'));
 
 const server = app.listen(process.env.PORT || 8000, () => {
 	console.log(`running at http://localhost:${server.address().port}`);
