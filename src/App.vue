@@ -125,18 +125,21 @@ export default {
 				}
 			}
 		});
-		window.addEventListener('popstate', () => {
-			const id = location.pathname.slice(1);
+		this.$root.$on('open-address', address => {
+			const id = address.pathname.slice(1);
 			if (id && id !== this.$store.state.current.id) {
 				this.$store.dispatch('load', id);
 			}
 
-			const pane = location.search.slice(1);
+			const pane = address.search.slice(1);
 			if (pane) {
 				this.$refs.nav.$emit('open', pane);
 			} else {
 				this.$refs.nav.$emit('close');
 			}
+		});
+		window.addEventListener('popstate', () => {
+			this.$root.$emit('open-address', new URL(location));
 		});
 	},
 	mounted() {

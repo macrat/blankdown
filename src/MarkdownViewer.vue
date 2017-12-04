@@ -11,6 +11,32 @@
 		v-html="$store.getters.html" />
 </template>
 
+<script>
+import Vue from 'vue';
+
+
+export default {
+	created() {
+		this.$watch('$store.getters.html', () => this.makeLinkReceiver());
+		this.makeLinkReceiver();
+	},
+	methods: {
+		makeLinkReceiver() {
+			Vue.nextTick(() => {
+				this.$el.querySelectorAll('a').forEach(elm => {
+					elm.addEventListener('click', ev => {
+						if (elm.origin == location.origin) {
+							ev.preventDefault();
+							this.$root.$emit('open-address', new URL(elm));
+						}
+					});
+				});
+			});
+		},
+	},
+};
+</script>
+
 <style>
 	.markdown-viewer table, .markdown-viewer tr, .markdown-viewer th, .markdown-viewer td {
 		border-collapse: collapse;
