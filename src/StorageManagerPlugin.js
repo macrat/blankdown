@@ -68,15 +68,16 @@ export default store => {
 		return false;
 	}
 
-	function save_current(state) {
+	async function save_current(state) {
 		if (!state.current.readonly) {
-			storage.save(state.current.id, {
+			const timestamp = new Date().getTime() / 1000.0;
+			await storage.save(state.current.id, {
 				id: state.current.id,
 				name: store.getters.current_name,
 				markdown: state.current.markdown,
 				readonly: state.current.readonly,
-				accessed: state.current.accessed,
-				modified: new Date().getTime() / 1000.0,
+				accessed: timestamp,
+				modified: timestamp,
 			});
 		}
 	}
@@ -88,15 +89,13 @@ export default store => {
 	store.subscribeAction((action, state) => {
 		switch (action.type) {
 		case 'save':
-			save_current(state);
-			Vue.nextTick(() => {
+			save_current(state).then(() => {
 				store.commit('saved');
 			});
 			break;
 
 		case 'load':
-			save_current(state);
-			load_data(action.payload);
+			save_current(state).then(() => load_data(action.payload));
 			break;
 
 		case 'create':
