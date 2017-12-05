@@ -3,7 +3,7 @@ import Vuex from 'vuex';
 import marked from 'marked';
 import hljs from 'highlight.js';
 
-import StorageManagerPlugin from './StorageManagerPlugin.js';
+import StorageManagerPlugin from './StorageManagerPlugin.mjs';
 
 Vue.use(Vuex);
 

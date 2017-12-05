@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import generateUUID from 'uuid/v4';
 
-import documents from '../documents.mjs';
+import documents from '../common/documents.mjs';
 
 
 function get_name_by_markdown(markdown) {

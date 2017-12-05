@@ -4,7 +4,7 @@ const generateUUID = require('uuid/v4');
 const marked = require('marked');
 const hljs = require('highlight.js');
 
-import { default as documents, ids as documentIDs } from './documents.mjs';
+import { default as documents, ids as documentIDs } from '../common/documents.mjs';
 const documentsPattern = documentIDs.join('|');
 
 marked.setOptions({
@@ -101,7 +101,9 @@ app.use('/', router);
 
 
 app.get(`/(${UUID_pattern}|${documentsPattern})?`, (req, res) => {
-	res.sendFile(__dirname + '/index.html');
+	res.sendFile('index.html', {
+		root: __dirname + '/../static',
+	});
 });
 
 

@@ -1,11 +1,11 @@
 {
   "name": "blankdown",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "yet yet yet another markdown editor",
+  "main": "server/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "./node_modules/babel-cli/bin/babel-node.js server.js",
+    "start": "./node_modules/babel-cli/bin/babel-node.js ./server",
     "build": "NODE_ENV=production ./node_modules/webpack/bin/webpack.js",
     "debug": "./node_modules/npm-run-all/bin/npm-run-all/index.js --parallel debug:postgres debug:build debug:start-delay",
     "debug:start-delay": "sleep 5s; npm run debug:start",
@@ -13,7 +13,7 @@
     "debug:build": "./node_modules/webpack/bin/webpack.js --watch",
     "debug:postgres": "docker run --rm -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=blankdown -p 5432:5432 postgres"
   },
-  "author": "",
+  "author": "MacRat <m@crat.jp>",
   "license": "MIT",
   "dependencies": {
     "axios": "^0.17.1",
