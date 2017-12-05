@@ -4,6 +4,12 @@ import { debounce } from 'lodash-es';
 import storage from './RemoteStorageManager.js';
 
 
+const welcomeDocument = `# welcome to blankdown
+
+This is yet yet yet another **markdown** editor.
+`;
+
+
 function get_name_by_markdown(markdown) {
 	const idx = markdown.indexOf('\n');
 	if (idx >= 0) {
@@ -124,7 +130,7 @@ export default store => {
 			}
 		}
 
-		storage.create().then(page => {
+		storage.create(welcomeDocument).then(page => {
 			history.pushState(null, '', '/' + page.id + location.search);
 			store.commit('created', page);
 		});

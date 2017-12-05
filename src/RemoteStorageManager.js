@@ -53,9 +53,11 @@ export default new Vue({
 		},
 
 		async create(markdown='') {
-			return remote_to_local((await axios.post('/v1/create', {
+			return remote_to_local(Object.assign({
+				markdown: markdown
+			}, (await axios.post('/v1/create', {
 				markdown: markdown,
-			})).data);
+			})).data));
 		},
 
 		async remove(id) {

@@ -153,7 +153,6 @@ router.post('/v1/create', login_required(async (req, res) => {
 		id: page_id,
 		author: req.user.id,
 		name: get_name_by_markdown(req.body.markdown) || '',
-		markdown: req.body.markdown || '',
 		accessed: accessed / 1000.0,
 		modified: modified / 1000.0,
 		public: false,
