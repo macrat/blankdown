@@ -6,6 +6,7 @@ import Markdown from '../common/Markdown.mjs';
 
 
 export default new Vue({
+	name: 'LocalStorage',
 	methods: {
 		async pages() {
 			return (JSON.parse(localStorage.getItem('state::recent_pages')) || []).filter(x => this.getBody(x.id));
@@ -76,7 +77,7 @@ export default new Vue({
 				accessed: timestamp,
 			};
 
-			this.save(page.id, page);
+			await this.save(page.id, page);
 
 			return page;
 		},

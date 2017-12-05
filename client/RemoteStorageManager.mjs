@@ -15,6 +15,7 @@ function remote_to_local(page) {
 
 
 export default new Vue({
+	name: 'RemoteStorage',
 	methods: {
 		async pages() {
 			return ((await axios.get('/v1/pages')).data.pages || []).map(remote_to_local).filter(x => x.name !== "");
@@ -58,6 +59,8 @@ export default new Vue({
 			}, (await axios.post('/v1/create', {
 				markdown: markdown,
 			})).data));
+
+			this.$emit('changed-pages', await this.pages());
 		},
 
 		async remove(id) {

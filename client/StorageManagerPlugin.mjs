@@ -19,6 +19,8 @@ export default store => {
 
 		const data = await storage.load(id);
 		if (data) {
+			await storage.markAccess(id);
+
 			store.commit('loaded', {
 				id: id,
 				markdown: data.markdown,
@@ -82,24 +84,18 @@ export default store => {
 			});
 			break;
 
+		case 'restore':
+			storage.create(action.payload.markdown).then(page => {
+				store.commit('restored', page);
+			});
+			break;
+
 		case 'update':
 			autosave();
 			break;
 
 		case 'import':
 			storage.create().then(page => store.commit('loaded', page));
-			break;
-		}
-	});
-
-	store.subscribe((mutation, state) => {
-		switch (mutation.type) {
-		case 'created':
-		case 'loaded':
-		case 'restored':
-			if (!mutation.payload.readonly && mutation.payload.id) {
-				storage.markAccess(mutation.payload.id);
-			}
 			break;
 		}
 	});

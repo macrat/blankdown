@@ -88,7 +88,6 @@ const store = new Vuex.Store({
 		remove() {
 		},
 		restore(context) {
-			this.commit('restored', context.state.removed);
 		},
 	},
 	getters: {
