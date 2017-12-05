@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { debounce } from 'lodash-es';
 
-import storage from './LocalStorageManager.js';
+import storage from './RemoteStorageManager.js';
 
 
 const shortcuts_document = `# Shortcuts
@@ -41,6 +41,10 @@ function get_name_by_markdown(markdown) {
 
 export default store => {
 	async function load_data(id) {
+		if (!id) {
+			return;
+		}
+
 		const readonly_document = ({
 			shortcuts: shortcuts_document,
 			about: about_document,
@@ -73,9 +77,7 @@ export default store => {
 			const timestamp = new Date().getTime() / 1000.0;
 			await storage.save(state.current.id, {
 				id: state.current.id,
-				name: store.getters.current_name,
 				markdown: state.current.markdown,
-				readonly: state.current.readonly,
 				accessed: timestamp,
 				modified: timestamp,
 			});
@@ -99,11 +101,8 @@ export default store => {
 			break;
 
 		case 'create':
-			store.commit('created', {
-				id: (new Date()).getTime().toString(36),
-				name: '',
-				markdown: '',
-				readonly: false,
+			storage.create().then(page => {
+				store.commit('created', page)
 			});
 			break;
 
@@ -130,12 +129,7 @@ export default store => {
 			break;
 
 		case 'import':
-			store.commit('loaded', {
-				id: (new Date()).getTime().toString(36),
-				name: get_name_by_markdown(action.payload),
-				markdown: action.payload,
-				readonly: false,
-			});
+			storage.create().then(page => store.commit('loaded', page));
 			break;
 		}
 	});
@@ -156,7 +150,11 @@ export default store => {
 	storage.$on('changed-pages', pages => store.commit('changed_recent_files', pages));
 
 	let id = (async function() {
-		for (let id of [location.pathname.slice(1), ...(await storage.pages() || []).map(x => x.id)]) {
+		const pathes = ((await storage.pages()) || []).map(x => x.id);
+		if (location.pathname.slice(1) in pathes) {
+			pathes.unshift(location.pathname.slice(1));
+		}
+		for (let id of pathes) {
 			if (await load_data(id)) {
 				return id;
 			}
@@ -167,13 +165,7 @@ export default store => {
 	const loaded = id !== null;
 
 	if (!loaded) {
-		id = (new Date()).getTime().toString(36);
-		store.commit('created', {
-			id: id,
-			name: 'blankdown',
-			markdown:  "# blankdown\n\nThis is yet yet yet another markdown editor.\n\nYou can write **markdown** here, and save into local storage of your computer.\n",
-			readonly: false,
-		});
+		storage.create().then(page => store.commit('created', page));
 	}
 
 	if (location.pathname.slice(1) !== id) {

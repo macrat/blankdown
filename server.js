@@ -44,7 +44,7 @@ db.connect(err => {
 				author VARCHAR(40) NOT NULL CHECK(LENGTH(author) > 0),
 				accessed BIGINT NOT NULL,
 				modified BIGINT NOT NULL,
-				markdown TEXT NOT NULL CHECK(LENGTH(markdown) > 0),
+				markdown TEXT NOT NULL,
 				public CHAR(1) NOT NULL DEFAULT 'N' CHECK(public = 'Y' OR public = 'N'),
 				CHECK(accessed >= modified)
 			)
@@ -53,6 +53,19 @@ db.connect(err => {
 		client.release();
 	}
 })();
+
+
+function get_name_by_markdown(markdown) {
+	if (!markdown) {
+		return '';
+	}
+	const idx = markdown.indexOf('\n');
+	if (idx >= 0) {
+		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
+	} else {
+		return markdown.trim().replace(/^#+ /, '').trim();
+	}
+}
 
 
 const express = require('express');
@@ -77,11 +90,14 @@ app.use((req, res, next) => {
 });
 
 
+const UUID_pattern = '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})';
+
+
 const router = require('express-async-router').AsyncRouter({ send: false });
 app.use('/', router);
 
 
-app.use('/', (req, res, next) => {
+app.get(`/(${UUID_pattern}|shortcuts|about)?`, (req, res, next) => {
 	res.sendfile('index.html', err => next(err));
 });
 
@@ -105,18 +121,26 @@ function login_required(func) {
 
 
 router.post('/v1/create', login_required(async (req, res) => {
+	if (!req.body.modified && (req.body.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < req.body.modified)) {
+		res.status(400).json({ error: 'invalid modified timestamp', modified: { requested: req.body.modified || null }});
+		return;
+	}
+
+	if (!req.body.accessed && (req.body.accessed < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < req.body.accessed)) {
+		res.status(400).json({ error: 'invalid accessed timestamp', accessed: { requested: req.body.accessed || null }});
+		return;
+	}
+
 	const page_id = generateUUID();
 	const timestamp = (new Date()).getTime();
 
-	if (!req.body) {
-		res.status(400).json({ error: 'can\'t make empty page' });
-		return;
-	}
+	const modified = req.body.modified * 1000 || timestamp;
+	const accessed = Math.max(modified, req.body.accessed * 1000 || timestamp);
 
 	const client = await db.connect();
 
 	try {
-		await client.query("INSERT INTO pages VALUES ($1, $2, $3, $3, $4)", [page_id, req.user.id, timestamp, req.body]);
+		await client.query("INSERT INTO pages VALUES ($1, $2, $3, $4, $5)", [page_id, req.user.id, accessed, modified, req.body.markdown || '']);
 	} finally {
 		client.release();
 	}
@@ -125,24 +149,16 @@ router.post('/v1/create', login_required(async (req, res) => {
 	res.status(201).json({
 		id: page_id,
 		author: req.user.id,
-		markdown: req.body,
-		accessed: timestamp / 1000.0,
-		modified: timestamp / 1000.0,
+		name: get_name_by_markdown(req.body.markdown),
+		markdown: req.body.markdown || '',
+		accessed: accessed / 1000.0,
+		modified: modified / 1000.0,
 		public: false,
 	});
 }));
 
 
 router.get('/v1/pages', login_required(async (req, res) => {
-	function get_name_by_markdown(markdown) {
-		const idx = markdown.indexOf('\n');
-		if (idx >= 0) {
-			return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
-		} else {
-			return markdown.trim().replace(/^#+ /, '').trim();
-		}
-	}
-
 	const client = await db.connect();
 
 	let result;
@@ -170,9 +186,6 @@ router.get('/v1/pages', login_required(async (req, res) => {
 		pages: pages
 	});
 }));
-
-
-const UUID_pattern = '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})';
 
 
 router.delete(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, res) => {
@@ -230,6 +243,7 @@ router.get(new RegExp(`/${UUID_pattern}\.json`), async (req, res) => {
 	res.status(200).json({
 		id: page_id,
 		author: data.author,
+		name: get_name_by_markdown(data.markdown),
 		markdown: data.markdown,
 		accessed: data.accessed / 1000.0,
 		modified: data.modified / 1000.0,
@@ -254,7 +268,12 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 		return;
 	}
 
-	if (!request.modified || request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.modified) {
+	if (!request.modified && (request.markdown || request.pubblic)) {
+		res.status(400).json({ error: 'modified timestamp is required if modify data' });
+		return;
+	}
+
+	if (request.modified && (request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.modified)) {
 		res.status(400).json({ error: 'invalid modified timestamp', modified: { requested: request.modified || null }});
 		return;
 	}
@@ -292,8 +311,8 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 			page_id,
 			request.markdown || data.markdown,
 			(request.public == undefined) ? data.public : (request.public ? 'Y' : 'N'),
-			Math.max(request.accessed || 0, data.accessed) * 1000,
-			request.modified * 1000,
+			Math.max((request.accessed || 0) * 1000, Number.parseInt(data.accessed)),
+			(request.modified * 1000 || Number.parseInt(data.modified)),
 		]);
 
 		await client.query("COMMIT");

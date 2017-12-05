@@ -1,4 +1,15 @@
 import Vue from 'vue';
+import generateUUID from 'uuid/v4';
+
+
+function get_name_by_markdown(markdown) {
+	const idx = markdown.indexOf('\n');
+	if (idx >= 0) {
+		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
+	} else {
+		return markdown.trim().replace(/^#+ /, '').trim();
+	}
+}
 
 
 export default new Vue({
@@ -41,7 +52,6 @@ export default new Vue({
 			pages.unshift({
 				id: page.id,
 				name: page.name,
-				readonly: page.readonly,
 				modified: page.modified,
 				accessed: page.accessed,
 			});
@@ -50,6 +60,21 @@ export default new Vue({
 			localStorage.setItem('state::recent_pages', JSON.stringify(pages));
 
 			this.$emit('changed-pages', pages);
+		},
+
+		async create(markdown='') {
+			const timestamp = new Date().getTime() / 1000.0;
+			const page = {
+				id: generateUUID(),
+				name: get_name_by_markdown(markdown),
+				markdown: markdown,
+				modified: timestamp,
+				accessed: timestamp,
+			};
+
+			this.save(page.id, page);
+
+			return page;
 		},
 
 		async remove(id) {
