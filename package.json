@@ -7,10 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "build": "NODE_ENV=production ./node_modules/webpack/bin/webpack.js",
-	"debug": "./node_modules/npm-run-all/bin/npm-run-all/index.js --parallel debug:start debug:build",
-	"debug:start": "node server.js",
+    "debug": "./node_modules/npm-run-all/bin/npm-run-all/index.js --parallel debug:postgres debug:build debug:start-delay",
+    "debug:start-delay": "sleep 5s; npm run debug:start",
+    "debug:start": "nodemon server.js",
     "debug:build": "./node_modules/webpack/bin/webpack.js --watch",
-	"debug:postgres": "docker run --rm -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=blankdown -p 5432:5432 postgres"
+    "debug:postgres": "docker run --rm -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=blankdown -p 5432:5432 postgres"
   },
   "author": "",
   "license": "MIT",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "css-loader": "^0.28.7",
+    "nodemon": "^1.12.4",
     "npm-run-all": "^4.1.2",
     "uglifyjs-webpack-plugin": "^1.1.2",
     "vue-loader": "^13.5.0",
