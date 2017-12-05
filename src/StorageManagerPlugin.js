@@ -149,30 +149,25 @@ export default store => {
 	storage.pages().then(pages => store.commit('changed_recent_files', pages));
 	storage.$on('changed-pages', pages => store.commit('changed_recent_files', pages));
 
-	let id = (async function() {
+	(async function() {
 		const pathes = ((await storage.pages()) || []).map(x => x.id);
 		if (location.pathname.slice(1) in pathes) {
 			pathes.unshift(location.pathname.slice(1));
 		}
 		for (let id of pathes) {
 			if (await load_data(id)) {
+				if (location.pathname.slice(1) !== id) {
+					history.replaceState(null, '', '/' + id + location.search);
+				}
 				return id;
 			}
 		}
-		return null;
+
+		storage.create().then(page => {
+			console.log(page);
+			history.pushState(null, '', '/' + page.id + location.search);
+			store.commit('created', page);
+		});
 	})();
 
-	const loaded = id !== null;
-
-	if (!loaded) {
-		storage.create().then(page => store.commit('created', page));
-	}
-
-	if (location.pathname.slice(1) !== id) {
-		if (loaded) {
-			history.replaceState(null, '', '/' + id + location.search);
-		} else {
-			history.pushState(null, '', '/' + id + location.search);
-		}
-	}
 };

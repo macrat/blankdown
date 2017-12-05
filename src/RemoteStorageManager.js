@@ -13,7 +13,7 @@ export default new Vue({
 					modified: x.modified,
 					accessed: x.accessed,
 				};
-			});
+			}).filter(x => x.name !== "");
 		},
 
 		async load(id) {
