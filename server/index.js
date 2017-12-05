@@ -2,46 +2,11 @@ const generateUUID = require('uuid/v4');
 
 
 import Markdown from '../common/Markdown.mjs';
+import Database from './Database.mjs';
 
 
 import { default as documents, ids as documentIDs } from '../common/documents.mjs';
 const documentsPattern = documentIDs.join('|');
-
-
-const pg = require('pg');
-const db = new pg.Pool({
-	host: process.env.DB_HOST || 'localhost',
-	port: process.env.DB_PORT || 5432,
-	database: process.env.DB_NAME || 'blankdown',
-	user: process.env.DB_USER || 'test',
-	password: process.env.DB_PASSWORD || 'test',
-});
-db.connect(err => {
-	if (err) {
-		console.error(err);
-		throw err;
-	}
-});
-
-(async () => {
-	const client = await db.connect();
-
-	try {
-		await client.query(`
-			CREATE TABLE IF NOT EXISTS pages (
-				id CHAR(36) PRIMARY KEY CHECK(LENGTH(author) > 0),
-				author VARCHAR(40) NOT NULL CHECK(LENGTH(author) > 0),
-				accessed BIGINT NOT NULL,
-				modified BIGINT NOT NULL,
-				markdown TEXT NOT NULL,
-				public CHAR(1) NOT NULL DEFAULT 'N' CHECK(public = 'Y' OR public = 'N'),
-				CHECK(accessed >= modified)
-			)
-		`);
-	} finally {
-		client.release();
-	}
-})();
 
 
 const express = require('express');
@@ -115,54 +80,41 @@ router.post('/v1/create', login_required(async (req, res) => {
 		return;
 	}
 
-	const page_id = generateUUID();
-	const timestamp = (new Date()).getTime();
+	const pageID = generateUUID();
+	const timestamp = (new Date()).getTime() / 1000.0;
 
-	const modified = request.modified * 1000 || timestamp;
-	const accessed = Math.max(modified, request.accessed * 1000 || timestamp);
+	const modified = request.modified || timestamp;
+	const accessed = Math.max(modified, request.accessed || timestamp);
 
-	const client = await db.connect();
+	await Database.insert(pageID, req.user.id, accessed * 1000, modified * 1000, request.markdown || '', false);
 
-	try {
-		await client.query("INSERT INTO pages VALUES ($1, $2, $3, $4, $5)", [page_id, req.user.id, accessed, modified, request.markdown || '']);
-	} finally {
-		client.release();
-	}
-
-	res.set('Location', `/${page_id}.json`);
+	res.set('Location', `/${pageID}.json`);
 	res.status(201).json({
-		id: page_id,
+		id: pageID,
 		author: req.user.id,
 		name: Markdown.getNameBy(request.markdown) || '',
-		accessed: accessed / 1000.0,
-		modified: modified / 1000.0,
+		accessed: accessed,
+		modified: modified,
 		public: false,
 	});
 }));
 
 
 router.get('/v1/pages', login_required(async (req, res) => {
-	const client = await db.connect();
+	const result = await Database.getUserPages(req.user.id);
 
-	let result;
-	try {
-		result = await client.query("SELECT id, accessed, modified, markdown, public FROM pages WHERE author = $1 ORDER BY accessed DESC", [req.user.id]);
-	} finally {
-		client.release();
-	}
-
-	const pages = result.rows.map(x => {
+	const pages = result.map(x => {
 		return {
 			id: x.id,
+			name: Markdown.getNameBy(x.markdown),
 			accessed: x.accessed / 1000.0,
 			modified: x.modified / 1000.0,
-			name: Markdown.getNameBy(x.markdown),
-			public: x.public === 'Y',
+			public: x.public,
 		};
 	});
 
 	if (pages.length > 0) {
-		res.set('Last-Modified', new Date(Number.parseInt(result.rows[0].accessed)).toUTCString());
+		res.set('Last-Modified', new Date(result[0].accessed).toUTCString());
 	}
 	res.set('Expires', '0');
 	res.set('Cache-Control', 'no-cache');
@@ -174,66 +126,45 @@ router.get('/v1/pages', login_required(async (req, res) => {
 
 
 router.delete(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, res) => {
-	const page_id = req.params[0].toLowerCase();
+	const pageID = req.params[0].toLowerCase();
 
-	const client = await db.connect();
+	const author = await Database.getPageAuthor(pageID);
 
-	try {
-		const result = await client.query("SELECT author FROM pages WHERE id = $1", [page_id]);
-
-		if (!result || !result.rows || !result.rows[0]) {
-			res.status(404).json({ error: 'not found' });
-			return;
-		}
-
-		if (result.rows[0].author !== req.user.id) {
-			res.status(403).json({ error: 'permission denied' });
-			return;
-		}
-
-		await client.query("DELETE FROM pages WHERE id = $1", [page_id]);
-
-		res.status(200).json({});
-	} finally {
-		client.release();
-	}
-}));
-
-
-router.get(new RegExp(`^/${UUID_pattern}\.json$`), async (req, res) => {
-	const page_id = req.params[0].toLowerCase();
-
-	const client = await db.connect();
-
-	let result;
-	try {
-		result = await client.query("SELECT author, accessed, modified, markdown, public FROM pages WHERE id = $1", [page_id]);
-	} finally {
-		client.release();
-	}
-
-	if (!result || !result.rows || !result.rows[0]) {
+	if (!author) {
 		res.status(404).json({ error: 'not found' });
 		return;
 	}
 
-	const data = result.rows[0];
-
-	if (data.public !== 'Y' && (!req.user || data.author !== req.user.id)) {
+	if (author !== req.user.id) {
 		res.status(403).json({ error: 'permission denied' });
 		return;
 	}
 
-	res.set('Last-Modified', new Date(Number.parseInt(data.accessed)).toUTCString());
-	res.status(200).json({
-		id: page_id,
-		author: data.author,
-		name: Markdown.getNameBy(data.markdown),
-		markdown: data.markdown,
-		accessed: data.accessed / 1000.0,
-		modified: data.modified / 1000.0,
-		public: data.public === 'Y',
-	});
+	await Database.removePage(pageID);
+
+	res.status(200).json({});
+}));
+
+
+router.get(new RegExp(`^/${UUID_pattern}\.json$`), async (req, res) => {
+	const page = await Database.getPage(req.params[0].toLowerCase());
+
+	if (!page) {
+		res.status(404).json({ error: 'not found' });
+		return;
+	}
+
+	if (!page.public && (!req.user || page.author !== req.user.id)) {
+		res.status(403).json({ error: 'permission denied' });
+		return;
+	}
+
+	res.set('Last-Modified', new Date(page.accessed).toUTCString());
+	res.status(200).json(Object.assign(page, {
+		accessed: page.accessed / 1000.0,
+		modified: page.modified / 1000.0,
+		name: Markdown.getNameBy(page.markdown),
+	}));
 });
 
 
@@ -268,109 +199,73 @@ router.patch(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, 
 		return;
 	}
 
-	const client = await db.connect();
-
-	try {
-		await client.query("BEGIN");
-
-		const result = await client.query("SELECT author, accessed, modified, markdown, public FROM pages WHERE id = $1", [page_id]);
-
-		if (!result || !result.rows || !result.rows[0]) {
-			res.status(404).json({ error: 'not found' });
-			return;
-		}
-
-		const data = result.rows[0];
-
-		if (data.author !== req.user.id) {
-			res.status(403).json({ error: 'permission denied' });
-			return;
-		}
-
-		if (data.modified > request.modified * 1000) {
-			res.status(409).json({ error: 'modified timestamp was conflict', modified: { server: data.modified, requested: request.modified }});
-			return;
-		}
-
-		await client.query("UPDATE pages SET markdown=$2, public=$3, accessed=$4, modified=$5 WHERE id = $1", [
-			page_id,
-			request.markdown || data.markdown,
-			(request.public == undefined) ? data.public : (request.public ? 'Y' : 'N'),
-			Math.max((request.accessed || 0) * 1000, Number.parseInt(data.accessed)),
-			(request.modified * 1000 || Number.parseInt(data.modified)),
-		]);
-
-		await client.query("COMMIT");
-
+	if (request.modified) {
+		request.modified = request.modified * 1000.0;
+	}
+	if (request.accessed) {
+		request.accessed = request.accessed * 1000.0;
+	}
+	const error = await Database.updatePage(req.user.id, page_id, request);
+	if (!error) {
 		res.status(200).json({});
-	} catch (e) {
-		await client.query("ROLLBACK");
-		throw e;
-	} finally {
-		client.release();
+	} else {
+		switch (error.code) {
+		case 404:
+			res.status(404).json({ error: 'not found' });
+			break;
+
+		case 403:
+			res.status(403).json({ error: 'permission denied' });
+			break;
+
+		case 409:
+			res.status(409).json({
+				error: 'modified timestamp was conflict',
+				modified: { server: data.modified, requested: request.modified },
+			});
+			break;
+		}
 	}
 }));
 
 
 router.get(new RegExp(`^/${UUID_pattern}\.md$`), async (req, res) => {
-	const page_id = req.params[0].toLowerCase();
-
-	const client = await db.connect();
-
-	let result;
-	try {
-		result = await client.query("SELECT markdown, modified, author, public FROM pages WHERE id = $1", [page_id]);
-	} finally {
-		client.release();
-	}
+	const page = await Database.getMarkdown(req.params[0].toLowerCase());
 
 	res.set('Content-Type', 'text/markdown');
 
-	if (!result || !result.rows || !result.rows[0]) {
+	if (!page) {
 		res.status(404).end('# not found\n');
 		return;
 	}
 
-	const data = result.rows[0];
-
-	if (data.public !== 'Y' && (!req.user || data.author !== req.user.id)) {
+	if (!page.public && (!req.user || page.author !== req.user.id)) {
 		res.status(403).end('# permission denied\n');
 		return;
 	}
 
-	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
-	res.status(200).end(data.markdown);
+	res.set('Last-Modified', new Date(page.modified).toUTCString());
+	res.status(200).end(page.markdown);
 });
 
 
 router.get(new RegExp(`^/${UUID_pattern}\.html$`), async (req, res) => {
-	const page_id = req.params[0].toLowerCase();
-
-	const client = await db.connect();
-
-	let result;
-	try {
-		result = await client.query("SELECT markdown, modified, author, public FROM pages WHERE id = $1", [page_id]);
-	} finally {
-		client.release();
-	}
+	const page = await Database.getMarkdown(req.params[0].toLowerCase());
 
 	res.set('Content-Type', 'text/html');
 
-	if (!result || !result.rows || !result.rows[0]) {
+	if (!page) {
 		res.status(404).end('<h1>not found</h1>\n');
 		return;
 	}
 
-	const data = result.rows[0];
-
-	if (data.public !== 'Y' && (!req.user || data.author !== req.user.id)) {
+	if (!page && (!req.user || page.author !== req.user.id)) {
 		res.status(403).end('<h1>permission denied<h1>\n');
 		return;
 	}
 
-	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
-	res.status(200).end(Markdown.toHTML(data.markdown));
+	res.set('Last-Modified', new Date(page.modified).toUTCString());
+	res.status(200).end(Markdown.toHTML(page.markdown));
 });
 
 
