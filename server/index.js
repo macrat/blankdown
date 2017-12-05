@@ -46,7 +46,6 @@ db.connect(err => {
 
 const express = require('express');
 const app = express();
-app.set('etag', false);
 app.set('x-powered-by', false);
 app.use(require('morgan')('combined'));
 app.use(require('body-parser').text({ type: '*/*' }));
@@ -156,8 +155,10 @@ router.get('/v1/pages', login_required(async (req, res) => {
 	});
 
 	if (pages.length > 0) {
-		res.set('Last-Modified', new Date(pages[0].accessed * 1000).toUTCString());
+		res.set('Last-Modified', new Date(Number.parseInt(result.rows[0].accessed)).toUTCString());
 	}
+	res.set('Expires', '0');
+	res.set('Cache-Control', 'no-cache');
 
 	res.status(200).json({
 		pages: pages
@@ -216,7 +217,7 @@ router.get(new RegExp(`/${UUID_pattern}\.json`), async (req, res) => {
 		return;
 	}
 
-	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
+	res.set('Last-Modified', new Date(Number.parseInt(data.accessed)).toUTCString());
 	res.status(200).json({
 		id: page_id,
 		author: data.author,

@@ -46,7 +46,7 @@ export default store => {
 
 	const autosave = debounce(() => {
 		store.dispatch('save');
-	}, 1000);
+	}, 5000);
 
 	store.subscribeAction((action, state) => {
 		switch (action.type) {
