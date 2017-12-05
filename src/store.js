@@ -147,7 +147,7 @@ const store = new Vuex.Store({
 			function make_html_by(toc) {
 				return '<ul>\n' + toc.map(x => {
 					if (typeof x === 'string') {
-						return `<li><a href="#${x.replace(' ', '-').toLowerCase()}">${ x }</a></li>`;
+						return `<li><a href="#${x.replace(/[^\w]+/g, '-').toLowerCase()}">${ x }</a></li>`;
 					} else {
 						return make_html_by(x);
 					}
