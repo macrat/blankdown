@@ -38,7 +38,17 @@ db.connect(err => {
 	const client = await db.connect();
 
 	try {
-		await client.query("CREATE TABLE IF NOT EXISTS pages (id CHAR(36) PRIMARY KEY, author VARCHAR(40) NOT NULL, last_updated BIGINT NOT NULL, markdown TEXT NOT NULL, public CHAR(1) NOT NULL DEFAULT 'N' CHECK (public = 'Y' OR public = 'N'))");
+		await client.query(`
+			CREATE TABLE IF NOT EXISTS pages (
+				id CHAR(36) PRIMARY KEY CHECK(LENGTH(author) > 0),
+				author VARCHAR(40) NOT NULL CHECK(LENGTH(author) > 0),
+				accessed BIGINT NOT NULL,
+				modified BIGINT NOT NULL,
+				markdown TEXT NOT NULL CHECK(LENGTH(markdown) > 0),
+				public CHAR(1) NOT NULL DEFAULT 'N' CHECK(public = 'Y' OR public = 'N'),
+				CHECK(accessed >= modified)
+			)
+		`);
 	} finally {
 		client.release();
 	}
@@ -106,7 +116,7 @@ router.post('/v1/create', login_required(async (req, res) => {
 	const client = await db.connect();
 
 	try {
-		await client.query("INSERT INTO pages VALUES ($1, $2, $3, $4)", [page_id, req.user.id, timestamp, req.body]);
+		await client.query("INSERT INTO pages VALUES ($1, $2, $3, $3, $4)", [page_id, req.user.id, timestamp, req.body]);
 	} finally {
 		client.release();
 	}
@@ -116,7 +126,8 @@ router.post('/v1/create', login_required(async (req, res) => {
 		id: page_id,
 		author: req.user.id,
 		markdown: req.body,
-		last_updated: timestamp / 1000.0,
+		accessed: timestamp / 1000.0,
+		modified: timestamp / 1000.0,
 		public: false,
 	});
 }));
@@ -136,7 +147,7 @@ router.get('/v1/pages', login_required(async (req, res) => {
 
 	let result;
 	try {
-		result = await client.query("SELECT id, last_updated, markdown, public FROM pages WHERE author = $1 ORDER BY last_updated DESC", [req.user.id]);
+		result = await client.query("SELECT id, accessed, modified, markdown, public FROM pages WHERE author = $1 ORDER BY accessed DESC", [req.user.id]);
 	} finally {
 		client.release();
 	}
@@ -144,14 +155,15 @@ router.get('/v1/pages', login_required(async (req, res) => {
 	const pages = result.rows.map(x => {
 		return {
 			id: x.id,
-			last_updated: x.last_updated / 1000.0,
+			accessed: x.accessed / 1000.0,
+			modified: x.modified / 1000.0,
 			name: get_name_by_markdown(x.markdown),
 			public: x.public === 'Y',
 		};
 	});
 
 	if (pages.length > 0) {
-		res.set('Last-Modified', new Date(pages[0].last_updated * 1000).toUTCString());
+		res.set('Last-Modified', new Date(pages[0].accessed * 1000).toUTCString());
 	}
 
 	res.status(200).json({
@@ -197,7 +209,7 @@ router.get(new RegExp(`/${UUID_pattern}\.json`), async (req, res) => {
 
 	let result;
 	try {
-		result = await client.query("SELECT author, last_updated, markdown, public FROM pages WHERE id = $1", [page_id]);
+		result = await client.query("SELECT author, accessed, modified, markdown, public FROM pages WHERE id = $1", [page_id]);
 	} finally {
 		client.release();
 	}
@@ -214,12 +226,13 @@ router.get(new RegExp(`/${UUID_pattern}\.json`), async (req, res) => {
 		return;
 	}
 
-	res.set('Last-Modified', new Date(Number.parseInt(data.last_updated)).toUTCString());
+	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
 	res.status(200).json({
 		id: page_id,
 		author: data.author,
 		markdown: data.markdown,
-		last_updated: data.last_updated / 1000.0,
+		accessed: data.accessed / 1000.0,
+		modified: data.modified / 1000.0,
 		public: data.public === 'Y',
 	});
 });
@@ -241,8 +254,13 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 		return;
 	}
 
-	if (!request.last_updated || request.last_updated < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.last_updated) {
-		res.status(400).json({ error: 'invalid last_updated', content: { requested: request.last_updated }});
+	if (!request.modified || request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.modified) {
+		res.status(400).json({ error: 'invalid modified timestamp', modified: { requested: request.modified || null }});
+		return;
+	}
+
+	if (request.accessed && (request.accessed < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.accessed || request.accessed < request.modified)) {
+		res.status(400).json({ error: 'invalid accessed timestamp', accessed: { requested: request.accessed }});
 		return;
 	}
 
@@ -251,7 +269,7 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 	try {
 		await client.query("BEGIN");
 
-		const result = await client.query("SELECT author, last_updated, markdown, public FROM pages WHERE id = $1", [page_id]);
+		const result = await client.query("SELECT author, accessed, modified, markdown, public FROM pages WHERE id = $1", [page_id]);
 
 		if (!result || !result.rows || !result.rows[0]) {
 			res.status(404).json({ error: 'not found' });
@@ -265,16 +283,17 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 			return;
 		}
 
-		if (data.last_updated <= request.last_updated) {
-			res.status(409).json({ error: 'last_updated was conflict', content: { server: data.last_updated, requested: request.last_updated }});
+		if (data.modified <= request.modified) {
+			res.status(409).json({ error: 'modified timestamp was conflict', modified: { server: data.modified, requested: request.modified }});
 			return;
 		}
 
-		await client.query("UPDATE pages SET markdown=$2, public=$3, last_updated=$4 WHERE id = $1", [
+		await client.query("UPDATE pages SET markdown=$2, public=$3, accessed=$4, modified=$5 WHERE id = $1", [
 			page_id,
 			request.markdown || data.markdown,
 			(request.public == undefined) ? data.public : (request.public ? 'Y' : 'N'),
-			request.last_updated * 1000,
+			Math.max(request.accessed || 0, data.accessed) * 1000,
+			request.modified * 1000,
 		]);
 
 		await client.query("COMMIT");
@@ -296,7 +315,7 @@ router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
 
 	let result;
 	try {
-		result = await client.query("SELECT markdown, last_updated, author, public FROM pages WHERE id = $1", [page_id]);
+		result = await client.query("SELECT markdown, modified, author, public FROM pages WHERE id = $1", [page_id]);
 	} finally {
 		client.release();
 	}
@@ -313,7 +332,7 @@ router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
 		return;
 	}
 
-	res.set('Last-Modified', new Date(Number.parseInt(data.last_updated)).toUTCString());
+	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
 	res.status(200).end(marked(data.markdown, {
 		sanitize: true,
 	}));
