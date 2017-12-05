@@ -2,6 +2,7 @@
 .markdown-viewer {
 	box-sizing: border-box;
 	overflow: auto;
+	overflow-wrap: break-word;
 }
 </style>
 
@@ -34,14 +35,15 @@ export default {
 		height: auto;
 	}
 
-	.hljs {
+	pre code {
 		display: block;
-		overflow-x: auto;
+		overflow: auto;
 		padding: 0.5em;
-		background: #F0F0F0;
+		background: #F5F5F5;
+		width: 95%;
 	}
 	
-	.hljs, .hljs-subst {
+	.hljs-subst {
 		color: #444;
 	}
 
