@@ -40,7 +40,7 @@ function get_name_by_markdown(markdown) {
 
 
 export default store => {
-	function load_data(id) {
+	async function load_data(id) {
 		const readonly_document = ({
 			shortcuts: shortcuts_document,
 			about: about_document,
@@ -55,7 +55,7 @@ export default store => {
 			return true;
 		}
 
-		const data = storage.load(id);
+		const data = await storage.load(id);
 		if (data) {
 			store.commit('loaded', {
 				id: id,
@@ -109,19 +109,21 @@ export default store => {
 			break;
 
 		case 'remove':
-			storage.remove(state.current.id);
-			store.commit('removed', state.current);
+			storage.remove(state.current.id).then(() => {
+				store.commit('removed', state.current);
 
-			const next = storage.loadMostRecent();
-			if (!next) {
-				store.dispatch('create');
-			} else {
-				store.commit('loaded', {
-					id: next.id,
-					markdown: next.markdown,
-					readonly: next.readonly,
+				storage.loadMostRecent().then(next => {
+					if (!next) {
+						store.dispatch('create');
+					} else {
+						store.commit('loaded', {
+							id: next.id,
+							markdown: next.markdown,
+							readonly: next.readonly,
+						});
+					}
 				});
-			}
+			});
 			break;
 
 		case 'update':
@@ -151,18 +153,19 @@ export default store => {
 		}
 	});
 
-	store.commit('changed_recent_files', storage.pages());
+	storage.pages().then(pages => store.commit('changed_recent_files', pages));
 	storage.$on('changed-pages', pages => store.commit('changed_recent_files', pages));
 
-	let id;
-	let loaded = false;
-
-	for (id of [location.pathname.slice(1), ...(storage.pages() || []).map(x => x.id)]) {
-		if (load_data(id)) {
-			loaded = true;
-			break;
+	let id = (async function() {
+		for (let id of [location.pathname.slice(1), ...(await storage.pages() || []).map(x => x.id)]) {
+			if (await load_data(id)) {
+				return id;
+			}
 		}
-	}
+		return null;
+	})();
+
+	const loaded = id !== null;
 
 	if (!loaded) {
 		id = (new Date()).getTime().toString(36);
