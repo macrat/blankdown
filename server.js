@@ -4,6 +4,9 @@ const generateUUID = require('uuid/v4');
 const marked = require('marked');
 const hljs = require('highlight.js');
 
+import { default as documents, ids as documentIDs } from './documents.mjs';
+const documentsPattern = documentIDs.join('|');
+
 marked.setOptions({
 	highlight(code, lang) {
 		try {
@@ -97,8 +100,8 @@ const router = require('express-async-router').AsyncRouter({ send: false });
 app.use('/', router);
 
 
-app.get(`/(${UUID_pattern}|shortcuts|about)?`, (req, res, next) => {
-	res.sendfile('index.html', err => next(err));
+app.get(`/(${UUID_pattern}|${documentsPattern})?`, (req, res) => {
+	res.sendFile(__dirname + '/index.html');
 });
 
 
@@ -149,7 +152,7 @@ router.post('/v1/create', login_required(async (req, res) => {
 	res.status(201).json({
 		id: page_id,
 		author: req.user.id,
-		name: get_name_by_markdown(req.body.markdown),
+		name: get_name_by_markdown(req.body.markdown) || '',
 		markdown: req.body.markdown || '',
 		accessed: accessed / 1000.0,
 		modified: modified / 1000.0,
@@ -386,6 +389,62 @@ router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
 
 	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
 	res.status(200).end(marked(data.markdown, {
+		sanitize: true,
+	}));
+});
+
+
+router.get(new RegExp(`/(${documentsPattern}).json`), async (req, res) => {
+	const documentID = req.params[0].toLowerCase();
+
+	const doc = documents[documentID];
+
+	if (!doc) {
+		res.status(404).json({ error: 'not found' });
+		return;
+	}
+
+	res.status(200).json({
+		id: documentID,
+		author: 'blankdown',
+		name: get_name_by_markdown(doc),
+		markdown: doc,
+		accessed: null,
+		modified: null,
+		public: true,
+	});
+});
+
+
+router.get(new RegExp(`/(${documentsPattern}).md`), async (req, res) => {
+	const documentID = req.params[0].toLowerCase();
+
+	const doc = documents[documentID];
+
+	res.set('Content-Type', 'text/markdown');
+
+	if (!doc) {
+		res.status(404).end('# not found\n');
+		return;
+	}
+
+	res.status(200).end(doc);
+});
+
+
+router.get(new RegExp(`/(${documentsPattern}).md`), async (req, res) => {
+	const documentID = req.params[0].toLowerCase();
+
+	const doc = documents[documentID];
+
+	res.set('Content-Type', 'text/html');
+
+	if (!doc) {
+		res.status(404).end('<h1>not found</h1>\n');
+		return;
+	}
+
+	res.status(200).end(marked(doc, {
 		sanitize: true,
 	}));
 });

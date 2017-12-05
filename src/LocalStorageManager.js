@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import generateUUID from 'uuid/v4';
 
+import documents from '../documents.mjs';
+
 
 function get_name_by_markdown(markdown) {
 	const idx = markdown.indexOf('\n');
@@ -27,6 +29,17 @@ export default new Vue({
 		},
 
 		async load(id) {
+			if (id in documents) {
+				return {
+					id: id,
+					name: get_name_by_markdown(documents[id]),
+					markdown: documents[id],
+					readonly: true,
+					accessed: null,
+					modified: null,
+				}
+			}
+
 			const metadata = await this.getMetadata(id);
 			if (!metadata) {
 				return null;

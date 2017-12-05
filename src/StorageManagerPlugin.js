@@ -4,31 +4,6 @@ import { debounce } from 'lodash-es';
 import storage from './RemoteStorageManager.js';
 
 
-const shortcuts_document = `# Shortcuts
-
-## main menu
-|key combination|what do                |
-|:--------------|:----------------------|
-|Alt-F          |Open [FILE pane](?file)|
-|Alt-H          |Open [HELP pane](?help)|
-|Escape         |Close side pane        |
-
-## file
-|key combination|what do                        |
-|:--------------|:------------------------------|
-|Ctrl-M         |Make new file                  |
-|Ctrl-S         |Save current file              |
-|Ctrl-Shift-S   |Export current file as markdown|
-|Ctrl-Shift-O   |Import markdown file from disk |
-`;
-
-
-const about_document = `# About blankdown
-
-not yet wrote.
-`;
-
-
 function get_name_by_markdown(markdown) {
 	const idx = markdown.indexOf('\n');
 	if (idx >= 0) {
@@ -43,20 +18,6 @@ export default store => {
 	async function load_data(id) {
 		if (!id) {
 			return;
-		}
-
-		const readonly_document = ({
-			shortcuts: shortcuts_document,
-			about: about_document,
-		})[id];
-
-		if (readonly_document) {
-			store.commit('loaded', {
-				id: id,
-				markdown: readonly_document,
-				readonly: true,
-			});
-			return true;
 		}
 
 		const data = await storage.load(id);
@@ -164,7 +125,6 @@ export default store => {
 		}
 
 		storage.create().then(page => {
-			console.log(page);
 			history.pushState(null, '', '/' + page.id + location.search);
 			store.commit('created', page);
 		});
