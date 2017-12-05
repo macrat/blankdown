@@ -2,16 +2,7 @@ import Vue from 'vue';
 import generateUUID from 'uuid/v4';
 
 import documents from '../common/documents.mjs';
-
-
-function get_name_by_markdown(markdown) {
-	const idx = markdown.indexOf('\n');
-	if (idx >= 0) {
-		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
-	} else {
-		return markdown.trim().replace(/^#+ /, '').trim();
-	}
-}
+import Markdown from '../common/Markdown.mjs';
 
 
 export default new Vue({
@@ -32,7 +23,7 @@ export default new Vue({
 			if (id in documents) {
 				return {
 					id: id,
-					name: get_name_by_markdown(documents[id]),
+					name: Markdown.getNameBy(documents[id]),
 					markdown: documents[id],
 					readonly: true,
 					accessed: null,
@@ -79,7 +70,7 @@ export default new Vue({
 			const timestamp = new Date().getTime() / 1000.0;
 			const page = {
 				id: generateUUID(),
-				name: get_name_by_markdown(markdown),
+				name: Markdown.getNameBy(markdown),
 				markdown: markdown,
 				modified: timestamp,
 				accessed: timestamp,

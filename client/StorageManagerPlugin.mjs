@@ -2,22 +2,13 @@ import Vue from 'vue';
 import { debounce } from 'lodash-es';
 
 import storage from './RemoteStorageManager.mjs';
+import Markdown from '../common/Markdown.mjs';
 
 
 const welcomeDocument = `# welcome to blankdown
 
 This is yet yet yet another **markdown** editor.
 `;
-
-
-function get_name_by_markdown(markdown) {
-	const idx = markdown.indexOf('\n');
-	if (idx >= 0) {
-		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
-	} else {
-		return markdown.trim().replace(/^#+ /, '').trim();
-	}
-}
 
 
 export default store => {

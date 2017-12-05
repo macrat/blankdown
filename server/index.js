@@ -1,25 +1,11 @@
 const generateUUID = require('uuid/v4');
 
 
-const marked = require('marked');
-const hljs = require('highlight.js');
+import Markdown from '../common/Markdown.mjs';
+
 
 import { default as documents, ids as documentIDs } from '../common/documents.mjs';
 const documentsPattern = documentIDs.join('|');
-
-marked.setOptions({
-	highlight(code, lang) {
-		try {
-			if (lang) {
-				return hljs.highlight(lang, code, true).value;
-			} else {
-				return hljs.highlightAuto(code).value;
-			}
-		} catch(e) {
-			return code;
-		}
-	},
-});
 
 
 const pg = require('pg');
@@ -56,19 +42,6 @@ db.connect(err => {
 		client.release();
 	}
 })();
-
-
-function get_name_by_markdown(markdown) {
-	if (!markdown) {
-		return '';
-	}
-	const idx = markdown.indexOf('\n');
-	if (idx >= 0) {
-		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
-	} else {
-		return markdown.trim().replace(/^#+ /, '').trim();
-	}
-}
 
 
 const express = require('express');
@@ -154,7 +127,7 @@ router.post('/v1/create', login_required(async (req, res) => {
 	res.status(201).json({
 		id: page_id,
 		author: req.user.id,
-		name: get_name_by_markdown(req.body.markdown) || '',
+		name: Markdown.getNameBy(req.body.markdown) || '',
 		accessed: accessed / 1000.0,
 		modified: modified / 1000.0,
 		public: false,
@@ -177,7 +150,7 @@ router.get('/v1/pages', login_required(async (req, res) => {
 			id: x.id,
 			accessed: x.accessed / 1000.0,
 			modified: x.modified / 1000.0,
-			name: get_name_by_markdown(x.markdown),
+			name: Markdown.getNameBy(x.markdown),
 			public: x.public === 'Y',
 		};
 	});
@@ -247,7 +220,7 @@ router.get(new RegExp(`/${UUID_pattern}\.json`), async (req, res) => {
 	res.status(200).json({
 		id: page_id,
 		author: data.author,
-		name: get_name_by_markdown(data.markdown),
+		name: Markdown.getNameBy(data.markdown),
 		markdown: data.markdown,
 		accessed: data.accessed / 1000.0,
 		modified: data.modified / 1000.0,
@@ -389,9 +362,7 @@ router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
 	}
 
 	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
-	res.status(200).end(marked(data.markdown, {
-		sanitize: true,
-	}));
+	res.status(200).end(Markdown.toHTML(data.markdown));
 });
 
 
@@ -408,7 +379,7 @@ router.get(new RegExp(`/(${documentsPattern}).json`), async (req, res) => {
 	res.status(200).json({
 		id: documentID,
 		author: 'blankdown',
-		name: get_name_by_markdown(doc),
+		name: Markdown.getNameBy(doc),
 		markdown: doc,
 		accessed: null,
 		modified: null,
@@ -445,7 +416,5 @@ router.get(new RegExp(`/(${documentsPattern}).md`), async (req, res) => {
 		return;
 	}
 
-	res.status(200).end(marked(doc, {
-		sanitize: true,
-	}));
+	res.status(200).end(Markdown.toHTML(doc));
 });

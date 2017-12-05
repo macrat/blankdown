@@ -1,36 +1,10 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
-import marked from 'marked';
-import hljs from 'highlight.js';
 
 import StorageManagerPlugin from './StorageManagerPlugin.mjs';
+import Markdown from '../common/Markdown.mjs';
 
 Vue.use(Vuex);
-
-
-marked.setOptions({
-	highlight(code, lang) {
-		try {
-			if (lang) {
-				return hljs.highlight(lang, code, true).value;
-			} else {
-				return hljs.highlightAuto(code).value;
-			}
-		} catch(e) {
-			return code;
-		}
-	},
-});
-
-
-function get_name_by_markdown(markdown) {
-	const idx = markdown.indexOf('\n');
-	if (idx >= 0) {
-		return markdown.slice(0, idx).trim().replace(/^#+ /, '').trim();
-	} else {
-		return markdown.trim().replace(/^#+ /, '').trim();
-	}
-}
 
 
 const store = new Vuex.Store({
@@ -119,29 +93,10 @@ const store = new Vuex.Store({
 	},
 	getters: {
 		html(state) {
-			return marked(state.current.markdown, {
-				sanitize: true,
-			});
+			return Markdown.toHTML(state.current.markdown);
 		},
 		toc(state) {
-			const lexer = new marked.Lexer({ sanitize: true });
-			const result = [];
-
-			function get(stack, depth) {
-				if (depth === 1) {
-					return stack;
-				}
-				if (!stack[stack.length - 1] || !stack[stack.length - 1].push) {
-					stack.push([]);
-				}
-				return get(stack[stack.length - 1], depth - 1);
-			}
-
-			for (var x of lexer.lex(state.current.markdown).filter(x => x.type == 'heading')) {
-				get(result, x.depth).push(x.text);
-			}
-
-			return result;
+			return Markdown.getTOCBy(state.current.markdown);
 		},
 		toc_html(state) {
 			function make_html_by(toc) {
@@ -156,10 +111,10 @@ const store = new Vuex.Store({
 			return make_html_by(store.getters.toc);
 		},
 		current_name(state) {
-			return get_name_by_markdown(state.current.markdown);
+			return Markdown.getNameBy(state.current.markdown);
 		},
 		removed_name(state) {
-			return get_name_by_markdown(state.removed.markdown);
+			return Markdown.getNameBy(state.removed.markdown);
 		},
 	},
 });
