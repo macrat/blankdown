@@ -157,7 +157,7 @@ export default store => {
 	let id;
 	let loaded = false;
 
-	for (id of [location.pathname.slice(1), ...(JSON.parse(localStorage.getItem('state::recent_files')) || []).map(x => x.id)]) {
+	for (id of [location.pathname.slice(1), ...(storage.pages() || []).map(x => x.id)]) {
 		if (load_data(id)) {
 			loaded = true;
 			break;
