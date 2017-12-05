@@ -98,26 +98,33 @@ function login_required(func) {
 
 
 router.post('/v1/create', login_required(async (req, res) => {
-	if (!req.body.modified && (req.body.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < req.body.modified)) {
-		res.status(400).json({ error: 'invalid modified timestamp', modified: { requested: req.body.modified || null }});
+	let request;
+	try {
+		request = JSON.parse(req.body);
+	} catch (e) {
+		res.status(400).json({ error: 'invalid json' });
+	}
+
+	if (!request.modified && (request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.modified)) {
+		res.status(400).json({ error: 'invalid modified timestamp', modified: { requested: request.modified || null }});
 		return;
 	}
 
-	if (!req.body.accessed && (req.body.accessed < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < req.body.accessed)) {
-		res.status(400).json({ error: 'invalid accessed timestamp', accessed: { requested: req.body.accessed || null }});
+	if (!request.accessed && (request.accessed < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.accessed)) {
+		res.status(400).json({ error: 'invalid accessed timestamp', accessed: { requested: request.accessed || null }});
 		return;
 	}
 
 	const page_id = generateUUID();
 	const timestamp = (new Date()).getTime();
 
-	const modified = req.body.modified * 1000 || timestamp;
-	const accessed = Math.max(modified, req.body.accessed * 1000 || timestamp);
+	const modified = request.modified * 1000 || timestamp;
+	const accessed = Math.max(modified, request.accessed * 1000 || timestamp);
 
 	const client = await db.connect();
 
 	try {
-		await client.query("INSERT INTO pages VALUES ($1, $2, $3, $4, $5)", [page_id, req.user.id, accessed, modified, req.body.markdown || '']);
+		await client.query("INSERT INTO pages VALUES ($1, $2, $3, $4, $5)", [page_id, req.user.id, accessed, modified, request.markdown || '']);
 	} finally {
 		client.release();
 	}
@@ -126,7 +133,7 @@ router.post('/v1/create', login_required(async (req, res) => {
 	res.status(201).json({
 		id: page_id,
 		author: req.user.id,
-		name: Markdown.getNameBy(req.body.markdown) || '',
+		name: Markdown.getNameBy(request.markdown) || '',
 		accessed: accessed / 1000.0,
 		modified: modified / 1000.0,
 		public: false,
@@ -166,7 +173,7 @@ router.get('/v1/pages', login_required(async (req, res) => {
 }));
 
 
-router.delete(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, res) => {
+router.delete(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, res) => {
 	const page_id = req.params[0].toLowerCase();
 
 	const client = await db.connect();
@@ -193,7 +200,7 @@ router.delete(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, r
 }));
 
 
-router.get(new RegExp(`/${UUID_pattern}\.json`), async (req, res) => {
+router.get(new RegExp(`^/${UUID_pattern}\.json$`), async (req, res) => {
 	const page_id = req.params[0].toLowerCase();
 
 	const client = await db.connect();
@@ -230,7 +237,7 @@ router.get(new RegExp(`/${UUID_pattern}\.json`), async (req, res) => {
 });
 
 
-router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, res) => {
+router.patch(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, res) => {
 	const page_id = req.params[0].toLowerCase();
 
 	if (!req.body) {
@@ -280,7 +287,7 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 			return;
 		}
 
-		if (data.modified <= request.modified) {
+		if (data.modified > request.modified * 1000) {
 			res.status(409).json({ error: 'modified timestamp was conflict', modified: { server: data.modified, requested: request.modified }});
 			return;
 		}
@@ -305,7 +312,7 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 }));
 
 
-router.get(new RegExp(`/${UUID_pattern}\.md`), async (req, res) => {
+router.get(new RegExp(`^/${UUID_pattern}\.md$`), async (req, res) => {
 	const page_id = req.params[0].toLowerCase();
 
 	const client = await db.connect();
@@ -336,7 +343,7 @@ router.get(new RegExp(`/${UUID_pattern}\.md`), async (req, res) => {
 });
 
 
-router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
+router.get(new RegExp(`^/${UUID_pattern}\.html$`), async (req, res) => {
 	const page_id = req.params[0].toLowerCase();
 
 	const client = await db.connect();
@@ -367,7 +374,7 @@ router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
 });
 
 
-router.get(new RegExp(`/(${documentsPattern}).json`), async (req, res) => {
+router.get(new RegExp(`^/(${documentsPattern}).json$`), async (req, res) => {
 	const documentID = req.params[0].toLowerCase();
 
 	const doc = documents[documentID];
@@ -389,7 +396,7 @@ router.get(new RegExp(`/(${documentsPattern}).json`), async (req, res) => {
 });
 
 
-router.get(new RegExp(`/(${documentsPattern}).md`), async (req, res) => {
+router.get(new RegExp(`^/(${documentsPattern}).md$`), async (req, res) => {
 	const documentID = req.params[0].toLowerCase();
 
 	const doc = documents[documentID];
@@ -405,7 +412,7 @@ router.get(new RegExp(`/(${documentsPattern}).md`), async (req, res) => {
 });
 
 
-router.get(new RegExp(`/(${documentsPattern}).md`), async (req, res) => {
+router.get(new RegExp(`^/(${documentsPattern}).md$`), async (req, res) => {
 	const documentID = req.params[0].toLowerCase();
 
 	const doc = documents[documentID];
