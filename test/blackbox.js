@@ -114,6 +114,7 @@ describe('blackbox', () => {
 				assert.equal(html.status, 200);
 				assert.equal(html.headers['content-type'], 'text/html; charset=utf-8');
 				assert.equal(html.headers['last-modified'], new Date('2017-01-01').toUTCString());
+
 				const remove = await axios.delete(ORIGIN + add.headers['location']);
 				assert.equal(remove.status, 200);
 			});
@@ -153,6 +154,83 @@ describe('blackbox', () => {
 
 				const remove = await axios.delete(ORIGIN + add.headers['location']);
 				assert.equal(remove.status, 200);
+			});
+
+			it('search', async () => {
+				const one = await axios.post(ORIGIN + '/v1/create', {
+					markdown: '# this is test\ntest markdown',
+					modified: new Date('2017-01-01').getTime() / 1000.0,
+					accessed: new Date('2017-01-02').getTime() / 1000.0,
+				});
+				assert.equal(one.status, 201);
+
+				const two = await axios.post(ORIGIN + '/v1/create', {
+					markdown: '# second file\nthis is test',
+					modified: new Date('2017-02-01').getTime() / 1000.0,
+					accessed: new Date('2017-02-02').getTime() / 1000.0,
+				});
+				assert.equal(two.status, 201);
+
+				const searchOne = await axios.get(ORIGIN + '/v1/search?q=markdown');
+				assert.strictEqual(searchOne.status, 200);
+				assert.strictEqual(searchOne.headers['content-type'], 'application/json; charset=utf-8');
+				assert.strictEqual(searchOne.headers['last-modified'], new Date('2017-01-01').toUTCString());
+				assert.deepStrictEqual(searchOne.data, {
+					result: [
+						{
+							id: one.data.id,
+							author: one.data.author,
+							name: 'this is test',
+							modified: one.data.modified,
+							public: false,
+						},
+					],
+				});
+
+				const searchTwo = await axios.get(ORIGIN + '/v1/search?q=second');
+				assert.strictEqual(searchTwo.status, 200);
+				assert.strictEqual(searchTwo.headers['content-type'], 'application/json; charset=utf-8');
+				assert.strictEqual(searchTwo.headers['last-modified'], new Date('2017-02-01').toUTCString());
+				assert.deepStrictEqual(searchTwo.data, {
+					result: [
+						{
+							id: two.data.id,
+							author: two.data.author,
+							name: 'second file',
+							modified: two.data.modified,
+							public: false,
+						},
+					],
+				});
+
+				const searchBoth = await axios.get(ORIGIN + '/v1/search?q=test');
+				assert.strictEqual(searchBoth.status, 200);
+				assert.strictEqual(searchBoth.headers['content-type'], 'application/json; charset=utf-8');
+				assert.strictEqual(searchBoth.headers['last-modified'], new Date('2017-02-01').toUTCString());
+				assert.deepStrictEqual(searchBoth.data, {
+					result: [
+						{
+							id: two.data.id,
+							author: two.data.author,
+							name: 'second file',
+							modified: two.data.modified,
+							public: false,
+						},
+						{
+							id: one.data.id,
+							author: one.data.author,
+							name: 'this is test',
+							modified: one.data.modified,
+							public: false,
+						},
+					],
+				});
+
+				const removeOne = await axios.delete(ORIGIN + one.headers['location']);
+				assert.equal(removeOne.status, 200);
+
+				const removeTwo = await axios.delete(ORIGIN + two.headers['location']);
+				assert.equal(removeTwo.status, 200);
 			});
 		});
 	});

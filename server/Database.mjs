@@ -18,7 +18,7 @@ const db = new pg.Pool({
 				accessed BIGINT NOT NULL,
 				modified BIGINT NOT NULL,
 				markdown TEXT NOT NULL,
-				public CHAR(1) NOT NULL DEFAULT 'N' CHECK(public = 'Y' OR public = 'N'),
+				public BOOLEAN NOT NULL,
 				CHECK(accessed >= modified)
 			)
 		`);
@@ -35,7 +35,7 @@ function rowToData(row) {
 		accessed: Number.parseInt(row.accessed),
 		modified: Number.parseInt(row.modified),
 		markdown: row.markdown,
-		public: row.public === 'Y',
+		public: row.public,
 	};
 }
 
@@ -45,7 +45,7 @@ const Database = {
 		const client = await db.connect();
 
 		try {
-			await client.query("INSERT INTO pages VALUES ($1, $2, $3, $4, $5, $6)", [id, author, accessed, modified, markdown, public_ ? 'Y' : 'N']);
+			await client.query("INSERT INTO pages VALUES ($1, $2, $3, $4, $5, $6)", [id, author, accessed, modified, markdown, public_]);
 		} finally {
 			client.release();
 		}
@@ -145,7 +145,7 @@ const Database = {
 			await client.query("UPDATE pages SET markdown=$2, public=$3, accessed=$4, modified=$5 WHERE id = $1", [
 				pageID,
 				data.markdown || result.rows[0].markdown,
-				(data.public == undefined) ? result.rows[0].public : (data.public ? 'Y' : 'N'),
+				(data.public == undefined) ? result.rows[0].public : data.public,
 				Math.max(data.accessed || 0, Number.parseInt(result.rows[0].accessed)),
 				data.modified || Number.parseInt(result.rows[0].modified),
 			]);
@@ -160,6 +160,24 @@ const Database = {
 
 		return null;
 	},
+
+	searchPage: async (queries, userID=null) => {
+		const searchQuery = queries.map(x => "markdown LIKE '%" + x.replace("'", "''") + "%'").join(' AND ');
+
+		let result;
+		if (userID) {
+			result = await db.query("SELECT id, author, accessed, modified, markdown, public FROM pages WHERE (public OR author = $1) AND " + searchQuery + " ORDER BY modified DESC", [userID]);
+		} else {
+			result = await db.query("SELECT id, author, accessed, modified, markdown, public FROM pages WHERE public AND " + searchQuery + " ORDER BY modified DESC");
+		}
+
+		if (!result) {
+			return [];
+		}
+
+		return result.rows.map(rowToData);
+	},
 };
+
 
 export default Database;

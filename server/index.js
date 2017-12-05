@@ -68,6 +68,7 @@ router.post('/v1/create', login_required(async (req, res) => {
 		request = JSON.parse(req.body);
 	} catch (e) {
 		res.status(400).json({ error: 'invalid json' });
+		return;
 	}
 
 	if (!request.modified && (request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.modified)) {
@@ -123,6 +124,27 @@ router.get('/v1/pages', login_required(async (req, res) => {
 		pages: pages
 	});
 }));
+
+
+router.get('/v1/search', async (req, res) => {
+	const result = await Database.searchPage(req.query.q.split(' '), req.user ? req.user.id : null);
+
+	if (result.length > 0) {
+		res.set('Last-Modified', new Date(result[0].modified).toUTCString());
+	}
+	res.set('Expires', '0');
+	res.set('Cache-Control', 'no-cache');
+
+	res.status(200).json({ result: result.map(x => {
+		return {
+			id: x.id,
+			author: x.author,
+			name: Markdown.getNameBy(x.markdown),
+			modified: x.modified / 1000.0,
+			public: x.public,
+		};
+	}), });
+});
 
 
 router.delete(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, res) => {
