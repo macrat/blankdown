@@ -2,32 +2,27 @@ import Vue from 'vue';
 import axios from 'axios';
 
 
+function remote_to_local(page) {
+	return {
+		id: page.id,
+		name: page.name,
+		markdown: page.markdown,
+		readonly: page.public,
+		modified: page.modified,
+		accessed: page.accessed,
+	};
+}
+
+
 export default new Vue({
 	methods: {
 		async pages() {
-			return ((await axios.get('/v1/pages')).data.pages || []).map(x => {
-				return {
-					id: x.id,
-					name: x.name,
-					readonly: false,
-					modified: x.modified,
-					accessed: x.accessed,
-				};
-			}).filter(x => x.name !== "");
+			return ((await axios.get('/v1/pages')).data.pages || []).map(remote_to_local).filter(x => x.name !== "");
 		},
 
 		async load(id) {
 			try {
-				const page = (await axios.get(`/${id}.json`)).data;
-
-				return {
-					id: page.id,
-					name: page.name,
-					markdown: page.markdown,
-					readonly: false,
-					modified: page.modified,
-					accessed: page.accessed,
-				};
+				return remote_to_local((await axios.get(`/${id}.json`)).data);
 			} catch (e) {
 				console.error(e);
 				return null;
@@ -58,18 +53,9 @@ export default new Vue({
 		},
 
 		async create(markdown='') {
-			const page = (await axios.post('/v1/create', {
+			return remote_to_local((await axios.post('/v1/create', {
 				markdown: markdown,
-			})).data;
-
-			return {
-				id: page.id,
-				name: page.name,
-				markdown: page.markdown,
-				readonly: false,
-				modified: page.modified,
-				accessed: page.accessed,
-			};
+			})).data);
 		},
 
 		async remove(id) {
