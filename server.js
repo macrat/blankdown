@@ -308,6 +308,37 @@ router.patch(new RegExp(`/${UUID_pattern}\.json`), login_required(async (req, re
 }));
 
 
+router.get(new RegExp(`/${UUID_pattern}\.md`), async (req, res) => {
+	const page_id = req.params[0].toLowerCase();
+
+	const client = await db.connect();
+
+	let result;
+	try {
+		result = await client.query("SELECT markdown, modified, author, public FROM pages WHERE id = $1", [page_id]);
+	} finally {
+		client.release();
+	}
+
+	res.set('Content-Type', 'text/markdown');
+
+	if (!result || !result.rows || !result.rows[0]) {
+		res.status(404).end('# not found\n');
+		return;
+	}
+
+	const data = result.rows[0];
+
+	if (data.public !== 'Y' && (!req.user || data.author !== req.user.id)) {
+		res.status(403).end('# permission denied\n');
+		return;
+	}
+
+	res.set('Last-Modified', new Date(Number.parseInt(data.modified)).toUTCString());
+	res.status(200).end(data.markdown);
+});
+
+
 router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
 	const page_id = req.params[0].toLowerCase();
 
@@ -320,15 +351,17 @@ router.get(new RegExp(`/${UUID_pattern}\.html`), async (req, res) => {
 		client.release();
 	}
 
+	res.set('Content-Type', 'text/html');
+
 	if (!result || !result.rows || !result.rows[0]) {
-		res.status(404).json({ error: 'not found' });
+		res.status(404).end('<h1>not found</h1>\n');
 		return;
 	}
 
 	const data = result.rows[0];
 
 	if (data.public !== 'Y' && (!req.user || data.author !== req.user.id)) {
-		res.status(403).json({ error: 'permission denied' });
+		res.status(403).end('<h1>permission denied<h1>\n');
 		return;
 	}
 
