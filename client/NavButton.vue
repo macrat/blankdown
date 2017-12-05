@@ -27,7 +27,6 @@ export default {
 	methods: {
 		click() {
 			if (!this.disabled) {
-				this.$parent.close();
 				this.$emit('click');
 			}
 		},

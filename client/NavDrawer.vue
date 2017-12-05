@@ -68,5 +68,12 @@ export default {
 			}
 		},
 	},
+	mounted() {
+		this.$children.forEach(child => {
+			child.$watch('click', () => {
+				this.close();
+			});
+		});
+	},
 };
 </script>
