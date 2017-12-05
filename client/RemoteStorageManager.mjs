@@ -31,11 +31,13 @@ export default new Vue({
 		},
 
 		async loadMostRecent() {
-			const most_recent = await this.pages()[0];
-			if (!most_recent) {
-				return null;
+			for (const page of (await this.pages() || [])) {
+				const data = await this.load(page.id);
+				if (data) {
+					return data;
+				}
 			}
-			return await this.load(most_recent.id);
+			return null;
 		},
 
 		async save(id, page) {

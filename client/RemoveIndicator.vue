@@ -23,7 +23,7 @@ export default {
 	},
 	methods: {
 		dismiss() {
-			this.$store.dispatch('restore');
+			this.$store.dispatch('restore', this.$store.state.removed);
 			this.$refs.removed.$emit('hide-now');
 		},
 	},

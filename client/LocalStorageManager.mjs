@@ -40,11 +40,13 @@ export default new Vue({
 		},
 
 		async loadMostRecent() {
-			const most_recent = await this.pages()[0];
-			if (!most_recent) {
-				return null;
+			for (const page of (await this.pages() || [])) {
+				const data = await this.load(page.id);
+				if (data) {
+					return data;
+				}
 			}
-			return await this.load(most_recent.id);
+			return null;
 		},
 
 		async save(id, page) {
@@ -56,7 +58,7 @@ export default new Vue({
 			const pages = (await this.pages()).filter(x => x.id !== id);
 			pages.unshift({
 				id: page.id,
-				name: page.name,
+				name: Markdown.getNameBy(page.markdown),
 				modified: page.modified,
 				accessed: page.accessed,
 			});
@@ -83,9 +85,9 @@ export default new Vue({
 		},
 
 		async remove(id) {
-			const pages = JSON.stringify(await this.pages().filter(x => x.id !== id));
+			const pages = (await this.pages()).filter(x => x.id !== id);
 
-			localStorage.setItem('state::recent_pages', pages);
+			localStorage.setItem('state::recent_pages', JSON.stringify(pages));
 			localStorage.removeItem('page::' + id);
 
 			this.$emit('changed-pages', pages);
