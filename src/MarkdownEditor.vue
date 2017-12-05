@@ -31,6 +31,9 @@ export default {
 			this.update(elm.value);
 		});
 	},
+	mounted() {
+		this.$el.selectionStart = this.$el.selectionEnd = 0;
+	},
 	methods: {
 		indent() {
 			const elm = this.$el;
