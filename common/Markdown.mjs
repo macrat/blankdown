@@ -16,11 +16,20 @@ marked.setOptions({
 	},
 });
 
+const renderer = new marked.Renderer();
+
+renderer.heading = function(text, level) {
+	const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+
+	return `<h${level} id="${escapedText}"><a name="${text}" class="anchor" href="#${escapedText}">${text}</a></h${level}>`
+};
+
 
 export default {
 	toHTML(data) {
 		return marked(data, {
 			sanitize: true,
+			renderer: renderer,
 		});
 	},
 

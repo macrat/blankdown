@@ -35,6 +35,11 @@ export default {
 		height: auto;
 	}
 
+	.markdown-viewer .anchor {
+		color: black;
+		text-decoration: none;
+	}
+
 	pre code {
 		display: block;
 		overflow: auto;
