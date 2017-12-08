@@ -19,7 +19,9 @@ export default store => {
 
 		const data = await storage.load(id);
 		if (data) {
-			await storage.markAccess(id);
+			if (!data.readonly) {
+				await storage.markAccess(id);
+			}
 
 			store.commit('loaded', {
 				id: id,
