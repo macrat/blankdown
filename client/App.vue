@@ -27,20 +27,7 @@ nav {
 	<main :style="{ cursor: $store.state.saving ? 'progress' : 'auto' }">
 		<nav-wrapper ref=nav>
 			<nav-drawer name="FILE">
-				<nav-button @click="$store.dispatch('create')">new</nav-button>
-				<nav-button @click="$store.dispatch('save')">save</nav-button>
-				<nav-button @click="$store.dispatch('remove')">remove</nav-button>
-				<hr>
-				<nav-button @click="$refs.importAndExporter.$emit('import')">import</nav-button>
-				<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown</nav-button>
-				<nav-button @click="$refs.importAndExporter.$emit('export-html')">export as HTML</nav-button>
-				<hr>
-				<nav-button
-					v-for="file in $store.state.recent"
-					:key=file.id
-					@click="$store.dispatch('load', file.id)"
-					:disabled="file.id === $store.state.current.id"
-					:href="'/' + file.id">{{ file.name }}</nav-button>
+				<file-pain />
 			</nav-drawer>
 
 			<nav-drawer name="Tabble of Contents" shortName="ToC">
@@ -57,8 +44,6 @@ nav {
 
 		<saving-indicator />
 		<remove-indicator />
-
-		<import-and-exporter ref=importAndExporter />
 	</main>
 </template>
 
@@ -69,9 +54,9 @@ import NavButton from './NavButton.vue';
 
 import MarkdownWriter from './MarkdownWriter.vue';
 
-import HTMLViewer from './HTMLViewer.vue';
+import FilePain from './FilePain.vue';
 
-import ImportAndExporter from './ImportAndExporter.vue';
+import HTMLViewer from './HTMLViewer.vue';
 
 import SavingIndicator from './SavingIndicator.vue';
 import RemoveIndicator from './RemoveIndicator.vue';
@@ -85,9 +70,9 @@ export default {
 
 		MarkdownWriter: MarkdownWriter,
 
-		'html-viewer': HTMLViewer,
+		FilePain: FilePain,
 
-		ImportAndExporter: ImportAndExporter,
+		'html-viewer': HTMLViewer,
 
 		SavingIndicator: SavingIndicator,
 		RemoveIndicator: RemoveIndicator,
@@ -100,30 +85,16 @@ export default {
 	},
 	created() {
 		window.addEventListener('keydown', ev => {
-			if (ev.ctrlKey) {
-				if (ev.shiftKey) {
-					switch (ev.key) {
-					case 's':
-						ev.preventDefault();
-						this.$refs.importAndExporter.$emit('export-markdown');
-						break;
-
-					case 'o':
-						ev.preventDefault();
-						this.$refs.importAndExporter.$emit('import');
-						break;
-					}
-				} else {
-					switch (ev.key) {
-					case 'm':
-						ev.preventDefault();
-						this.$store.dispatch('create');
-						break;
-					case 's':
-						ev.preventDefault();
-						this.$store.dispatch('save');
-						break;
-					}
+			if (ev.ctrlKey && !ev.shiftKey) {
+				switch (ev.key) {
+				case 'm':
+					ev.preventDefault();
+					this.$store.dispatch('create');
+					break;
+				case 's':
+					ev.preventDefault();
+					this.$store.dispatch('save');
+					break;
 				}
 			}
 		});
