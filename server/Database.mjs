@@ -25,7 +25,11 @@ const db = new pg.Pool({
 	} finally {
 		client.release();
 	}
-})();
+})().catch(e => {
+	console.error("failed connecting to database when initialization");
+	console.error(e);
+	throw e;
+});
 
 
 function rowToData(row) {
