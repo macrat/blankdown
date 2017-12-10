@@ -1,6 +1,7 @@
 <template>
 	<div>
 		<nav-button @click="$store.dispatch('create')">new</nav-button>
+		<nav-button @click="$emit('open-file')">open</nav-button>
 		<nav-button @click="$store.dispatch('save')">save</nav-button>
 		<nav-button @click="$store.dispatch('remove')">remove</nav-button>
 		<hr>

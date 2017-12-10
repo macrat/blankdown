@@ -25,22 +25,26 @@ nav {
 
 <template>
 	<main :style="{ cursor: $store.state.saving ? 'progress' : 'auto' }">
-		<nav-wrapper ref=nav>
-			<nav-drawer name="FILE">
-				<file-pain />
-			</nav-drawer>
+		<dialog-wrapper :opened.sync=searchboxOpened @closed="$refs.writer.focus()">
+			<nav-wrapper ref=nav>
+				<nav-drawer name="FILE">
+					<file-pain @open-file="searchboxOpened = true" />
+				</nav-drawer>
 
-			<nav-drawer name="Tabble of Contents" shortName="ToC">
-				<html-viewer :html=$store.getters.toc_html class=toc-pane />
-			</nav-drawer>
+				<nav-drawer name="Tabble of Contents" shortName="ToC">
+					<html-viewer :html=$store.getters.toc_html class=toc-pane />
+				</nav-drawer>
 
-			<nav-drawer name="HELP">
-				<nav-button @click="$store.dispatch('load', 'shortcuts')">shortcuts</nav-button>
-				<nav-button @click="$store.dispatch('load', 'about')">about</nav-button>
-			</nav-drawer>
+				<nav-drawer name="HELP">
+					<nav-button @click="$store.dispatch('load', 'shortcuts')">shortcuts</nav-button>
+					<nav-button @click="$store.dispatch('load', 'about')">about</nav-button>
+				</nav-drawer>
 
-			<markdown-writer ref=writer slot=content />
-		</nav-wrapper>
+				<markdown-writer ref=writer slot=content />
+			</nav-wrapper>
+
+			<search-box slot=dialog @file-opened="searchboxOpened = false; $refs.nav.$emit('close')" />
+		</dialog-wrapper>
 
 		<saving-indicator />
 		<remove-indicator />
@@ -61,6 +65,9 @@ import HTMLViewer from './HTMLViewer.vue';
 import SavingIndicator from './SavingIndicator.vue';
 import RemoveIndicator from './RemoveIndicator.vue';
 
+import DialogWrapper from './DialogWrapper.vue';
+import SearchBox from './SearchBox.vue';
+
 
 export default {
 	components: {
@@ -76,11 +83,16 @@ export default {
 
 		SavingIndicator: SavingIndicator,
 		RemoveIndicator: RemoveIndicator,
+
+		DialogWrapper: DialogWrapper,
+		SearchBox: SearchBox,
 	},
 	data() {
 		return {
 			dialogOpened: false,
 			dialogContent: null,
+
+			searchboxOpened: false,
 		};
 	},
 	created() {
@@ -90,6 +102,10 @@ export default {
 				case 'm':
 					ev.preventDefault();
 					this.$store.dispatch('create');
+					break;
+				case 'o':
+					ev.preventDefault();
+					this.searchboxOpened = true;
 					break;
 				case 's':
 					ev.preventDefault();

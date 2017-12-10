@@ -41,7 +41,12 @@
 		</div>
 
 		<transition name=dialog>
-			<div class=dialog-backboard v-if=opened @click="$emit('switch', !opened)">
+			<div
+				class=dialog-backboard
+				v-if=opened
+				@click="$emit('update:opened', !opened)"
+				@keydown.escape.stop="$emit('update:opened', false)">
+
 				<div class=dialog-window @click.stop>
 					<slot name=dialog />
 				</div>
@@ -53,9 +58,14 @@
 <script>
 export default {
 	props: ['opened'],
-	model: {
-		prop: 'opened',
-		event: 'switch',
+	watch: {
+		opened(value) {
+			if (value) {
+				this.$emit('opened');
+			} else {
+				this.$emit('closed');
+			}
+		},
 	},
 };
 </script>
