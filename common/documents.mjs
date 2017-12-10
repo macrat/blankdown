@@ -12,6 +12,7 @@ const documents = {
 |key combination|what do                        |
 |:--------------|:------------------------------|
 |Ctrl-M         |Make new file                  |
+|Ctrl-O         |Open new file (with search)    |
 |Ctrl-S         |Save current file              |
 |Ctrl-Shift-S   |Export current file as markdown|
 |Ctrl-Shift-O   |Import markdown file from disk |
