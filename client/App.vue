@@ -28,7 +28,7 @@ nav {
 		<dialog-wrapper :opened.sync=searchboxOpened @closed="$refs.writer.focus()">
 			<nav-wrapper ref=nav>
 				<nav-drawer name="FILE">
-					<file-pain @open-file="searchboxOpened = true" />
+					<file-pain @open-file="searchboxOpened = true" @click="$refs.nav.closeAll(); $refs.writer.focus()"/>
 				</nav-drawer>
 
 				<nav-drawer name="Tabble of Contents" shortName="ToC">
@@ -36,8 +36,8 @@ nav {
 				</nav-drawer>
 
 				<nav-drawer name="HELP">
-					<nav-button @click="$store.dispatch('load', 'shortcuts')">shortcuts</nav-button>
-					<nav-button @click="$store.dispatch('load', 'about')">about</nav-button>
+					<nav-button @click="$store.dispatch('load', 'shortcuts'); $refs.nav.closeAll()">shortcuts</nav-button>
+					<nav-button @click="$store.dispatch('load', 'about'); $refs.nav.closeAll()">about</nav-button>
 				</nav-drawer>
 
 				<markdown-writer ref=writer slot=content />

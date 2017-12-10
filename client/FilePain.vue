@@ -1,18 +1,18 @@
 <template>
 	<div>
-		<nav-button @click="$store.dispatch('create')">new</nav-button>
-		<nav-button @click="$emit('open-file')">open</nav-button>
-		<nav-button @click="$store.dispatch('save')">save</nav-button>
-		<nav-button @click="$store.dispatch('remove')">remove</nav-button>
+		<nav-button @click="$emit('click'); $store.dispatch('create')">new</nav-button>
+		<nav-button @click="$emit('click'); $emit('open-file')">open</nav-button>
+		<nav-button @click="$emit('click'); $store.dispatch('save')">save</nav-button>
+		<nav-button @click="$emit('click'); $store.dispatch('remove')">remove</nav-button>
 		<hr>
-		<nav-button @click="$refs.importAndExporter.$emit('import')">import</nav-button>
-		<nav-button @click="$refs.importAndExporter.$emit('export-markdown')">export as markdown</nav-button>
-		<nav-button @click="$refs.importAndExporter.$emit('export-html')">export as HTML</nav-button>
+		<nav-button @click="$emit('click'); $refs.importAndExporter.$emit('import')">import</nav-button>
+		<nav-button @click="$emit('click'); $refs.importAndExporter.$emit('export-markdown')">export as markdown</nav-button>
+		<nav-button @click="$emit('click'); $refs.importAndExporter.$emit('export-html')">export as HTML</nav-button>
 		<hr>
 		<nav-button
 			v-for="file in $store.state.recent"
 			:key=file.id
-			@click="$store.dispatch('load', file.id)"
+			@click="$emit('click'); $store.dispatch('load', file.id)"
 			:disabled="file.id === $store.state.current.id"
 			:href="'/' + file.id">{{ file.name }}</nav-button>
 
