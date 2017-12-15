@@ -37,7 +37,7 @@ export default {
 	},
 	methods: {
 		focus() {
-			this.$refs.editor.$el.focus();
+			this.$refs.editor.focus();
 		},
 	},
 	mounted() {

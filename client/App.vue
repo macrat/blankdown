@@ -28,7 +28,12 @@ nav {
 		<dialog-wrapper :opened.sync=searchboxOpened @closed="$refs.writer.focus()">
 			<nav-wrapper ref=nav>
 				<nav-drawer name="FILE">
-					<file-pain @open-file="searchboxOpened = true" @click="$refs.nav.closeAll(); $refs.writer.focus()"/>
+					<file-pain
+						@open-file="searchboxOpened = true"
+						@click="$refs.nav.closeAll(); $refs.writer.focus()"
+						@request-import="$refs.importAndExporter.$emit('import')"
+						@request-export-markdown="$refs.importAndExporter.$emit('export-markdown')"
+						@request-export-html="$refs.importAndExporter.$emit('export-html')" />
 				</nav-drawer>
 
 				<nav-drawer name="Tabble of Contents" shortName="ToC">
@@ -48,6 +53,8 @@ nav {
 
 		<saving-indicator />
 		<remove-indicator />
+
+		<import-and-exporter ref=importAndExporter />
 	</main>
 </template>
 
@@ -59,6 +66,7 @@ import NavButton from './NavButton.vue';
 import MarkdownWriter from './MarkdownWriter.vue';
 
 import FilePain from './FilePain.vue';
+import ImportAndExporter from './ImportAndExporter.vue';
 
 import HTMLViewer from './HTMLViewer.vue';
 
@@ -78,6 +86,7 @@ export default {
 		MarkdownWriter: MarkdownWriter,
 
 		FilePain: FilePain,
+		ImportAndExporter: ImportAndExporter,
 
 		'html-viewer': HTMLViewer,
 
@@ -97,7 +106,7 @@ export default {
 	},
 	created() {
 		window.addEventListener('keydown', ev => {
-			if (ev.ctrlKey && !ev.shiftKey) {
+			if (ev.ctrlKey) {
 				switch (ev.key) {
 				case 'm':
 					ev.preventDefault();
@@ -110,6 +119,15 @@ export default {
 				case 's':
 					ev.preventDefault();
 					this.$store.dispatch('save');
+					break;
+
+				case 'O':
+					ev.preventDefault();
+					this.$refs.importAndExporter.$emit('import');
+					break;
+				case 'S':
+					ev.preventDefault();
+					this.$refs.importAndExporter.$emit('export-markdown');
 					break;
 				}
 			}
