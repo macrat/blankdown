@@ -17,28 +17,40 @@
 </style>
 
 <template>
-	<synchronize-scroll class=markdown-writer>
-		<markdown-editor ref=editor />
-		<markdown-viewer />
-	</synchronize-scroll>
+	<div class=markdown-writer>
+		<markdown-editor :scroll=scroll @update:scroll=scrolled ref=editor />
+		<markdown-viewer :scroll=scroll @update:scroll=scrolled />
+	</div>
 </template>
 
 <script>
 import MarkdownEditor from './MarkdownEditor.vue';
 import MarkdownViewer from './MarkdownViewer.vue';
-import SynchronizeScroll from './SynchronizeScroll.vue';
 
 
 export default {
+	data() {
+		return {
+			scroll: {
+				x: 0,
+				y: 0,
+			},
+		};
+	},
 	components: {
 		MarkdownEditor: MarkdownEditor,
 		MarkdownViewer: MarkdownViewer,
-		SynchronizeScroll: SynchronizeScroll,
 	},
 	methods: {
 		focus() {
 			this.$refs.editor.focus();
 		},
+		scrolled(ev) {
+			this.scroll = {
+				x: Math.round(ev.x * 100) / 100,
+				y: Math.round(ev.y * 100) / 100,
+			}
+		}
 	},
 	mounted() {
 		this.focus();

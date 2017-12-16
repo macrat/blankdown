@@ -9,7 +9,8 @@
 <template>
 	<html-viewer
 		class=markdown-viewer
-		:html="$store.getters.html" />
+		:html=$store.getters.html
+		@scroll.native=scrolled />
 </template>
 
 <script>
@@ -17,7 +18,25 @@ import HTMLViewer from './HTMLViewer.vue';
 
 
 export default {
+	props: ['scroll'],
 	components: { 'html-viewer': HTMLViewer },
+	watch: {
+		scroll(val) {
+			const w = this.$el.scrollWidth - this.$el.clientWidth;
+			const h = this.$el.scrollHeight - this.$el.clientHeight;
+			this.$el.scrollTo(val.x * w, val.y * h);
+		},
+	},
+	methods: {
+		scrolled(ev) {
+			const w = this.$el.scrollWidth - this.$el.clientWidth;
+			const h = this.$el.scrollHeight - this.$el.clientHeight;
+			this.$emit('update:scroll', {
+				x: w == 0 ? 0 : this.$el.scrollLeft / w,
+				y: h == 0 ? 0 : this.$el.scrollTop / h,
+			});
+		},
+	},
 };
 </script>
 

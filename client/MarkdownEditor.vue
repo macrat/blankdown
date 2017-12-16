@@ -11,15 +11,17 @@
 
 <style>
 .CodeMirror {
-	height: 100%;
 	width: 100%;
+	height: 100%;
 	cursor: text;
 }
+
 .CodeMirror span {
 	word-wrap: break-word;
 	overflow-wrap: break-word;
 	word-break: break-all;
 }
+
 .cm-header {
 	margin: 1em 0 .5em;
 	font-size: 1.3em;
@@ -42,8 +44,8 @@
 		<vue-code-mirror
 			ref=codemirror
 			:value=$store.state.current.markdown
-			@change=update
-			:options=options />
+			:options=options
+			@update=update />
 	</div>
 </template>
 
@@ -54,10 +56,30 @@ require('./codemirror-modes');
 
 
 export default {
+	props: ['scroll'],
 	components: { VueCodeMirror },
 	created() {
 		this.$root.$on('insert-image', data => {
 			this.doc.replaceRange(`![${data.name}](${data.url})`, this.doc.getCursor());
+		});
+	},
+	watch: {
+		scroll(val) {
+			const info = this.editor.getScrollInfo();
+			const w = info.width - info.clientWidth;
+			const h = info.height - info.clientHeight;
+			this.editor.scrollTo(val.x * w, val.y * h);
+		},
+	},
+	mounted() {
+		this.editor.on('scroll', ev => {
+			const info = ev.getScrollInfo();
+			const w = info.width - info.clientWidth;
+			const h = info.height - info.clientHeight;
+			this.$emit('update:scroll', {
+				x: w == 0 ? 0 : info.left / w,
+				y: h == 0 ? 0 : info.top / h,
+			});
 		});
 	},
 	computed: {
@@ -85,6 +107,9 @@ export default {
 		},
 		update(markdown) {
 			this.$store.dispatch('update', markdown);
+		},
+		scrolled(ev) {
+			this.$emit('scroll', ev);
 		},
 	},
 };

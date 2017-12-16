@@ -13,7 +13,7 @@ export default {
 			this.makeLinkReceiver();
 		},
 	},
-	created() {
+	mounted() {
 		this.makeLinkReceiver();
 	},
 	methods: {
