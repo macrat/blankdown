@@ -16,6 +16,12 @@
 }
 </style>
 
+<style>
+.markdown-writer:hover .ps__scrollbar-y-rail, .markdown-writer:hover .ps__scrollbar-x-rail {
+	opacity: .6;
+}
+</style>
+
 <template>
 	<div class=markdown-writer>
 		<markdown-editor :scroll=scroll @update:scroll=scrolled ref=editor />
@@ -34,6 +40,7 @@ export default {
 			scroll: {
 				x: 0,
 				y: 0,
+				from: null,
 			},
 		};
 	},
@@ -46,9 +53,13 @@ export default {
 			this.$refs.editor.focus();
 		},
 		scrolled(ev) {
-			this.scroll = {
+			const tmp = {
 				x: Math.round(ev.x * 100) / 100,
 				y: Math.round(ev.y * 100) / 100,
+				from: ev.from,
+			}
+			if (tmp.x != this.scroll.x || tmp.y != this.scroll.y) {
+				this.scroll = tmp;
 			}
 		}
 	},

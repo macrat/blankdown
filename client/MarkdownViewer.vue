@@ -1,39 +1,46 @@
 <style scoped>
 .markdown-viewer {
 	box-sizing: border-box;
-	overflow: auto;
 	overflow-wrap: break-word;
 }
 </style>
 
 <template>
-	<html-viewer
-		class=markdown-viewer
-		:html=$store.getters.html
-		@scroll.native=scrolled />
+	<vue-perfect-scrollbar @scroll.native=scrolled>
+		<html-viewer
+			class=markdown-viewer
+			:html=$store.getters.html />
+	</vue-perfect-scrollbar>
 </template>
 
 <script>
 import HTMLViewer from './HTMLViewer.vue';
+import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 
 
 export default {
 	props: ['scroll'],
-	components: { 'html-viewer': HTMLViewer },
+	components: {
+		'html-viewer': HTMLViewer,
+		VuePerfectScrollbar: VuePerfectScrollbar,
+	},
 	watch: {
 		scroll(val) {
-			const w = this.$el.scrollWidth - this.$el.clientWidth;
-			const h = this.$el.scrollHeight - this.$el.clientHeight;
-			this.$el.scrollTo(val.x * w, val.y * h);
+			if (val.from != 'viewer') {
+				const w = this.$el.scrollWidth - this.$el.clientWidth;
+				const h = this.$el.scrollHeight - this.$el.clientHeight;
+				this.$el.scrollTo(val.x * w, val.y * h);
+			}
 		},
 	},
 	methods: {
-		scrolled(ev) {
+		scrolled() {
 			const w = this.$el.scrollWidth - this.$el.clientWidth;
 			const h = this.$el.scrollHeight - this.$el.clientHeight;
 			this.$emit('update:scroll', {
 				x: w == 0 ? 0 : this.$el.scrollLeft / w,
 				y: h == 0 ? 0 : this.$el.scrollTop / h,
+				from: 'viewer',
 			});
 		},
 	},

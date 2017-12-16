@@ -2,6 +2,7 @@
 .markdown-editor {
 	box-sizing: border-box;
 	padding: .5em;
+	overflow: hidden;
 }
 .markdown-editor-readonly {
 	background-color: transparent;
@@ -45,7 +46,7 @@
 			ref=codemirror
 			:value=$store.state.current.markdown
 			:options=options
-			@update=update />
+			@change=update />
 	</div>
 </template>
 
@@ -65,10 +66,12 @@ export default {
 	},
 	watch: {
 		scroll(val) {
-			const info = this.editor.getScrollInfo();
-			const w = info.width - info.clientWidth;
-			const h = info.height - info.clientHeight;
-			this.editor.scrollTo(val.x * w, val.y * h);
+			if (val.from != 'editor') {
+				const info = this.editor.getScrollInfo();
+				const w = info.width - info.clientWidth;
+				const h = info.height - info.clientHeight;
+				this.editor.scrollTo(val.x * w, val.y * h);
+			}
 		},
 	},
 	mounted() {
@@ -79,6 +82,7 @@ export default {
 			this.$emit('update:scroll', {
 				x: w == 0 ? 0 : info.left / w,
 				y: h == 0 ? 0 : info.top / h,
+				from: 'editor',
 			});
 		});
 	},
@@ -89,6 +93,7 @@ export default {
 				theme: 'elegant',
 				dragDrop: false,
 				lineWrapping: true,
+				scrollbarStyle: null,
 				xml: false,
 				gitHubSpice: false,
 				readOnly: this.$store.state.current.readonly,
@@ -107,9 +112,6 @@ export default {
 		},
 		update(markdown) {
 			this.$store.dispatch('update', markdown);
-		},
-		scrolled(ev) {
-			this.$emit('scroll', ev);
 		},
 	},
 };
