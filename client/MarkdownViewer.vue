@@ -6,10 +6,13 @@
 </style>
 
 <template>
-	<vue-perfect-scrollbar @scroll.native=scrolled>
+	<vue-perfect-scrollbar
+		class=markdown-viewer
+		@scroll.native=scrolled>
+
 		<html-viewer
-			class=markdown-viewer
 			:html=$store.getters.html />
+
 	</vue-perfect-scrollbar>
 </template>
 
