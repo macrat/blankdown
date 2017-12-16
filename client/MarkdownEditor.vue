@@ -5,7 +5,7 @@
 }
 .markdown-editor-readonly {
 	background-color: transparent;
-	opacity: .7;
+	opacity: .5;
 }
 </style>
 
