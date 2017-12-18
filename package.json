@@ -13,7 +13,8 @@
     "debug:start-delay": "sleep 5s; npm run debug:start",
     "debug:start": "nodemon --exec npm start",
     "debug:build": "`npm bin`/webpack --watch",
-    "debug:postgres": "docker run --rm -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=blankdown -p 5432:5432 postgres"
+    "debug:postgres": "docker run --rm -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=blankdown -p 5432:5432 postgres",
+    "postinstall": "npm build"
   },
   "author": "MacRat <m@crat.jp>",
   "license": "MIT",
