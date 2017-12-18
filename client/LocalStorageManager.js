@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import generateUUID from 'uuid/v4';
 
-import documents from '../common/documents.mjs';
-import Markdown from '../common/Markdown.mjs';
+import documents from '../common/documents.js';
+import Markdown from '../common/Markdown.js';
 
 
 export default new Vue({

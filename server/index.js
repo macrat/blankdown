@@ -1,11 +1,11 @@
 const generateUUID = require('uuid/v4');
 
 
-import Markdown from '../common/Markdown.mjs';
-import Database from './Database.mjs';
+import Markdown from '../common/Markdown.js';
+import Database from './Database.js';
 
 
-import { default as documents, ids as documentIDs } from '../common/documents.mjs';
+import { default as documents, ids as documentIDs } from '../common/documents.js';
 const documentsPattern = documentIDs.join('|');
 
 
@@ -14,7 +14,7 @@ const app = express();
 app.set('x-powered-by', false);
 app.use(require('morgan')('combined'));
 app.use(require('body-parser').text({ type: '*/*' }));
-app.use(express.static('build'));
+app.use(express.static(__dirname + '/../build'));
 
 const server = app.listen(process.env.PORT || 8000, () => {
 	console.log(`running at http://localhost:${server.address().port}`);

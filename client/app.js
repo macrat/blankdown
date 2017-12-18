@@ -1,6 +1,6 @@
 import Vue from 'vue';
 
-import store from './store.mjs';
+import store from './store.js';
 import App from './App.vue';
 
 

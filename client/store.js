@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 
-import StorageManagerPlugin from './StorageManagerPlugin.mjs';
-import Markdown from '../common/Markdown.mjs';
+import StorageManagerPlugin from './StorageManagerPlugin.js';
+import Markdown from '../common/Markdown.js';
 
 Vue.use(Vuex);
 
