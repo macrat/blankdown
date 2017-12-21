@@ -24,9 +24,9 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 
 				const nextLine = stream.lookAhead(1);
 				if (stream.sol() && !stream.eol() && nextLine) {
-					const match = nextLine.match(/(=|-){1,}/);
+					const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
 					if (match) {
-						state.nextHeader = match[1] === '=' ? 1 : 2;
+						state.nextHeader = match[1].startsWith('=') ? 1 : 2;
 						stream.skipToEnd();
 						return 'header body header-' + state.nextHeader;
 					}
