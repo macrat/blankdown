@@ -25,12 +25,12 @@ nav {
 
 <template>
 	<main :style="{ cursor: $store.state.saving ? 'progress' : 'auto' }">
-		<dialog-wrapper :opened.sync=searchboxOpened @closed="$refs.writer.focus()">
+		<dialog-wrapper :opened.sync=searchboxOpened @closed="$refs.editor.focus()">
 			<nav-wrapper ref=nav>
 				<nav-drawer name="FILE">
 					<file-pain
 						@open-file="searchboxOpened = true"
-						@click="$refs.nav.closeAll(); $refs.writer.focus()"
+						@click="$refs.nav.closeAll(); $refs.editor.focus()"
 						@request-import="$refs.importAndExporter.$emit('import')"
 						@request-export-markdown="$refs.importAndExporter.$emit('export-markdown')"
 						@request-export-html="$refs.importAndExporter.$emit('export-html')" />
@@ -45,7 +45,7 @@ nav {
 					<nav-button @click="$store.dispatch('load', 'about'); $refs.nav.closeAll()">about</nav-button>
 				</nav-drawer>
 
-				<markdown-writer ref=writer slot=content />
+				<markdown-editor ref=editor slot=content />
 			</nav-wrapper>
 
 			<search-box slot=dialog @file-opened="searchboxOpened = false; $refs.nav.$emit('close')" />
@@ -63,7 +63,7 @@ import NavWrapper from './NavWrapper.vue';
 import NavDrawer from './NavDrawer.vue';
 import NavButton from './NavButton.vue';
 
-import MarkdownWriter from './MarkdownWriter.vue';
+import MarkdownEditor from './MarkdownEditor.vue';
 
 import FilePain from './FilePain.vue';
 import ImportAndExporter from './ImportAndExporter.vue';
@@ -83,7 +83,7 @@ export default {
 		NavDrawer: NavDrawer,
 		NavButton: NavButton,
 
-		MarkdownWriter: MarkdownWriter,
+		MarkdownEditor: MarkdownEditor,
 
 		FilePain: FilePain,
 		ImportAndExporter: ImportAndExporter,
@@ -142,10 +142,7 @@ export default {
 			}
 
 			if (address.hash) {
-				try {
-					this.$refs.writer.$el.querySelector(address.hash).scrollIntoView();
-				} catch (e) {
-				}
+				this.$refs.editor.scrollInto(address.hash.slice(1));
 			}
 
 			const pane = address.search.slice(1);
@@ -168,10 +165,7 @@ export default {
 		});
 
 		if (location.hash) {
-			try {
-				this.$refs.writer.$el.querySelector(location.hash).scrollIntoView();
-			} catch (e) {
-			}
+			this.$refs.editor.scrollInto(location.hash.slice(1));
 		}
 
 		const pane = decodeURIComponent(location.search.slice(1));

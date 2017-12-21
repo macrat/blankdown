@@ -27,8 +27,9 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 					const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
 					if (match) {
 						state.nextHeader = match[1].startsWith('=') ? 1 : 2;
+						const id = stream.lookAhead(0).toLowerCase().replace(/[^\w]+/g, '-');
 						stream.skipToEnd();
-						return 'header body header-' + state.nextHeader;
+						return 'header body header-' + state.nextHeader + ' ' + ('header--' + id);
 					}
 				}
 

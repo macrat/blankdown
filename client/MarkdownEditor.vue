@@ -1,8 +1,9 @@
 <style scoped>
 .markdown-editor {
 	box-sizing: border-box;
-	padding: .5em;
 	overflow: hidden;
+	height: 100%;
+	width: 100%;
 }
 .markdown-editor-readonly {
 	background-color: transparent;
@@ -59,8 +60,10 @@
 
 <script>
 import { codemirror as VueCodeMirror } from 'vue-codemirror-lite';
-require('codemirror/theme/elegant.css');
-require('./codemirror-modes');
+import 'codemirror/theme/elegant.css';
+import 'codemirror/addon/scroll/simplescrollbars.css';
+import 'codemirror/addon/scroll/simplescrollbars.js';
+import './codemirror-modes';
 
 import widgets from 'codemirror-widgets';
 
@@ -68,34 +71,13 @@ import thumbnailWidget from './codemirror-markdown-thumbnails.js';
 
 
 export default {
-	props: ['scroll'],
 	components: { VueCodeMirror },
 	created() {
 		this.$root.$on('insert-image', data => {
 			this.doc.replaceRange(`![${data.name}](${data.url})`, this.doc.getCursor());
 		});
 	},
-	watch: {
-		scroll(val) {
-			if (val.from != 'editor') {
-				const info = this.editor.getScrollInfo();
-				const w = info.width - info.clientWidth;
-				const h = info.height - info.clientHeight;
-				this.editor.scrollTo(val.x * w, val.y * h);
-			}
-		},
-	},
 	mounted() {
-		this.editor.on('scroll', ev => {
-			const info = ev.getScrollInfo();
-			const w = info.width - info.clientWidth;
-			const h = info.height - info.clientHeight;
-			this.$emit('update:scroll', {
-				x: w == 0 ? 0 : info.left / w,
-				y: h == 0 ? 0 : info.top / h,
-				from: 'editor',
-			});
-		});
 		this.widgetManager.enable(thumbnailWidget);
 	},
 	computed: {
@@ -105,7 +87,7 @@ export default {
 				theme: 'elegant',
 				dragDrop: false,
 				lineWrapping: true,
-				scrollbarStyle: null,
+				scrollbarStyle: 'simple',
 				xml: false,
 				gitHubSpice: false,
 				readOnly: this.$store.state.current.readonly,
@@ -127,6 +109,18 @@ export default {
 		},
 		update(markdown) {
 			this.$store.dispatch('update', markdown);
+		},
+		scrollInto(id) {
+			const lineCount = this.editor.getDoc().lineCount();
+			for (let line=0; line<lineCount; line++) {
+				const tokens = this.editor.getLineTokens(line);
+				for (let token of tokens) {
+					if (token.type && token.type.split(' ').includes('header--' + id)) {
+						this.editor.scrollIntoView({line: line, ch: 0});
+						return;
+					}
+				}
+			}
 		},
 	},
 };
