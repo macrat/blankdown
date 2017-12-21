@@ -16,7 +16,7 @@ const app = express();
 app.set('x-powered-by', false);
 app.use(require('morgan')('combined'));
 app.use(require('body-parser').text({ type: '*/*' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {maxage: process.env.NODE_ENV === 'production' ? '7d' : '0'}));
 
 const server = app.listen(process.env.PORT || 8000, () => {
 	console.log(`running at http://localhost:${server.address().port}`);
@@ -40,6 +40,10 @@ app.use('/', router);
 
 
 app.get(`/(${UUID_pattern}|${documentsPattern})?`, (req, res) => {
+	if (process.env.NODE_ENV === 'production') {
+		res.set('Cache-Control', 'public, max-age=' + (7*24*60*60));
+	}
+
 	res.sendFile('index.html', {
 		root: path.join(__dirname, 'public'),
 	});
