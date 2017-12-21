@@ -1,12 +1,15 @@
 const path = require('path');
 const webpack = require('webpack');
+const HTMLWebpackPlugin = require('html-webpack-plugin');
+const nodeExternals = require('webpack-node-externals');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 
-module.exports = {
-	entry: './client/app.js',
+const clientConfig = {
+	entry: './client/index.js',
 	output: {
 		filename: 'app.js',
-		path: path.join(__dirname, 'build'),
+		path: path.join(__dirname, 'build', 'public'),
 	},
 	module: {
 		rules: [
@@ -23,16 +26,19 @@ module.exports = {
 			},
 		],
 	},
+	plugins: [
+		new HTMLWebpackPlugin({
+			template: './static/index.html',
+			inject: false,
+		}),
+	],
 	devtool: '#eval-source-map',
 };
 
-
 if (process.env.NODE_ENV === 'production') {
-	module.exports.devtool = '#source-map',
+	clientConfig.devtool = '#source-map',
 
-	UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-
-	module.exports.plugins = (module.exports.plugins || []).concat([
+	clientConfig.plugins = (clientConfig.plugins || []).concat([
 		new webpack.DefinePlugin({
 			'process.env': {
 				NODE_ENV: '"production"'
@@ -46,3 +52,29 @@ if (process.env.NODE_ENV === 'production') {
 		}),
 	]);
 }
+
+
+const serverConfig = {
+	entry: './server/index.js',
+	output: {
+		filename: 'server.js',
+		path: path.join(__dirname, 'build'),
+	},
+	module: {
+		rules: [
+			{
+				test: /\.js$/,
+				loader: 'babel-loader',
+			},
+		],
+	},
+	target: 'node',
+	node: {
+		__dirname: false,
+	},
+	externals: [nodeExternals()],
+	devtool: '#eval-source-map',
+};
+
+
+module.exports = [clientConfig, serverConfig];
