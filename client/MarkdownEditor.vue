@@ -23,6 +23,9 @@
 	word-break: break-all;
 }
 
+.cm-header.cm-mark {
+	color: #bbb;
+}
 .cm-header {
 	margin: 1em 0 .5em;
 	font-size: 1.3em;
@@ -37,6 +40,10 @@
 }
 .cm-header.cm-header-3 {
 	font-size: 1.4em;
+}
+
+.cm-blob-image.cm-body {
+	font-size: 10%;
 }
 </style>
 
@@ -54,6 +61,10 @@
 import { codemirror as VueCodeMirror } from 'vue-codemirror-lite';
 require('codemirror/theme/elegant.css');
 require('./codemirror-modes');
+
+import widgets from 'codemirror-widgets';
+
+import thumbnailWidget from './codemirror-markdown-thumbnails.js';
 
 
 export default {
@@ -85,11 +96,12 @@ export default {
 				from: 'editor',
 			});
 		});
+		this.widgetManager.enable(thumbnailWidget);
 	},
 	computed: {
 		options() {
 			return {
-				mode: 'gfm',
+				mode: 'blankdown',
 				theme: 'elegant',
 				dragDrop: false,
 				lineWrapping: true,
@@ -104,6 +116,9 @@ export default {
 		},
 		doc() {
 			return this.editor.getDoc();
+		},
+		widgetManager() {
+			return widgets.createManager(this.editor);
 		},
 	},
 	methods: {

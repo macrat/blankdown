@@ -25,6 +25,7 @@
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "body-parser": "^1.18.2",
+    "codemirror-widgets": "github:macrat/codemirror-widgets",
     "css-loader": "^0.28.7",
     "express": "^4.16.2",
     "express-async-router": "^0.1.12",
