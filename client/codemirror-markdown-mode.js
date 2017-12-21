@@ -56,7 +56,6 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 
 				if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 					const match = stream.match(/(#+) +/, true);
-					console.log(match);
 					return 'header mark header-' + match[1].length;
 				}
 
