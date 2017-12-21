@@ -30,6 +30,9 @@ export default widgets.createType({
 		img.addEventListener('error', function() {
 			this.classList.add('cm-thumbnail-missing');
 		});
+		img.addEventListener('click', () => {
+			widget.enter();
+		});
 		return img;
 	},
 });
