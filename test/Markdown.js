@@ -1,6 +1,6 @@
 import assert from 'power-assert';
 
-import Markdown from '../common/Markdown.mjs';
+import Markdown from '../common/Markdown.js';
 
 
 describe('common', () => {
