@@ -8,7 +8,7 @@
 	bottom: 0;
 	left: 0;
 	width: 15em;
-	z-index: 2;
+	z-index: 10;
 }
 
 .nav-drawer hr {
