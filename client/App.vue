@@ -1,11 +1,12 @@
-<style>
-.nav-content-area {
+<style scoped>
+main {
 	height: 100vh;
 	overflow: auto;
 	display: flex;
-	flex-direction: column;
 }
+</style>
 
+<style>
 nav {
 	flex: 0 0 auto;
 }
@@ -13,43 +14,12 @@ nav {
 .markdown-writer {
 	flex: 1 1 0;
 }
-
-.toc-pane ul {
-	line-height: 1.3em;
-}
-.toc-pane a {
-	color: black;
-	text-decoration: none;
-}
 </style>
 
 <template>
 	<main :style="{ cursor: $store.state.saving ? 'progress' : 'auto' }">
-		<dialog-wrapper :opened.sync=searchboxOpened @closed="$refs.editor.focus()">
-			<nav-wrapper ref=nav>
-				<nav-drawer name="FILE">
-					<file-pain
-						@open-file="searchboxOpened = true"
-						@click="$refs.nav.closeAll(); $refs.editor.focus()"
-						@request-import="$refs.importAndExporter.$emit('import')"
-						@request-export-markdown="$refs.importAndExporter.$emit('export-markdown')"
-						@request-export-html="$refs.importAndExporter.$emit('export-html')" />
-				</nav-drawer>
-
-				<nav-drawer name="Tabble of Contents" shortName="ToC">
-					<html-viewer :html=$store.getters.toc_html class=toc-pane />
-				</nav-drawer>
-
-				<nav-drawer name="HELP">
-					<nav-button @click="$store.dispatch('load', 'shortcuts'); $refs.nav.closeAll()">shortcuts</nav-button>
-					<nav-button @click="$store.dispatch('load', 'about'); $refs.nav.closeAll()">about</nav-button>
-				</nav-drawer>
-
-				<markdown-editor ref=editor slot=content />
-			</nav-wrapper>
-
-			<search-box slot=dialog @file-opened="searchboxOpened = false; $refs.nav.$emit('close')" />
-		</dialog-wrapper>
+		<side-pane />
+		<markdown-editor ref=editor />
 
 		<saving-indicator />
 		<remove-indicator />
@@ -59,42 +29,25 @@ nav {
 </template>
 
 <script>
-import NavWrapper from './NavWrapper.vue';
-import NavDrawer from './NavDrawer.vue';
-import NavButton from './NavButton.vue';
+import SidePane from './SidePane.vue';
 
 import MarkdownEditor from './MarkdownEditor.vue';
 
-import FilePain from './FilePain.vue';
 import ImportAndExporter from './ImportAndExporter.vue';
-
-import HTMLViewer from './HTMLViewer.vue';
 
 import SavingIndicator from './SavingIndicator.vue';
 import RemoveIndicator from './RemoveIndicator.vue';
 
-import DialogWrapper from './DialogWrapper.vue';
-import SearchBox from './SearchBox.vue';
-
 
 export default {
 	components: {
-		NavWrapper: NavWrapper,
-		NavDrawer: NavDrawer,
-		NavButton: NavButton,
-
+		SidePane: SidePane,
 		MarkdownEditor: MarkdownEditor,
 
-		FilePain: FilePain,
 		ImportAndExporter: ImportAndExporter,
-
-		'html-viewer': HTMLViewer,
 
 		SavingIndicator: SavingIndicator,
 		RemoveIndicator: RemoveIndicator,
-
-		DialogWrapper: DialogWrapper,
-		SearchBox: SearchBox,
 	},
 	data() {
 		return {
@@ -144,33 +97,14 @@ export default {
 			if (address.hash) {
 				this.$refs.editor.scrollInto(address.hash.slice(1));
 			}
-
-			const pane = address.search.slice(1);
-			if (pane) {
-				this.$refs.nav.$emit('open', pane);
-			} else {
-				this.$refs.nav.$emit('close');
-			}
 		});
 		window.addEventListener('popstate', () => {
 			this.$root.$emit('open-address', location.href);
 		});
 	},
 	mounted() {
-		this.$refs.nav.$on('opened', name => {
-			history.replaceState(null, '', `/${this.currentID}?${name.toLowerCase()}${location.hash}`);
-		});
-		this.$refs.nav.$on('closed', () => {
-			history.replaceState(null, '', `/${this.currentID}${location.hash}`);
-		});
-
 		if (location.hash) {
 			this.$refs.editor.scrollInto(location.hash.slice(1));
-		}
-
-		const pane = decodeURIComponent(location.search.slice(1));
-		if (pane) {
-			this.$refs.nav.$emit('open', pane);
 		}
 	},
 	computed: {
@@ -181,11 +115,7 @@ export default {
 	watch: {
 		currentID(id) {
 			if (id && id !== location.pathname.slice(1)) {
-				if (this.$refs.nav.opened) {
-					history.pushState(null, '', `/${id}?${this.$refs.nav.current.name}`);
-				} else {
-					history.pushState(null, '', '/' + id);
-				}
+				history.pushState(null, '', '/' + id);
 			}
 		},
 	},
