@@ -93,6 +93,9 @@ a {
 						@click.prevent="$store.dispatch('remove', file.id)">remove</a>
 				</div>
 			</div>
+
+			<a href="/about" @click.prevent="$store.dispatch('load', 'about')">about</a>
+			<a href="/shortcuts" @click.prevent="$store.dispatch('load', 'shortcuts')">shortcuts</a>
 		</nav>
 	</drawer-view>
 </template>

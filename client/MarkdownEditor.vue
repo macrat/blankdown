@@ -5,10 +5,6 @@
 	height: 100%;
 	width: 100%;
 }
-.markdown-editor-readonly {
-	background-color: transparent;
-	opacity: .5;
-}
 </style>
 
 <style>
@@ -49,7 +45,7 @@
 </style>
 
 <template>
-	<div class=markdown-editor :class="{ 'markdown-editor-readonly': $store.state.current.readonly }">
+	<div class=markdown-editor>
 		<vue-code-mirror
 			ref=codemirror
 			:value=$store.state.current.markdown
@@ -90,7 +86,7 @@ export default {
 				scrollbarStyle: 'simple',
 				xml: false,
 				gitHubSpice: false,
-				readOnly: this.$store.state.current.readonly,
+				readOnly: this.$store.state.current.readonly ? 'nocursor' : false,
 			};
 		},
 		editor() {
