@@ -26,7 +26,9 @@ nav {
 		<saving-indicator />
 		<remove-indicator />
 
-		<import-and-exporter ref=importAndExporter />
+		<import-and-exporter
+			ref=importAndExporter
+			@image-loaded="$refs.editor.insertImage($event.filename, $event.url)" />
 	</main>
 </template>
 

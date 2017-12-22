@@ -68,11 +68,6 @@ import thumbnailWidget from './codemirror-markdown-thumbnails.js';
 
 export default {
 	components: { VueCodeMirror },
-	created() {
-		this.$root.$on('insert-image', data => {
-			this.doc.replaceRange(`![${data.name}](${data.url})`, this.doc.getCursor());
-		});
-	},
 	mounted() {
 		this.widgetManager.enable(thumbnailWidget);
 
@@ -127,6 +122,9 @@ export default {
 					}
 				}
 			}
+		},
+		insertImage(text, url) {
+			this.doc.replaceRange(`![${text}](${url})`, this.doc.getCursor());
 		},
 	},
 };

@@ -66,7 +66,6 @@ export default {
 						filename: files[0].name,
 						url: reader.result,
 					});
-					this.$root.$emit('insert-image', { name: files[0].name, url: reader.result });
 				});
 				reader.readAsDataURL(files[0]);
 			}
