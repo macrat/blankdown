@@ -49,10 +49,6 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 					return 'header mark header-' + match[1].length;
 				}
 
-				if (stream.sol() && stream.match(/- .*$/, true)) {
-					return 'variable-2';
-				}
-
 				const nextLine = stream.lookAhead(1);
 				if (stream.sol() && !stream.eol() && nextLine) {
 					const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
