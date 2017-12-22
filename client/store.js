@@ -85,7 +85,7 @@ const store = new Vuex.Store({
 		},
 		load(context, id) {
 		},
-		remove() {
+		remove(context, id) {
 		},
 		restore(context) {
 		},

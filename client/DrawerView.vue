@@ -6,7 +6,7 @@
 
 .drawer-view-content {
 	height: 100%;
-	width: 200px;
+	width: 250px;
 }
 
 .drawer-view-border {
@@ -60,7 +60,7 @@ export default {
 	data() {
 		return {
 			opened: false,
-			width: 200,
+			width: 250,
 			dragWidth: null,
 		};
 	},

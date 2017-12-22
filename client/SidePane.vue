@@ -6,6 +6,9 @@ nav {
 #profile {
 	display: flex;
 	align-items: center;
+}
+
+nav > div {
 	padding-bottom: .5em;
 	margin-bottom: .5em;
 	border-bottom: 1px solid gray;
@@ -23,6 +26,8 @@ img {
 input {
 	display: block;
 	width: 100%;
+	padding: .3em;
+	margin-bottom: .5em;
 }
 
 a {
@@ -31,14 +36,37 @@ a {
 	color: black;
 	text-decoration: none;
 }
+
+.file-remove {
+	font-size: 70%;
+	color: #666;
+}
+.file {
+	display: flex;
+	width: 100%;
+}
+.file-name {
+	flex: 1 1 0;
+}
+.file-current {
+	background-color: #ccc;
+}
+.file-noname .file-name {
+	color: #999;
+}
 </style>
 
 <template>
 	<drawer-view>
 		<nav>
-			<div id=profile>
+			<div>
 				<img :src=user.icon align=middle>
 				<span id=username>{{ user.name }}</span>
+			</div>
+
+			<div>
+				<a href @click.prevent="$store.dispatch('create')">new</a>
+				<a href @click.prevent="$store.dispatch('save')">save</a>
 			</div>
 
 			<input
@@ -48,9 +76,23 @@ a {
 				@keyup=update
 				@change=update>
 
-			<a
-				v-for="file in files"
-				@click.prevent="$store.dispatch('load', file.id)">{{ file.name }}</a>
+			<div id=file-list>
+				<div
+					class=file
+					v-for="file in files"
+					:class="{ 'file-noname': file.name.trim() === '', 'file-current': file.id === $store.state.current.id }">
+
+					<a
+						class=file-name
+						@click.prevent="$store.dispatch('load', file.id)"
+						:href="'/' + file.id">{{ file.name || 'no name' }}</a>
+
+					<a
+						class=file-remove
+						href
+						@click.prevent="$store.dispatch('remove', file.id)">remove</a>
+				</div>
+			</div>
 		</nav>
 	</drawer-view>
 </template>

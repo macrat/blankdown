@@ -69,17 +69,21 @@ export default store => {
 			break;
 
 		case 'remove':
-			storage.remove(state.current.id).then(() => {
-				store.commit('removed', state.current);
+			storage.load(action.payload).then(target => {
+				storage.remove(target.id).then(() => {
+					store.commit('removed', target);
 
-				storage.loadMostRecent().then(next => {
-					if (!next) {
-						store.dispatch('create');
-					} else {
-						store.commit('loaded', {
-							id: next.id,
-							markdown: next.markdown,
-							readonly: next.readonly,
+					if (target.id === state.current.id) {
+						storage.loadMostRecent().then(next => {
+							if (!next) {
+								store.dispatch('create');
+							} else {
+								store.commit('loaded', {
+									id: next.id,
+									markdown: next.markdown,
+									readonly: next.readonly,
+								});
+							}
 						});
 					}
 				});

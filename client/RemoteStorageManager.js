@@ -18,7 +18,7 @@ export default new Vue({
 	name: 'RemoteStorage',
 	methods: {
 		async pages() {
-			return ((await axios.get('/v1/pages')).data.pages || []).map(remote_to_local).filter(x => x.name !== "");
+			return ((await axios.get('/v1/pages')).data.pages || []).map(remote_to_local);
 		},
 
 		async load(id) {
