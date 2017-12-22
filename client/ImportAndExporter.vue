@@ -8,7 +8,7 @@
 	<div>
 		<input
 			class=import-and-exporter--input-file
-			@change="importFromFiles(this.event.target.files)"
+			@change=inputChanged
 			type=file
 			accept="*.md" />
 
@@ -19,10 +19,6 @@
 <script>
 export default {
 	created() {
-		this.$on('import', this.importMarkdown);
-		this.$on('export-markdown', this.exportMarkdown);
-		this.$on('export-html', this.exportHTML);
-
 		window.addEventListener('dragover', ev => {
 			ev.stopPropagation();
 			ev.preventDefault();
@@ -39,22 +35,37 @@ export default {
 		importMarkdown() {
 			this.$el.querySelector('.import-and-exporter--input-file').click();
 		},
+		inputChanged(ev) {
+			this.importFromFiles(ev.target.files);
+		},
 		importFromFiles(files) {
 			if (!files) {
 				return;
 			}
 
 			if (files[0].type.startsWith('text/')) {
+				this.$emit('import-start', files[0].name);
+
 				const reader = new FileReader();
 				reader.addEventListener('load', () => {
+					this.$emit('imported', {
+						filename: files[0].name,
+						contents: reader.result,
+					});
 					this.$store.dispatch('import', reader.result);
 				});
 				reader.readAsText(files[0]);
 			}
 
 			if (files[0].type.startsWith('image/')) {
+				this.$emit('image-load-start', files[0].name);
+
 				const reader = new FileReader();
 				reader.addEventListener('load', () => {
+					this.$emit('image-loaded', {
+						filename: files[0].name,
+						url: reader.result,
+					});
 					this.$root.$emit('insert-image', { name: files[0].name, url: reader.result });
 				});
 				reader.readAsDataURL(files[0]);
@@ -62,6 +73,12 @@ export default {
 		},
 
 		startDownload(filename, mimetype, data) {
+			this.$emit('download-start', {
+				filename: filename,
+				type: mimetype,
+				contents: data,
+			});
+
 			const elm = this.$el.querySelector('.import-and-exporter--download-link')
 			elm.href = URL.createObjectURL(new Blob([ data ], { type: mimetype }));
 			elm.download = filename;

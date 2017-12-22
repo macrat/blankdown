@@ -101,7 +101,7 @@ export default store => {
 			break;
 
 		case 'import':
-			storage.create().then(page => store.commit('loaded', page));
+			storage.create(action.payload).then(page => store.commit('loaded', page));
 			break;
 		}
 	});

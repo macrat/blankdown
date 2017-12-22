@@ -66,7 +66,9 @@ a {
 
 			<div>
 				<a href @click.prevent="$store.dispatch('create')">new</a>
-				<a href @click.prevent="$store.dispatch('save')">save</a>
+				<a href @click.prevent="$emit('import-request')">import</a>
+				<a href @click.prevent="$emit('export-request', 'markdown')">export</a>
+				<a href @click.prevent="$emit('export-request', 'html')">export as HTML</a>
 			</div>
 
 			<input

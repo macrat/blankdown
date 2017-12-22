@@ -18,7 +18,9 @@ nav {
 
 <template>
 	<main :style="{ cursor: $store.state.saving ? 'progress' : 'auto' }">
-		<side-pane />
+		<side-pane
+			@import-request=importRequest
+			@export-request=exportRequest />
 		<markdown-editor ref=editor />
 
 		<saving-indicator />
@@ -49,14 +51,6 @@ export default {
 		SavingIndicator: SavingIndicator,
 		RemoveIndicator: RemoveIndicator,
 	},
-	data() {
-		return {
-			dialogOpened: false,
-			dialogContent: null,
-
-			searchboxOpened: false,
-		};
-	},
 	created() {
 		window.addEventListener('keydown', ev => {
 			if (ev.ctrlKey) {
@@ -65,10 +59,6 @@ export default {
 					ev.preventDefault();
 					this.$store.dispatch('create');
 					break;
-				case 'o':
-					ev.preventDefault();
-					this.searchboxOpened = true;
-					break;
 				case 's':
 					ev.preventDefault();
 					this.$store.dispatch('save');
@@ -76,11 +66,11 @@ export default {
 
 				case 'O':
 					ev.preventDefault();
-					this.$refs.importAndExporter.$emit('import');
+					this.importRequest();
 					break;
 				case 'S':
 					ev.preventDefault();
-					this.$refs.importAndExporter.$emit('export-markdown');
+					this.exportRequest('markdown');
 					break;
 				}
 			}
@@ -116,6 +106,21 @@ export default {
 		currentID(id) {
 			if (id && id !== location.pathname.slice(1)) {
 				history.pushState(null, '', '/' + id);
+			}
+		},
+	},
+	methods: {
+		importRequest() {
+			this.$refs.importAndExporter.importMarkdown();
+		},
+		exportRequest(type) {
+			switch (type) {
+			case 'markdown':
+				this.$refs.importAndExporter.exportMarkdown();
+				break;
+			case 'html':
+				this.$refs.importAndExporter.exportHTML();
+				break;
 			}
 		},
 	},
