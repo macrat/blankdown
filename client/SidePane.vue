@@ -1,11 +1,9 @@
 <style scoped>
 nav {
-	border-right : 1px solid black;
 	padding: .5em;
-	width: 12em;
 }
 
-div {
+#profile {
 	display: flex;
 	align-items: center;
 	padding-bottom: .5em;
@@ -36,30 +34,35 @@ a {
 </style>
 
 <template>
-	<nav>
-		<div>
-			<img :src=user.icon align=middle>
-			<span id=username>{{ user.name }}</span>
-		</div>
+	<drawer-view>
+		<nav>
+			<div id=profile>
+				<img :src=user.icon align=middle>
+				<span id=username>{{ user.name }}</span>
+			</div>
 
-		<input
-			type=search
-			placeholder=search
-			v-model=searchWord
-			@keyup=update
-			@change=update>
+			<input
+				type=search
+				placeholder=search
+				v-model=searchWord
+				@keyup=update
+				@change=update>
 
-		<a
-			v-for="file in files"
-			@click.prevent="$store.dispatch('load', file.id)">{{ file.name }}</a>
-	</nav>
+			<a
+				v-for="file in files"
+				@click.prevent="$store.dispatch('load', file.id)">{{ file.name }}</a>
+		</nav>
+	</drawer-view>
 </template>
 
 <script>
 import axios from 'axios';
 
+import DrawerView from './DrawerView.vue';
+
 
 export default {
+	components: { DrawerView },
 	data() {
 		return {
 			user: {
