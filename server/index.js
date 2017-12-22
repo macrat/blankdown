@@ -212,7 +212,7 @@ router.patch(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, 
 		return;
 	}
 
-	if (!request.modified && (request.markdown || request.pubblic)) {
+	if (!request.modified && (request.markdown || request.public)) {
 		res.status(400).json({ error: 'modified timestamp is required if modify data' });
 		return;
 	}
