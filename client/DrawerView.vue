@@ -59,7 +59,7 @@
 export default {
 	data() {
 		return {
-			opened: false,
+			opened: true,
 			width: 250,
 			dragWidth: null,
 			dragStartPos: null,
