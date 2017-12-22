@@ -22,17 +22,6 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 					return tokens;
 				}
 
-				const nextLine = stream.lookAhead(1);
-				if (stream.sol() && !stream.eol() && nextLine) {
-					const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
-					if (match) {
-						state.nextHeader = match[1].startsWith('=') ? 1 : 2;
-						const id = stream.lookAhead(0).toLowerCase().replace(/[^\w]+/g, '-');
-						stream.skipToEnd();
-						return 'header body header-' + state.nextHeader + ' ' + ('header--' + id);
-					}
-				}
-
 				if (state.imageLink && stream.match(/\(data:(?=.*\))/, true)) {
 					state.imageLink = false;
 					state.blobImage = true;
@@ -58,6 +47,21 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 				if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 					const match = stream.match(/(#+) +/, true);
 					return 'header mark header-' + match[1].length;
+				}
+
+				if (stream.sol() && stream.match(/- .*$/, true)) {
+					return 'variable-2';
+				}
+
+				const nextLine = stream.lookAhead(1);
+				if (stream.sol() && !stream.eol() && nextLine) {
+					const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
+					if (match) {
+						state.nextHeader = match[1].startsWith('=') ? 1 : 2;
+						const id = stream.lookAhead(0).toLowerCase().replace(/[^\w]+/g, '-');
+						stream.skipToEnd();
+						return 'header body header-' + state.nextHeader + ' ' + ('header--' + id);
+					}
 				}
 
 				if (stream.next() == null) {
