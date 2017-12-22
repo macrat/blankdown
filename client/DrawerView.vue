@@ -62,6 +62,9 @@ export default {
 			opened: false,
 			width: 250,
 			dragWidth: null,
+			dragStartPos: null,
+			oldPos: null,
+			moveDistance: 0,
 		};
 	},
 	computed: {
@@ -76,41 +79,37 @@ export default {
 		close() {
 			this.opened = false;
 		},
-	},
-	mounted() {
-		let dragStart = null;
-		let oldPos = null;
-		let moveDistance = 0;
 
-		this.$el.querySelector('.drawer-view-border').addEventListener('mousedown', ev => {
-			dragStart = ev.clientX;
-			oldPos = this.opened ? this.width : 0;
-			moveDistance = 0;
-		});
-		window.addEventListener('mousemove', ev => {
-			if (dragStart !== null) {
-				ev.preventDefault();
-				const move = ev.clientX - dragStart;
-				if (this.opened) {
-					this.dragWidth = Math.max(0, Math.min(this.width, this.width + move)) + 'px';
-				} else {
-					this.dragWidth = Math.max(0, Math.min(this.width, move)) + 'px';
-				}
-				moveDistance += Math.abs(move - oldPos);
-				oldPos = move;
-			}
-		});
-		window.addEventListener('mouseup', ev => {
-			if (dragStart === null) {
+		dragStart(clientX) {
+			this.dragStartPos = clientX;
+			this.oldPos = this.opened ? this.width : 0;
+			this.dragWidth = this.oldPos + 'px';
+			this.moveDistance = 0;
+		},
+		dragMove(clientX) {
+			if (!this.dragging) {
 				return;
 			}
-			ev.preventDefault();
 
-			const move = ev.clientX - dragStart;
-			dragStart = null;
+			const move = clientX - this.dragStartPos;
+			if (this.opened) {
+				this.dragWidth = Math.max(0, Math.min(this.width, this.width + move)) + 'px';
+			} else {
+				this.dragWidth = Math.max(0, Math.min(this.width, move)) + 'px';
+			}
+			this.moveDistance += Math.abs(move - this.oldPos);
+			this.oldPos = move;
+		},
+		dragEnd(clientX) {
+			if (!this.dragging) {
+				return;
+			}
+
+			const move = clientX - this.dragStartPos;
+			this.dragStartPos = null;
 			this.dragWidth = null;
 
-			if (moveDistance < 10) {
+			if (this.moveDistance < 10) {
 				if (this.opened) {
 					this.close();
 				} else {
@@ -124,7 +123,49 @@ export default {
 			} else if (!this.opened && move > 10) {
 				this.open();
 			}
-		});
+		},
+	},
+	mounted() {
+		let touchX = 0;
+
+		const border = this.$el.querySelector('.drawer-view-border');
+		border.addEventListener('mousedown', ev => {
+			ev.preventDefault();
+			this.dragStart(ev.clientX);
+		}, { passive: false });
+		border.addEventListener('touchstart', ev => {
+			ev.preventDefault();
+			touchX = ev.changedTouches[0].clientX;
+			this.dragStart(touchX);
+		}, { passive: false });
+
+		window.addEventListener('mousemove', ev => {
+			if (this.dragging) {
+				ev.preventDefault();
+				this.dragMove(ev.clientX);
+			}
+		}, { passive: false });
+		window.addEventListener('touchmove', ev => {
+			if (this.dragging) {
+				ev.preventDefault();
+				touchX = ev.changedTouches[0].clientX;
+				this.dragMove(touchX);
+			}
+		}, { passive: false });
+
+		window.addEventListener('mouseup', ev => {
+			if (this.dragging) {
+				ev.preventDefault();
+				this.dragEnd(ev.clientX);
+			}
+		}, { passive: false });
+		window.addEventListener('touchend', ev => {
+			if (this.dragging) {
+				ev.preventDefault();
+				this.dragEnd(touchX);
+				touchX = 0;
+			}
+		}, { passive: false });
 	},
 };
 </script>
