@@ -75,6 +75,13 @@ export default {
 	},
 	mounted() {
 		this.widgetManager.enable(thumbnailWidget);
+
+		const timer = setInterval(() => {
+			this.focus();
+			if (this.editor.hasFocus()) {
+				clearInterval(timer);
+			}
+		}, 10);
 	},
 	computed: {
 		options() {
