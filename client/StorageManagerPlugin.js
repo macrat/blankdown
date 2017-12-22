@@ -70,10 +70,12 @@ export default store => {
 
 		case 'remove':
 			storage.load(action.payload).then(target => {
+				const removeCurrent = target.id === state.current.id;
+
 				storage.remove(target.id).then(() => {
 					store.commit('removed', target);
 
-					if (target.id === state.current.id) {
+					if (removeCurrent) {
 						storage.loadMostRecent().then(next => {
 							if (!next) {
 								store.dispatch('create');
