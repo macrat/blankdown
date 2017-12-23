@@ -2,12 +2,6 @@ const documents = {
 	shortcuts: `# Shortcuts
 
 ## main menu
-|key combination|what do                |
-|:--------------|:----------------------|
-|Alt-F          |Open [FILE pane](?file)|
-|Alt-H          |Open [HELP pane](?help)|
-|Escape         |Close side pane        |
-
 ## file
 |key combination|what do                        |
 |:--------------|:------------------------------|
