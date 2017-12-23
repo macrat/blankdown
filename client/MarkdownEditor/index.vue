@@ -42,6 +42,17 @@
 .cm-blob-image.cm-body {
 	font-size: 10%;
 }
+
+.toc-widget {
+	display: inline-block;
+	background-color: #eee;
+	border-left: .1em solid black;
+	border-right: .1em solid black;
+	padding: .5em 1em;
+}
+.toc-widget-title {
+	font-size: 150%;
+}
 </style>
 
 <template>
@@ -55,6 +66,8 @@
 </template>
 
 <script>
+import Vue from 'vue';
+
 import { codemirror as VueCodeMirror } from 'vue-codemirror-lite';
 import 'codemirror/theme/elegant.css';
 import 'codemirror/addon/scroll/simplescrollbars.css';
@@ -64,12 +77,14 @@ import './modes.js';
 import widgets from 'codemirror-widgets';
 
 import thumbnailWidget from './thumbnail-widget.js';
+import ToCWidget from './toc-widget.js';
 
 
 export default {
 	components: { VueCodeMirror },
 	mounted() {
 		this.widgetManager.enable(thumbnailWidget);
+		this.widgetManager.enable(new ToCWidget(this.tocCreated));
 
 		const timer = setInterval(() => {
 			this.focus();
@@ -125,6 +140,14 @@ export default {
 		},
 		insertImage(text, url) {
 			this.doc.replaceRange(`![${text}](${url})`, this.doc.getCursor());
+		},
+		tocCreated(element, toc=null) {
+			element.querySelector('.toc-widget-content').innerHTML = toc || this.$store.getters.toc_html;
+		},
+	},
+	watch: {
+		'$store.getters.toc_html': function(toc) {
+			this.$el.querySelectorAll('.toc-widget-content').forEach(elm => this.tocCreated(elm, toc));
 		},
 	},
 };
