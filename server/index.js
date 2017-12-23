@@ -18,6 +18,14 @@ app.use(require('morgan')('combined'));
 app.use(require('body-parser').text({ type: '*/*' }));
 app.use(express.static(path.join(__dirname, 'public'), {maxage: process.env.NODE_ENV === 'production' ? '7d' : '0'}));
 
+app.use((req, res, next) => {
+	if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
+		res.redirect('https://' + req.headers.host + req.url);
+	} else {
+		next();
+	}
+});
+
 const server = app.listen(process.env.PORT || 8000, () => {
 	console.log(`running at http://localhost:${server.address().port}`);
 });
