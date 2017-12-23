@@ -15,8 +15,6 @@ const express = require('express');
 const app = express();
 app.set('x-powered-by', false);
 app.use(require('morgan')('combined'));
-app.use(require('body-parser').text({ type: '*/*' }));
-app.use(express.static(path.join(__dirname, 'public'), {maxage: process.env.NODE_ENV === 'production' ? '7d' : '0'}));
 
 app.use((req, res, next) => {
 	if (req.headers['x-forwarded-proto'] && req.headers['x-forwarded-proto'] !== 'https') {
@@ -25,6 +23,9 @@ app.use((req, res, next) => {
 		next();
 	}
 });
+
+app.use(require('body-parser').text({ type: '*/*' }));
+app.use(express.static(path.join(__dirname, 'public'), {maxage: process.env.NODE_ENV === 'production' ? '7d' : '0'}));
 
 const server = app.listen(process.env.PORT || 8000, () => {
 	console.log(`running at http://localhost:${server.address().port}`);
