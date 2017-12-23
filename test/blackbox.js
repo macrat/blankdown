@@ -1,5 +1,6 @@
 import assert from 'power-assert';
 import regeneratorRuntime from 'regenerator-runtime';
+import sleep from 'sleep';
 
 import axios from 'axios';
 
@@ -40,8 +41,23 @@ describe('blackbox', () => {
 
 	describe('API', () => {
 		describe('v1', () => {
-			axios.get(ORIGIN + '/v1/debug/database/clear')
-				.catch(e => console.error('WARN: failed clear database'))
+			beforeEach(function(done) {
+				axios.get(ORIGIN + '/v1/debug/database/clear')
+					.then(() => done())
+					.catch(e => {
+						process.on('unhandledRejection', () => {});
+						this.skip();
+					})
+			});
+
+			after(function(done) {
+				axios.get(ORIGIN + '/v1/debug/database/clear')
+					.then(() => done())
+					.catch(e => {
+						assert('failed to clear: ', e);
+						done();
+					})
+			});
 
 			it('create and get', async () => {
 				const first = await axios.get(ORIGIN + '/v1/pages');
@@ -252,6 +268,8 @@ describe('blackbox', () => {
 				const created2 = await client.create('# this is second file');
 				assert.strictEqual(created2.markdown, '# this is second file');
 
+				sleep.msleep(10);
+
 				created2.markdown = 'changed';
 				created2.modified = new Date().getTime() / 1000.0;
 				created2.accessed = new Date().getTime() / 1000.0;
@@ -260,8 +278,8 @@ describe('blackbox', () => {
 				const loaded2 = await client.load(created2.id);
 				assert.strictEqual(loaded2.id, created2.id);
 				assert.strictEqual(loaded2.markdown, 'changed');
-				assert.equal(loaded2.modified, created2.modified);
-				assert.equal(loaded2.accessed, created2.accessed);
+				assert(Math.abs(loaded2.modified - created2.modified) < 0.01);
+				assert(Math.abs(loaded2.accessed - created2.accessed) < 0.01);
 
 				assert.deepStrictEqual(loaded2, await client.loadMostRecent());
 

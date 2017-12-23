@@ -5,9 +5,7 @@
   "main": "server/index.js",
   "scripts": {
     "start": "NODE_ENV=production node ./build/server.js",
-    "test": "`npm bin`/mocha --require babel-core/register --invert --fgrep blackbox",
-    "test:blackbox": "`npm bin`/mocha --require babel-core/register --fgrep blackbox",
-    "test:all": "`npm bin`/mocha --require babel-core/register",
+    "test": "`npm bin`/mocha --require babel-core/register",
     "build": "NODE_ENV=production `npm bin`/webpack",
     "debug": "`npm bin`/npm-run-all --parallel debug:postgres debug:build debug:start-delay",
     "debug:start-delay": "sleep 5s; npm run debug:start",
@@ -51,6 +49,7 @@
   },
   "devDependencies": {
     "mocha": "^4.0.1",
-    "power-assert": "^1.4.4"
+    "power-assert": "^1.4.4",
+    "sleep": "^5.1.1"
   }
 }
