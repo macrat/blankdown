@@ -95,18 +95,19 @@ router.post('/v1/create', login_required(async (req, res) => {
 		return;
 	}
 
-	if (!request.modified && (request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.modified)) {
+	const timestamp = (new Date()).getTime() / 1000.0;
+
+	if (request.modified && (request.modified < (new Date('2000-01-01')).getTime()/1000.0 || timestamp + 60 < request.modified)) {
 		res.status(400).json({ error: 'invalid modified timestamp', modified: { requested: request.modified || null }});
 		return;
 	}
 
-	if (!request.accessed && (request.accessed < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.accessed)) {
+	if (request.accessed && (request.accessed < (new Date('2000-01-01')).getTime()/1000.0 || timestamp + 60 < request.accessed)) {
 		res.status(400).json({ error: 'invalid accessed timestamp', accessed: { requested: request.accessed || null }});
 		return;
 	}
 
 	const pageID = generateUUID();
-	const timestamp = (new Date()).getTime() / 1000.0;
 
 	const modified = request.modified || timestamp;
 	const accessed = Math.max(modified, request.accessed || timestamp);
@@ -235,12 +236,12 @@ router.patch(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, 
 		return;
 	}
 
-	if (request.modified && (request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.modified)) {
+	if (request.modified && (request.modified < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 + 60 < request.modified)) {
 		res.status(400).json({ error: 'invalid modified timestamp', modified: { requested: request.modified || null }});
 		return;
 	}
 
-	if (request.accessed && (request.accessed < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 < request.accessed || request.accessed < request.modified)) {
+	if (request.accessed && (request.accessed < (new Date('2000-01-01')).getTime()/1000.0 || (new Date()).getTime()/1000.0 + 60 < request.accessed || request.accessed < request.modified)) {
 		res.status(400).json({ error: 'invalid accessed timestamp', accessed: { requested: request.accessed }});
 		return;
 	}
