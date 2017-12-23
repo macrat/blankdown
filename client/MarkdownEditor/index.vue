@@ -76,15 +76,15 @@ import './modes.js';
 
 import widgets from 'codemirror-widgets';
 
-import thumbnailWidget from './thumbnail-widget.js';
-import ToCWidget from './toc-widget.js';
+import ThumbnailWidget from './ThumbnailWidget.js';
+import TOCWidget from './TOCWidget.js';
 
 
 export default {
 	components: { VueCodeMirror },
 	mounted() {
-		this.widgetManager.enable(thumbnailWidget);
-		this.widgetManager.enable(new ToCWidget(this.tocCreated));
+		this.widgetManager.enable(new ThumbnailWidget());
+		this.widgetManager.enable(new TOCWidget(this.tocCreated));
 
 		const timer = setInterval(() => {
 			this.focus();
