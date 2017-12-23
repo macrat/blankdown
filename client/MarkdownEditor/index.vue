@@ -59,11 +59,11 @@ import { codemirror as VueCodeMirror } from 'vue-codemirror-lite';
 import 'codemirror/theme/elegant.css';
 import 'codemirror/addon/scroll/simplescrollbars.css';
 import 'codemirror/addon/scroll/simplescrollbars.js';
-import './codemirror-modes';
+import './modes.js';
 
 import widgets from 'codemirror-widgets';
 
-import thumbnailWidget from './codemirror-markdown-thumbnails.js';
+import thumbnailWidget from './thumbnail-widget.js';
 
 
 export default {

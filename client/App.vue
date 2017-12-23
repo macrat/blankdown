@@ -35,7 +35,7 @@ nav {
 <script>
 import SidePane from './SidePane.vue';
 
-import MarkdownEditor from './MarkdownEditor.vue';
+import MarkdownEditor from './MarkdownEditor/index.vue';
 
 import ImportAndExporter from './ImportAndExporter.vue';
 

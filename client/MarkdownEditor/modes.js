@@ -117,4 +117,4 @@ require('codemirror/mode/yaml-frontmatter/yaml-frontmatter');
 require('codemirror/mode/yaml/yaml');
 require('codemirror/mode/z80/z80');
 
-import _ from './codemirror-markdown-mode.js';
+import _ from './blankdown-mode.js';
