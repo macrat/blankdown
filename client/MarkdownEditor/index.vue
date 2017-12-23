@@ -142,7 +142,10 @@ export default {
 			this.doc.replaceRange(`![${text}](${url})`, this.doc.getCursor());
 		},
 		tocCreated(element, toc=null) {
-			element.querySelector('.toc-widget-content').innerHTML = toc || this.$store.getters.toc_html;
+			const elm = element.querySelector('.toc-widget-content');
+			if (elm) {
+				elm.innerHTML = toc || this.$store.getters.toc_html;
+			}
 		},
 	},
 	watch: {
