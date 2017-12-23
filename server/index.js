@@ -68,6 +68,15 @@ function login_required(func) {
 }
 
 
+if (process.env.NODE_ENV !== 'production') {
+	router.get('/v1/debug/database/clear', (req, res) => {
+		Database.clearAll()
+			.then(() => res.status(201).send('done'))
+			.catch(e => res.status(500).send('failed'))
+	});
+}
+
+
 router.post('/v1/create', login_required(async (req, res) => {
 	let request;
 	try {
@@ -249,7 +258,7 @@ router.patch(new RegExp(`^/${UUID_pattern}\.json$`), login_required(async (req, 
 		case 409:
 			res.status(409).json({
 				error: 'modified timestamp was conflict',
-				modified: { server: data.modified, requested: request.modified },
+				modified: { server: error.modified, requested: request.modified },
 			});
 			break;
 		}

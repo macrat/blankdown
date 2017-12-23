@@ -1,5 +1,6 @@
 import Vue from 'vue';
-import axios from 'axios';
+
+import APIClient from './APIClient.js';
 
 
 function remote_to_local(page) {
@@ -16,67 +17,53 @@ function remote_to_local(page) {
 
 export default new Vue({
 	name: 'RemoteStorage',
+	computed: {
+		client() {
+			const client = new APIClient();
+			client.on('saved', this.changedPages);
+			client.on('created', this.changedPages);
+			client.on('removed', this.changedPages);
+			client.on('mark-access', this.changedPages);
+			return client;
+		},
+	},
 	methods: {
+		changedPages() {
+			this.client.getFiles().then(files => {
+				this.$emit('changed-pages', files);
+			}).catch(console.error);
+		},
+
 		async pages() {
-			return ((await axios.get('/v1/pages')).data.pages || []).map(remote_to_local);
+			return await this.client.getFiles();
 		},
 
 		async load(id) {
-			try {
-				return remote_to_local((await axios.get(`/${id}.json`)).data);
-			} catch (e) {
-				console.error(e);
-				return null;
-			}
+			return await this.client.load(id);
 		},
 
 		async loadMostRecent() {
-			for (const page of (await this.pages() || [])) {
-				const data = await this.load(page.id);
-				if (data) {
-					return data;
-				}
-			}
-			return null;
+			return await this.client.loadMostRecent();
 		},
 
 		async save(id, page) {
 			if (!page.markdown) {
-				await this.remove(id);
-				return;
+				return await this.client.remove(id);
+			} else {
+				return await this.client.save(page);
 			}
-
-			await axios.patch(`/${id}.json`, {
-				accessed: new Date().getTime() / 1000.0,
-				modified: page.modified,
-				markdown: page.markdown,
-			});
-
-			this.$emit('changed-pages', await this.pages());
 		},
 
 		async create(markdown='') {
-			return remote_to_local(Object.assign({
-				markdown: markdown
-			}, (await axios.post('/v1/create', {
-				markdown: markdown,
-			})).data));
-
-			this.$emit('changed-pages', await this.pages());
+			return await this.client.create(markdown);
 		},
 
 		async remove(id) {
-			await axios.delete(`/${id}.json`);
-
-			this.$emit('changed-pages', await this.pages());
+			return await this.client.remove(id);
 		},
 
 		async markAccess(id, timestamp=null) {
-			await axios.patch(`/${id}.json`, {
-				accessed: timestamp || (new Date().getTime() / 1000.0),
-			});
-
-			this.$emit('changed-pages', await this.pages());
+			return await this.client.markAccess(id, timestamp);
 		},
 	},
 });

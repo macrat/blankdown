@@ -3,6 +3,8 @@ import regeneratorRuntime from 'regenerator-runtime';
 
 import axios from 'axios';
 
+import APIClient from '../client/APIClient.js';
+
 const ORIGIN = `http://localhost:${process.env.PORT || 8000}`;
 
 
@@ -38,6 +40,9 @@ describe('blackbox', () => {
 
 	describe('API', () => {
 		describe('v1', () => {
+			axios.get(ORIGIN + '/v1/debug/database/clear')
+				.catch(e => console.error('WARN: failed clear database'))
+
 			it('create and get', async () => {
 				const first = await axios.get(ORIGIN + '/v1/pages');
 				assert.equal(first.status, 200);
@@ -231,6 +236,50 @@ describe('blackbox', () => {
 
 				const removeTwo = await axios.delete(ORIGIN + two.headers['location']);
 				assert.equal(removeTwo.status, 200);
+			});
+
+			it('client', async () => {
+				const client = new APIClient(null, ORIGIN);
+
+				assert.deepStrictEqual(await client.getFiles(), []);
+
+				const created = await client.create('# hello\nthis is test\n');
+				assert.strictEqual(created.markdown, '# hello\nthis is test\n');
+
+				const loaded = await client.load(created.id);
+				assert.deepStrictEqual(loaded, created);
+
+				const created2 = await client.create('# this is second file');
+				assert.strictEqual(created2.markdown, '# this is second file');
+
+				created2.markdown = 'changed';
+				created2.modified = new Date().getTime() / 1000.0;
+				created2.accessed = new Date().getTime() / 1000.0;
+				await client.save(created2)
+
+				const loaded2 = await client.load(created2.id);
+				assert.strictEqual(loaded2.id, created2.id);
+				assert.strictEqual(loaded2.markdown, 'changed');
+				assert.equal(loaded2.modified, created2.modified);
+				assert.equal(loaded2.accessed, created2.accessed);
+
+				assert.deepStrictEqual(loaded2, await client.loadMostRecent());
+
+				await client.markAccess(created.id);
+
+				const recent = await client.loadMostRecent();
+				assert.strictEqual(created.id, recent.id);
+				assert.strictEqual(created.markdown, recent.markdown);
+
+				recent.markdown = undefined;
+				loaded2.markdown = undefined;
+				assert.deepStrictEqual(await client.getFiles(), [recent, loaded2]);
+
+				await client.remove(recent.id);
+				assert.deepStrictEqual(await client.getFiles(), [loaded2]);
+
+				await client.remove(loaded2.id);
+				assert.deepStrictEqual(await client.getFiles(), []);
 			});
 		});
 	});

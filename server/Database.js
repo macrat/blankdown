@@ -142,7 +142,7 @@ const Database = {
 				return { code: 403 };
 			}
 
-			if (result.rows[0].modified/1000.0 > data.modified) {
+			if (result.rows[0].modified >= data.modified) {
 				return { code: 409, modified: Number.parseInt(result.rows[0].modified) };
 			}
 
@@ -182,6 +182,13 @@ const Database = {
 		return result.rows.map(rowToData);
 	},
 };
+
+
+if (process.env.NODE_ENV !== 'production') {
+	Database.clearAll = function() {
+		return db.query("DELETE FROM pages");
+	}
+}
 
 
 export default Database;
