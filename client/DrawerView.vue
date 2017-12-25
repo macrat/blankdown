@@ -68,13 +68,18 @@ export default {
 	components: { VuePerfectScrollbar },
 	data() {
 		return {
-			opened: false,
+			opened: JSON.parse(localStorage.getItem('pane-opened') || 'false'),
 			width: 250,
 			dragWidth: null,
 			dragStartPos: null,
 			oldPos: null,
 			moveDistance: 0,
 		};
+	},
+	watch: {
+		opened(state) {
+			localStorage.setItem('pane-opened', JSON.stringify(state));
+		},
 	},
 	computed: {
 		dragging() {
