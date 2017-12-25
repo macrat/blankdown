@@ -6,9 +6,20 @@
 	color: white;
 }
 
+.drawer-view-dragging {
+	display: block !important;
+}
+
+.drawer-view-outer {
+	width: 250px;
+	position: relative;
+}
+
 .drawer-view-content {
 	height: 100%;
 	width: 250px;
+	position: absolute;
+	right: 0;
 }
 
 .drawer-view-border {
@@ -18,20 +29,8 @@
 	border-left: 1px solid darkslategray;
 }
 
-.drawer-view-content-dragging {
-	overflow: hidden;
-	word-wrap: unset;
-	word-break: unset;
-	white-space: nowrap;
-	display: block !important;
-}
-
 .drawer-view-enter-active, .drawer-view-leave-active {
 	transition: ease width .5s;
-	overflow: hidden;
-	word-wrap: unset;
-	word-break: unset;
-	white-space: nowrap;
 }
 .drawer-view-enter, .drawer-view-leave-to {
 	width: 0;
@@ -40,16 +39,20 @@
 
 <template>
 	<div class=drawer-view>
-		<transition name=drawer-view>
-			<div
-				class=drawer-view-content
-				:class="{ 'drawer-view-content-dragging': dragging }"
-				:style="{ width: dragWidth }"
-				v-show=opened>
+		<vue-perfect-scrollbar>
+			<transition name=drawer-view>
+				<div
+					class=drawer-view-outer
+					:class="{ 'drawer-view-dragging': dragging }"
+					:style="{ width: dragging ? dragWidth + 'px' : null }"
+					v-show=opened>
 
-				<slot />
-			</div>
-		</transition>
+					<div class=drawer-view-content>
+						<slot />
+					</div>
+				</div>
+			</transition>
+		</vue-perfect-scrollbar>
 
 		<div class=drawer-view-border>
 			<div class=drawer-view-openclose></div>
@@ -58,7 +61,11 @@
 </template>
 
 <script>
+import VuePerfectScrollbar from 'vue-perfect-scrollbar';
+
+
 export default {
+	components: { VuePerfectScrollbar },
 	data() {
 		return {
 			opened: false,
@@ -85,7 +92,7 @@ export default {
 		dragStart(clientX) {
 			this.dragStartPos = clientX;
 			this.oldPos = this.opened ? this.width : 0;
-			this.dragWidth = this.oldPos + 'px';
+			this.dragWidth = this.oldPos;
 			this.moveDistance = 0;
 		},
 		dragMove(clientX) {
@@ -95,9 +102,9 @@ export default {
 
 			const move = clientX - this.dragStartPos;
 			if (this.opened) {
-				this.dragWidth = Math.max(0, Math.min(this.width, this.width + move)) + 'px';
+				this.dragWidth = Math.max(0, Math.min(this.width, this.width + move));
 			} else {
-				this.dragWidth = Math.max(0, Math.min(this.width, move)) + 'px';
+				this.dragWidth = Math.max(0, Math.min(this.width, move));
 			}
 			this.moveDistance += Math.abs(move - this.oldPos);
 			this.oldPos = move;

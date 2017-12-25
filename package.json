@@ -41,6 +41,7 @@
     "vue": "^2.5.9",
     "vue-codemirror-lite": "^1.0.3",
     "vue-loader": "^13.5.0",
+    "vue-perfect-scrollbar": "0.0.14",
     "vue-style-loader": "^3.0.3",
     "vue-template-compiler": "^2.5.9",
     "vuex": "^3.0.1",
