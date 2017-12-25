@@ -12,5 +12,5 @@ const vm = new Vue({
 
 
 if ('serviceWorker' in navigator) {
-	navigator.serviceWorker.register('./ServiceWorker.js', { scope: '/' });
+	navigator.serviceWorker.register('/ServiceWorker.js', { scope: '/' });
 }
