@@ -14,6 +14,18 @@
 	cursor: text;
 }
 
+.CodeMirror-overlayscroll-vertical > div {
+	border-radius: 0;
+	background: lightslategray;
+	transition: background .1s ease, width .1s ease;
+	width: .4em;
+}
+
+.CodeMirror-overlayscroll-vertical > div:hover, .CodeMirror-overlayscroll-vertical > div:active {
+	background: slategray;
+	width: .8em;
+}
+
 .CodeMirror span {
 	word-wrap: break-word;
 	overflow-wrap: break-word;
@@ -100,7 +112,7 @@ export default {
 				theme: 'elegant',
 				dragDrop: false,
 				lineWrapping: true,
-				scrollbarStyle: 'simple',
+				scrollbarStyle: 'overlay',
 				indentUnit: 4,
 				tabSize: 4,
 				indentWithTabs: true,
