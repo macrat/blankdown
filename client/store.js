@@ -88,13 +88,13 @@ const store = new Vuex.Store({
 		},
 		toc_html(state) {
 			function make_html_by(toc) {
-				return '<ul>\n' + toc.map(x => {
+				return '<ul>' + toc.map(x => {
 					if (typeof x === 'string') {
 						return `<li><a href="#${x.replace(/[^\w]+/g, '-').toLowerCase()}">${ x }</a></li>`;
 					} else {
 						return make_html_by(x);
 					}
-				}).join('\n') + '\n</ul>';
+				}).join('') + '</ul>';
 			}
 			return make_html_by(store.getters.toc);
 		},

@@ -50,7 +50,7 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 				}
 
 				if (stream.sol() && stream.match(/\[toc\]$/i, true)) {
-					return 'variable-1 toc';
+					return 'toc';
 				}
 
 				const nextLine = stream.lookAhead(1);

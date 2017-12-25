@@ -18,7 +18,6 @@ export default function(onCreated) {
 		},
 		createElement: function(widget) {
 			const toc = document.createElement('div');
-			toc.innerHTML = '<span class=toc-widget-title>ToC</span><div class=toc-widget-content></div>';
 			toc.classList.add('toc-widget');
 			onCreated(toc);
 			return toc;

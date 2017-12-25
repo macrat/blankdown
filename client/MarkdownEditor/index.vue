@@ -55,15 +55,45 @@
 	font-size: 10%;
 }
 
+.cm-toc {
+	background-color: #eaf0f0;
+}
+
 .toc-widget {
 	display: inline-block;
-	background-color: #eee;
-	border-left: .1em solid black;
-	border-right: .1em solid black;
+	background-color: #eaf0f0;
 	padding: .5em 1em;
+	min-width: 20em;
+	position: relative;
 }
-.toc-widget-title {
-	font-size: 150%;
+.toc-widget:before {
+	content: ' ';
+	border: .3em solid black;
+	border-right: none;
+	box-sizing: border-box;
+	height: 100%;
+	width: 1em;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+.toc-widget:after {
+	content: ' ';
+	border: .3em solid black;
+	border-left: none;
+	box-sizing: border-box;
+	height: 100%;
+	width: 1em;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+.toc-widget ul {
+	margin: 0;
+	padding: 0 1em;
+}
+.toc-widget li {
+	line-height: 1.5em;
 }
 </style>
 
@@ -154,15 +184,15 @@ export default {
 			this.doc.replaceRange(`![${text}](${url})`, this.doc.getCursor());
 		},
 		tocCreated(element, toc=null) {
-			const elm = element.querySelector('.toc-widget-content');
-			if (elm) {
-				elm.innerHTML = toc || this.$store.getters.toc_html;
+			if (element) {
+				element.innerHTML = toc || this.$store.getters.toc_html;
 			}
 		},
 	},
 	watch: {
 		'$store.getters.toc_html': function(toc) {
-			this.$el.querySelectorAll('.toc-widget-content').forEach(elm => this.tocCreated(elm, toc));
+			console.log('changed');
+			this.$el.querySelectorAll('.toc-widget').forEach(elm => this.tocCreated(elm, toc));
 		},
 	},
 };
