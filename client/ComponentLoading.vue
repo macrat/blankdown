@@ -1,0 +1,48 @@
+<style scoped>
+#loading {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	width: 100%;
+}
+#loading-svg {
+	width: 10em;
+	max-width: 100%;
+}
+#loading-circle {
+	animation: loading-animation 10s ease 1s infinite alternate;
+}
+@keyframes loading-animation {
+	from {
+		stroke-dashoffset: 0;
+		stroke-dasharray: 780;
+	}
+	to {
+		stroke-dashoffset: 780;
+		stroke-dasharray: 20;
+	}
+}
+</style>
+
+<template>
+	<div id=loading>
+		<svg id="loading-svg" viewBox="0 0 256 256" width="256" height="256">
+			<g transform="translate(0,-796.36216)">
+				<g transform="matrix(1,0,0,1,128,924.36218)">
+					<circle
+						id="loading-circle"
+						r="123"
+						style="fill:none;stroke:#2f4f4f;stroke-width:10;transform:rotate(-90deg)" />
+				</g>
+				<path
+					d="m 32.377217,984.36218 140.000003,0"
+					style="fill:none;stroke:#2f4f4f;stroke-width:20;stroke-linecap:butt" />
+				<path
+					transform="matrix(0.42857141,0,0,1.1547005,118.47575,-139.49821)"
+					d="m 175.3431,981.9519 -70.00001,-121.24355 140.00001,-10e-6 z"
+					style="fill:#2f4f4f;stroke:none" />
+			</g>
+		</svg>
+	</div>
+</template>

@@ -3,7 +3,7 @@ const CACHE_NAME = 'blankdown-v1';
 
 self.addEventListener('install', ev => {
 	ev.waitUntil(caches.open(CACHE_NAME).then(cache => {
-		return cache.addAll(['/', '/app.js', '/manifest.json']);
+		return cache.addAll(['/', '/app.js', '/MarkdownEditor.js', '/manifest.json']);
 	}));
 });
 

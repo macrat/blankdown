@@ -12,6 +12,7 @@ const clientConfig = {
 	},
 	output: {
 		filename: '[name].js',
+		chunkFilename: '[name].js',
 		path: path.join(__dirname, 'build', 'public'),
 	},
 	module: {
@@ -33,6 +34,7 @@ const clientConfig = {
 		new CopyWebpackPlugin([{
 			from: path.join(__dirname, 'static'),
 			to: path.join(__dirname, 'build', 'public'),
+			ignore: ['.*'],
 		}]),
 	],
 	devtool: '#eval-source-map',

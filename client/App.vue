@@ -35,7 +35,7 @@ nav {
 <script>
 import SidePane from './SidePane.vue';
 
-import MarkdownEditor from './MarkdownEditor/index.vue';
+import ComponentLoading from './ComponentLoading.vue';
 
 import ImportAndExporter from './ImportAndExporter.vue';
 
@@ -46,7 +46,11 @@ import RemoveIndicator from './RemoveIndicator.vue';
 export default {
 	components: {
 		SidePane: SidePane,
-		MarkdownEditor: MarkdownEditor,
+		MarkdownEditor: () => ({
+			component: require.ensure([], require => require('./MarkdownEditor/index.vue'), 'MarkdownEditor'),
+			loading: ComponentLoading,
+			delay: 0,
+		}),
 
 		ImportAndExporter: ImportAndExporter,
 
