@@ -83,9 +83,6 @@ const store = new Vuex.Store({
 		},
 	},
 	getters: {
-		html(state) {
-			return Markdown.toHTML(state.current.markdown);
-		},
 		toc(state) {
 			return Markdown.getTOCBy(state.current.markdown);
 		},

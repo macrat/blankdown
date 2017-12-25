@@ -17,6 +17,12 @@
 </template>
 
 <script>
+import APIClient from './APIClient.js';
+
+
+const client = new APIClient(null);
+
+
 export default {
 	created() {
 		window.addEventListener('dragover', ev => {
@@ -87,7 +93,8 @@ export default {
 			this.startDownload(this.$store.getters.current_name + '.md', 'text/markdown', this.$store.state.current.markdown);
 		},
 		exportHTML() {
-			this.startDownload(this.$store.getters.current_name + '.html', 'text/html', this.$store.getters.html);
+			client.getHTML(this.$store.state.current.id)
+				.then(html => this.startDownload(this.$store.getters.current_name + '.html', 'text/html', html));
 		},
 	},
 };

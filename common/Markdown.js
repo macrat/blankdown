@@ -1,20 +1,4 @@
 import marked from 'marked';
-import hljs from 'highlight.js';
-
-
-marked.setOptions({
-	highlight(code, lang) {
-		try {
-			if (lang) {
-				return hljs.highlight(lang, code, true).value;
-			} else {
-				return hljs.highlightAuto(code).value;
-			}
-		} catch(e) {
-			return code;
-		}
-	},
-});
 
 const renderer = new marked.Renderer();
 

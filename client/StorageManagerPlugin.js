@@ -1,8 +1,7 @@
 import Vue from 'vue';
-import { debounce } from 'lodash-es';
+import debounce from 'lodash-es/debounce';
 
 import storage from './RemoteStorageManager.js';
-import Markdown from '../common/Markdown.js';
 
 
 const welcomeDocument = `# welcome to blankdown

@@ -68,6 +68,14 @@ export default class APIClient {
 		}
 	}
 
+	async getMarkdown(id) {
+		return (await axios.get(`${this.origin}/${id}.md`)).data;
+	}
+
+	async getHTML(id) {
+		return (await axios.get(`${this.origin}/${id}.html`)).data;
+	}
+
 	async loadMostRecent() {
 		for (const file of (await this.getFiles() || [])) {
 			const data = await this.load(file.id);
