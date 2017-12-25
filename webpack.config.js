@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-const HTMLWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
@@ -27,10 +27,10 @@ const clientConfig = {
 		],
 	},
 	plugins: [
-		new HTMLWebpackPlugin({
-			template: './static/index.html',
-			inject: false,
-		}),
+		new CopyWebpackPlugin([{
+			from: path.join(__dirname, 'static'),
+			to: path.join(__dirname, 'build', 'public'),
+		}]),
 	],
 	devtool: '#eval-source-map',
 };
@@ -51,7 +51,7 @@ if (process.env.NODE_ENV === 'production') {
 			minimize: true
 		}),
 	]);
-}
+};
 
 
 const serverConfig = {

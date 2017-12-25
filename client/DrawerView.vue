@@ -2,6 +2,8 @@
 .drawer-view {
 	height: 100vh;
 	display: flex;
+	background-color: slategray;
+	color: white;
 }
 
 .drawer-view-content {
@@ -12,8 +14,8 @@
 .drawer-view-border {
 	height: 100%;
 	width: .7em;
-	border: 1px solid black;
-	border-width: 0 1px;
+	background-color: lightslategray;
+	border-left: 1px solid darkslategray;
 }
 
 .drawer-view-content-dragging {
@@ -59,7 +61,7 @@
 export default {
 	data() {
 		return {
-			opened: true,
+			opened: false,
 			width: 250,
 			dragWidth: null,
 			dragStartPos: null,

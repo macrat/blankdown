@@ -53,23 +53,15 @@ const store = new Vuex.Store({
 			state.current.markdown = data.markdown;
 			state.current.readonly = data.readonly;
 		},
-		removed(state) {
-			state.removed.id = state.current.id;
-			state.removed.markdown = state.current.markdown;
-			state.removed.readonly = state.current.readonly;
-
-			state.current.id = null;
-			state.current.markdown = '';
-			state.current.readonly = true;
+		removed(state, target) {
+			state.removed.id = target.id;
+			state.removed.markdown = target.markdown;
+			state.removed.readonly = target.readonly;
 		},
 		restored(state, file) {
 			state.current.id = file.id;
 			state.current.markdown = file.markdown;
 			state.current.readonly = file.readonly;
-
-			state.removed.id = null;
-			state.removed.markdown = '';
-			state.removed.readonly = true;
 		},
 	},
 	actions: {

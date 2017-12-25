@@ -48,6 +48,38 @@ const router = require('express-async-router').AsyncRouter({ send: false });
 app.use('/', router);
 
 
+app.get('/manifest.json', (req, res) => {
+	res.status(200).json({
+		short_name: "blankdown",
+		name: "blankdown",
+		description: "yet yet yet another markdown editor",
+		start_url: "/",
+		icons: [
+			{
+				sizes: "256x256",
+				src: "/icon.svg",
+				type: "image/svg+xml",
+			},
+			{
+				sizes: "192x192",
+				src: "/192x192.png",
+				type: "images/png",
+			},
+			{
+				sizes: "256x256 192x192 128x128 96x96 64x64 48x48 32x32 16x16",
+				src: "/favicon.ico",
+				type: "images/x-icon",
+			},
+		],
+		background_color: "white",
+		theme_color: "darkslategray",
+		display: "standalone",
+		orientation: "any",
+		scope: "/",
+	});
+});
+
+
 app.get(`/(${UUID_pattern}|${documentsPattern})?`, (req, res) => {
 	if (process.env.NODE_ENV === 'production') {
 		res.set('Cache-Control', 'public, max-age=' + (7*24*60*60));

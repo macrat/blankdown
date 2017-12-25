@@ -3,10 +3,9 @@
 	z-index: 10;
 	position: fixed;
 	bottom: .5em;
-	background-color: rgba(245, 245, 245, 0.8);
+	background-color: lightslategray;
 	padding: .5em 2em;
-	border: 1px solid rgba(0, 0, 0, 0.05);
-	color: #666;
+	color: white;
 }
 
 .indicator-enter-active, .indicator-leave-active {

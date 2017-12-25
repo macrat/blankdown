@@ -11,7 +11,7 @@ nav {
 nav > div {
 	padding-bottom: .5em;
 	margin-bottom: .5em;
-	border-bottom: 1px solid gray;
+	border-bottom: 1px solid white;
 }
 
 img {
@@ -25,21 +25,23 @@ img {
 
 input {
 	display: block;
+	background-color: #c8d3de;
 	width: 100%;
-	padding: .3em;
+	padding: .5em .3em;
 	margin-bottom: .5em;
+	border: none;
 }
 
 a {
 	display: block;
 	line-height: 2em;
-	color: black;
+	color: white;
 	text-decoration: none;
 }
 
 .file-remove {
-	font-size: 70%;
-	color: #666;
+	font-size: 80%;
+	color: #eee;
 }
 .file {
 	display: flex;
@@ -49,10 +51,10 @@ a {
 	flex: 1 1 0;
 }
 .file-current {
-	background-color: #ccc;
+	background-color: #596b7d;
 }
 .file-noname .file-name {
-	color: #999;
+	color: #aaa;
 }
 </style>
 
