@@ -63,7 +63,7 @@ app.get('/manifest.json', (req, res) => {
 			{
 				sizes: "192x192",
 				src: "/192x192.png",
-				type: "images/png",
+				type: "image/png",
 			},
 			{
 				sizes: "256x256 192x192 128x128 96x96 64x64 48x48 32x32 16x16",
