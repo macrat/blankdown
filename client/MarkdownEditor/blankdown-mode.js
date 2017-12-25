@@ -46,7 +46,8 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 
 				if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 					const match = stream.match(/(#+) +/, true);
-					return 'header mark header-' + match[1].length;
+					const id = stream.match(/.*$/, false)[0].trim();
+					return 'header mark header-' + match[1].length + ' ' + ('header--' + id);
 				}
 
 				if (stream.sol() && stream.match(/\[toc\]$/i, true)) {
@@ -58,7 +59,7 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 					const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
 					if (match) {
 						state.nextHeader = match[1].startsWith('=') ? 1 : 2;
-						const id = stream.lookAhead(0).toLowerCase().replace(/[^\w]+/g, '-');
+						const id = stream.lookAhead(0).trim().toLowerCase().replace(/[^\w]+/g, '-');
 						stream.skipToEnd();
 						return 'header body header-' + state.nextHeader + ' ' + ('header--' + id);
 					}

@@ -93,7 +93,7 @@
 	padding: 0 1em;
 }
 .toc-widget li {
-	line-height: 1.5em;
+	margin: .5em 0;
 }
 </style>
 
@@ -132,6 +132,10 @@ export default {
 			this.focus();
 			if (this.editor.hasFocus()) {
 				clearInterval(timer);
+
+				if (location.hash) {
+					this.scrollInto(location.hash.slice(1));
+				}
 			}
 		}, 10);
 	},
@@ -191,7 +195,6 @@ export default {
 	},
 	watch: {
 		'$store.getters.toc_html': function(toc) {
-			console.log('changed');
 			this.$el.querySelectorAll('.toc-widget').forEach(elm => this.tocCreated(elm, toc));
 		},
 	},

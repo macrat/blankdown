@@ -90,18 +90,13 @@ export default {
 				this.$store.dispatch('load', id);
 			}
 
-			if (address.hash) {
+			if (address.hash && this.$refs.editor.scrollInto) {
 				this.$refs.editor.scrollInto(address.hash.slice(1));
 			}
 		});
 		window.addEventListener('popstate', () => {
 			this.$root.$emit('open-address', location.href);
 		});
-	},
-	mounted() {
-		if (location.hash) {
-			this.$refs.editor.scrollInto(location.hash.slice(1));
-		}
 	},
 	computed: {
 		currentID() {
