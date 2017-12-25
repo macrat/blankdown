@@ -31,6 +31,9 @@ const clientConfig = {
 		],
 	},
 	plugins: [
+		new webpack.DefinePlugin({
+			VERSION_CODE: JSON.stringify(process.env.VERSION_CODE),
+		}),
 		new CopyWebpackPlugin([{
 			from: path.join(__dirname, 'static'),
 			to: path.join(__dirname, 'build', 'public'),
