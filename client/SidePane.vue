@@ -88,18 +88,20 @@ a {
 
 					<a
 						class=file-name
+						draggable=false
 						@click.prevent="$store.dispatch('load', file.id)"
 						:href="'/' + file.id">{{ file.name || 'no name' }}</a>
 
 					<a
 						class=file-remove
+						draggable=false
 						href
 						@click.prevent="$store.dispatch('remove', file.id)">remove</a>
 				</div>
 			</div>
 
-			<a href="/about" @click.prevent="$store.dispatch('load', 'about')">about</a>
-			<a href="/shortcuts" @click.prevent="$store.dispatch('load', 'shortcuts')">shortcuts</a>
+			<a href="/about" draggable=false @click.prevent="$store.dispatch('load', 'about')">about</a>
+			<a href="/shortcuts" draggable=false @click.prevent="$store.dispatch('load', 'shortcuts')">shortcuts</a>
 		</nav>
 	</drawer-view>
 </template>
