@@ -6,9 +6,12 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 
 const clientConfig = {
-	entry: './client/index.js',
+	entry: {
+		app: './client/index.js',
+		ServiceWorker: './serviceworker/index.js',
+	},
 	output: {
-		filename: 'app.js',
+		filename: '[name].js',
 		path: path.join(__dirname, 'build', 'public'),
 	},
 	module: {
