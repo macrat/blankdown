@@ -65,6 +65,7 @@
 	padding: .5em 1em;
 	min-width: 20em;
 	position: relative;
+	box-sizing: border-box;
 }
 .toc-widget:before {
 	content: ' ';
