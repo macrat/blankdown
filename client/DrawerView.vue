@@ -95,9 +95,7 @@ export default {
 		},
 
 		dragStart(clientX) {
-			this.dragStartPos = clientX;
-			this.oldPos = this.opened ? this.width : 0;
-			this.dragWidth = this.oldPos;
+			this.dragStartPos = this.oldPos = this.dragWidth = clientX;
 			this.moveDistance = 0;
 		},
 		dragMove(clientX) {
@@ -111,31 +109,27 @@ export default {
 			} else {
 				this.dragWidth = Math.max(0, Math.min(this.width, move));
 			}
-			this.moveDistance += Math.abs(move - this.oldPos);
-			this.oldPos = move;
+			this.moveDistance += Math.abs(clientX - this.oldPos);
+			this.oldPos = clientX;
 		},
 		dragEnd(clientX) {
 			if (!this.dragging) {
 				return;
 			}
 
-			const move = clientX - this.dragStartPos;
+			const move = Math.abs(clientX - this.dragStartPos);
+			const distance = this.moveDistance;
+			this.moveDistance = null;
 			this.dragStartPos = null;
 			this.dragWidth = null;
 
-			if (this.moveDistance < 10) {
+			if (distance < 10 || move > this.width/5) {
 				if (this.opened) {
 					this.close();
 				} else {
 					this.open();
 				}
 				return;
-			}
-
-			if (this.opened && move < this.width - 10) {
-				this.close();
-			} else if (!this.opened && move > 10) {
-				this.open();
 			}
 		},
 	},
