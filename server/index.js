@@ -25,11 +25,6 @@ app.use((req, res, next) => {
 });
 
 app.use(require('body-parser').text({ type: '*/*' }));
-app.use(express.static(path.join(__dirname, 'public'), {maxage: process.env.NODE_ENV === 'production' ? '7d' : '0'}));
-
-const server = app.listen(process.env.PORT || 8000, () => {
-	console.log(`running at http://localhost:${server.address().port}`);
-});
 
 
 // for debug  TODO: replace it
@@ -41,11 +36,18 @@ app.use((req, res, next) => {
 });
 
 
-const UUID_pattern = '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})';
-
-
 const router = require('express-async-router').AsyncRouter({ send: false });
 app.use('/', router);
+
+app.use(express.static(path.join(__dirname, 'public'), {maxage: process.env.NODE_ENV === 'production' ? '7d' : '0'}));
+
+
+const server = app.listen(process.env.PORT || 8000, () => {
+	console.log(`running at http://localhost:${server.address().port}`);
+});
+
+
+const UUID_pattern = '([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})';
 
 
 app.get('/manifest.json', (req, res) => {
@@ -76,6 +78,13 @@ app.get('/manifest.json', (req, res) => {
 		display: "standalone",
 		orientation: "any",
 		scope: "/",
+	});
+});
+
+
+app.get('/ServiceWorker.js', (req, res) => {
+	res.sendFile('ServiceWorker.js', {
+		root: path.join(__dirname, 'public'),
 	});
 });
 
