@@ -21,6 +21,7 @@ img {
 
 #username {
 	margin-left: .5em;
+	font-size: 120%;
 }
 
 input {
@@ -61,7 +62,7 @@ a {
 <template>
 	<drawer-view>
 		<nav>
-			<div>
+			<div id=profile>
 				<img :src=user.icon align=middle>
 				<span id=username>{{ user.name }}</span>
 			</div>
