@@ -14,14 +14,21 @@
 	cursor: text;
 }
 
+.CodeMirror-overlayscroll-vertical {
+	width: .8em;
+	background-color: transparent;
+	transition: background .1s ease;
+}
+.CodeMirror-overlayscroll-vertical:hover {
+	background-color: rgba(112, 128, 144, 0.1);
+}
 .CodeMirror-overlayscroll-vertical > div {
 	border-radius: 0;
 	background: lightslategray;
 	transition: background .1s ease, width .1s ease;
 	width: .4em;
 }
-
-.CodeMirror-overlayscroll-vertical > div:hover, .CodeMirror-overlayscroll-vertical > div:active {
+.CodeMirror-overlayscroll-vertical:hover > div, .CodeMirror-overlayscroll-vertical > div:active {
 	background: slategray;
 	width: .8em;
 }
