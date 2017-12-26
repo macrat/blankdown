@@ -1,16 +1,20 @@
 import widgets from 'codemirror-widgets';
 
+import ReWidgetMixIn from './ReWidgetMixIn.js';
+
 
 export default function() {
 	return widgets.createType({
 		mixins: [
-			widgets.mixins.re(/!\[(.*?)\]\((.*?)\)/g, match => {
-				return {
-					props: {
+			new ReWidgetMixIn(/!\[(.*?)\]\((.*?)\)/g, (cm, match, tokens) => {
+				if (tokens.has('image')) {
+					return {
 						alt: match[1],
 						src: match[2],
-					},
-				};
+					};
+				} else {
+					return null;
+				}
 			}),
 		],
 		debounceWait: 10,
@@ -26,10 +30,10 @@ export default function() {
 			img.src = widget.props.src;
 			img.alt = widget.props.alt;
 			img.title = widget.props.alt;
-			img.classList.add('cm-thumbnail');
-			img.classList.add('cm-thumbnail-image');
+			img.classList.add('thumbnail-widget');
+			img.classList.add('thumbnail-widget-image');
 			img.addEventListener('error', function() {
-				this.classList.add('cm-thumbnail-missing');
+				this.classList.add('thumbnail-widget-missing');
 			});
 			img.addEventListener('click', () => {
 				widget.enter();

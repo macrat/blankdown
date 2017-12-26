@@ -104,6 +104,14 @@
 .toc-widget li {
 	margin: .5em 0;
 }
+
+.thumbnail-widget-missing {
+	display: inline-block;
+	width: 6em;
+	height: 6em;
+	background-color: #aaa;
+	color: white;
+}
 </style>
 
 <template>

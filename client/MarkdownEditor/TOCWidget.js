@@ -1,20 +1,25 @@
 import widgets from 'codemirror-widgets';
 
+import ReWidgetMixIn from './ReWidgetMixIn.js';
+
 
 export default function(onCreated) {
 	return widgets.createType({
 		mixins: [
-			widgets.mixins.re(/^\[toc\]$/gim, match => {
-				return {};
+			new ReWidgetMixIn(/^\[toc\]$/gim, (cm, match, tokens) => {
+				if (tokens.has('toc')) {
+					return {};
+				} else {
+					return null;
+				}
 			}),
 		],
 		debounceWait: 10,
 		findEditRange: function(range) {
-			const ret = {
+			return {
 				from: { line: range.from.line - 1, ch: 0 },
 				to: { line: range.to.line + 1, ch: 0 },
 			};
-			return ret;
 		},
 		createElement: function(widget) {
 			const toc = document.createElement('div');
