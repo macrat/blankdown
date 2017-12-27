@@ -70,10 +70,12 @@
 	display: inline-block;
 	background-color: #eaf0f0;
 	padding: .5em 1em;
-	min-width: 20em;
 	max-width: 100%;
 	position: relative;
 	box-sizing: border-box;
+}
+@media screen and (min-width: 20em) {
+	min-width: 20em;
 }
 .toc-widget:before {
 	content: ' ';
