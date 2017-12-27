@@ -70,12 +70,16 @@
 	display: inline-block;
 	background-color: #eaf0f0;
 	padding: .5em 1em;
+	min-width: 20em;
 	max-width: 100%;
 	position: relative;
 	box-sizing: border-box;
+	transition: min-width .5s ease;
 }
-@media screen and (min-width: 20em) {
-	min-width: 20em;
+@media screen and (max-width: 23em) {
+	.toc-widget {
+		min-width: 100%;
+	}
 }
 .toc-widget:before {
 	content: ' ';

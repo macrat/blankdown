@@ -79,6 +79,12 @@ export default {
 	watch: {
 		opened(state) {
 			localStorage.setItem('pane-opened', JSON.stringify(state));
+
+			if (state) {
+				this.$emit('open');
+			} else {
+				this.$emit('close');
+			}
 		},
 	},
 	computed: {

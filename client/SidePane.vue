@@ -40,6 +40,11 @@ a {
 	text-decoration: none;
 }
 
+a:focus {
+	outline: none;
+	background-color: lightslategray;
+}
+
 .file-remove {
 	font-size: 80%;
 	color: #eee;
@@ -60,7 +65,7 @@ a {
 </style>
 
 <template>
-	<drawer-view>
+	<drawer-view @open=$refs.newbutton.focus()>
 		<nav>
 			<div id=profile>
 				<img :src=user.icon align=middle>
@@ -68,7 +73,7 @@ a {
 			</div>
 
 			<div>
-				<a href @click.prevent="$store.dispatch('create')">new</a>
+				<a href @click.prevent="$store.dispatch('create')" ref=newbutton>new</a>
 				<a href @click.prevent="$emit('import-request')">import</a>
 				<a href @click.prevent="$emit('export-request', 'markdown')">export</a>
 				<a href @click.prevent="$emit('export-request', 'html')">export as HTML</a>
