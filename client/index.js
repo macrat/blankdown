@@ -9,8 +9,3 @@ const vm = new Vue({
 	store: store,
 	render: h => h(App),
 });
-
-
-if ('serviceWorker' in navigator) {
-	navigator.serviceWorker.register('/ServiceWorker.js', { scope: '/' });
-}

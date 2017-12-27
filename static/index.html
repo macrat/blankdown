@@ -5,6 +5,13 @@
 		<title>blankdown - yet yet yet another markdown editor</title>
 		<meta name=viewport content="width=device-width,initial-scale=1">
 		<meta charset=utf-8>
+
+		<script>
+if ('serviceWorker' in navigator) {
+	navigator.serviceWorker.register('/ServiceWorker.js', { scope: '/' });
+}
+		</script>
+
 		<link rel=manifest href="/manifest.json">
 		<meta name=theme-color content=darkslategray>
 
