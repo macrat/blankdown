@@ -82,7 +82,7 @@ app.get('/manifest.json', (req, res) => {
 });
 
 
-app.get('/ServiceWorker.js', (req, res) => {
+router.get('/ServiceWorker.js', async (req, res) => {
 	res.sendFile('ServiceWorker.js', {
 		root: path.join(__dirname, 'public'),
 	});
