@@ -18,12 +18,18 @@
 
 <script>
 import APIClient from './APIClient.js';
+import ImageCompressor from './ImageCompressor.js';
 
 
 const client = new APIClient(null);
 
 
 export default {
+	computed: {
+		imageCompressor() {
+			return new ImageCompressor();
+		},
+	},
 	created() {
 		window.addEventListener('dragover', ev => {
 			ev.stopPropagation();
@@ -68,9 +74,13 @@ export default {
 
 				const reader = new FileReader();
 				reader.addEventListener('load', () => {
-					this.$emit('image-loaded', {
-						filename: files[0].name,
-						url: reader.result,
+					this.imageCompressor.compress(reader.result).then(url => {
+						this.$emit('image-loaded', {
+							filename: files[0].name,
+							url: url,
+						});
+					}).catch(err => {
+						this.$emit('image-load-fail', err);
 					});
 				});
 				reader.readAsDataURL(files[0]);
