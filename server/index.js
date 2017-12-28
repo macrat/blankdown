@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const generateUUID = require('uuid/v4');
 
 import path from 'path';

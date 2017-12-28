@@ -4,6 +4,8 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
+require('dotenv').config();
+
 
 const clientConfig = {
 	entry: {
@@ -33,6 +35,8 @@ const clientConfig = {
 	plugins: [
 		new webpack.DefinePlugin({
 			VERSION_CODE: JSON.stringify(process.env.VERSION_CODE),
+			AUTH0_CLIENT_ID: JSON.stringify(process.env.AUTH0_CLIENT_ID),
+			AUTH0_DOMAIN: JSON.stringify(process.env.AUTH0_DOMAIN),
 		}),
 		new CopyWebpackPlugin([{
 			from: path.join(__dirname, 'static'),

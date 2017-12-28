@@ -29,6 +29,7 @@ const store = new Vuex.Store({
 			markdown: '',
 			readonly: true,
 		},
+		user: null,
 	},
 	mutations: {
 		loaded(state, data) {
@@ -62,6 +63,12 @@ const store = new Vuex.Store({
 			state.current.id = file.id;
 			state.current.markdown = file.markdown;
 			state.current.readonly = file.readonly;
+		},
+		loggedin(state, profile) {
+			state.user = profile;
+		},
+		loggedout(state) {
+			state.user = null;
 		},
 	},
 	actions: {

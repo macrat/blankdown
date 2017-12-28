@@ -21,7 +21,17 @@ self.addEventListener('fetch', ev => {
 			return response;
 		}
 
-		if (/^\/[^\/.]+$/.test(new URL(ev.request.url).pathname)) {
+		const url = new URL(ev.request.url);
+
+		if (url.hostname.endsWith('.auth0.com')) {
+			return fetch(ev.request);
+		}
+
+		if (url.origin !== location.origin) {
+			return fetch(ev.request, { mode:'no-cors' });
+		}
+
+		if (/^\/[^\/.]+$/.test(url.pathname)) {
 			return caches.match(new Request('/'));
 		}
 

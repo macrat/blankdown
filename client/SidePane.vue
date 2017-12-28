@@ -3,25 +3,23 @@ nav {
 	padding: .5em;
 }
 
-#profile {
-	display: flex;
-	align-items: center;
-}
-
 nav > div {
 	padding-bottom: .5em;
 	margin-bottom: .5em;
 	border-bottom: 1px solid white;
 }
 
-img {
+#profile {
+	display: flex;
+	align-items: center;
+}
+#profile img {
 	width: 2em;
 	height: 2em;
 }
-
 #username {
 	margin-left: .5em;
-	font-size: 120%;
+	flex: 1 1 0;
 }
 
 input {
@@ -67,9 +65,13 @@ a:focus {
 <template>
 	<drawer-view @open=$refs.newbutton.focus()>
 		<nav>
-			<div id=profile>
-				<img :src=user.icon align=middle>
-				<span id=username>{{ user.name }}</span>
+			<div id=profile v-if=$store.state.user>
+				<img :src=$store.state.user.icon>
+				<a id=username href @click.prevent=logout>{{ $store.state.user.name }}</a>
+			</div>
+			<div id=profile v-else>
+				<img src="/icon.svg">
+				<a id=username a href @click.prevent=login>login</a>
 			</div>
 
 			<div>
@@ -115,6 +117,7 @@ a:focus {
 <script>
 import axios from 'axios';
 
+import Auth from './Auth.js';
 import DrawerView from './DrawerView.vue';
 
 
@@ -122,10 +125,6 @@ export default {
 	components: { DrawerView },
 	data() {
 		return {
-			user: {
-				name: 'user name',
-				icon: '',
-			},
 			filtered: null,
 			currentFilter: '',
 			searchWord: '',
@@ -135,6 +134,26 @@ export default {
 		files() {
 			return this.filtered !== null ? this.filtered : this.$store.state.recent;
 		},
+		auth() {
+			return new Auth(AUTH0_CLIENT_ID, AUTH0_DOMAIN);
+		},
+	},
+	created() {
+		this.auth.on('login', token => {
+			const profile = this.auth.profile;
+			if (profile) {
+				this.$store.commit('loggedin', {
+					name: profile.name,
+					icon: profile.picture,
+					token: token,
+				});
+			}
+		});
+		this.auth.on('error', error => {
+			alert('failed to login');
+			console.error(error);
+		});
+		this.auth.checkLoggedIn();
 	},
 	methods: {
 		update() {
@@ -155,6 +174,12 @@ export default {
 					this.filtered = response.data.result;
 				})
 				.catch(console.error)
+		},
+		login() {
+			this.auth.login();
+		},
+		logout() {
+			this.auth.logout();
 		},
 	},
 };
