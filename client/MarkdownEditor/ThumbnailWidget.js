@@ -1,4 +1,5 @@
 import widgets from 'codemirror-widgets';
+import axios from 'axios';
 
 import ReWidgetMixIn from './ReWidgetMixIn.js';
 
@@ -18,14 +19,23 @@ export default function() {
 			}),
 		],
 		debounceWait: 10,
-		findEditRange: function(range) {
+		findEditRange(range) {
 			const ret = {
 				from: { line: range.from.line - 1, ch: 0 },
 				to: { line: range.to.line + 1, ch: 0 },
 			};
 			return ret;
 		},
-		createElement: function(widget) {
+		createElement(widget) {
+			if (widget.props.src.startsWith('https://www.youtube.com/watch')) {
+				return this.createYoutubeElement(widget);
+			} else if (widget.props.src.startsWith('https://soundcloud.com/')) {
+				return this.createSoundCloudElement(widget);
+			} else {
+				return this.createImageElement(widget);
+			}
+		},
+		createImageElement(widget) {
 			const img = document.createElement('img');
 			img.src = widget.props.src;
 			img.alt = widget.props.alt;
@@ -39,6 +49,54 @@ export default function() {
 				widget.enter();
 			});
 			return img;
+		},
+		createYoutubeElement(widget) {
+			const iframe = document.createElement('iframe');
+			iframe.innerText = widget.props.alt;
+			iframe.title = widget.props.alt;
+			iframe.width = 640;
+			iframe.height = 360;
+
+			iframe.classList.add('thumbnail-widget');
+			iframe.classList.add('thumbnail-widget-video');
+
+			const url = new URL(widget.props.src);
+			const v = url.search.slice(1).split('&').map(x => x.split('=')).filter(xs => xs[0] === 'v');
+			if (!v || !v[0][1]) {
+				this.classList.add('thumbnail-widget-missing');
+				return iframe;
+			}
+
+			iframe.src = 'https://www.youtube.com/embed/' + v[0][1];
+			iframe.gesture = 'media';
+			iframe.allow = 'encrypted-media';
+			iframe.allowFullscreen = true;
+
+			return iframe;
+		},
+		createSoundCloudElement(widget) {
+			const outer = document.createElement('div');
+			outer.innerText = widget.props.alt;
+			outer.title = widget.props.alt;
+
+			outer.classList.add('thumbnail-widget');
+			outer.classList.add('thumbnail-widget-sound');
+			outer.classList.add('thumbnail-widget-missing');
+
+			axios.get('https://soundcloud.com/oembed', { params: { url: widget.props.src, format: 'json' } })
+				.then(result => {
+					outer.innerHTML = result.data.html;
+					outer.classList.remove('thumbnail-widget-missing');
+					const iframe = outer.querySelector('iframe');
+					iframe.width = 640;
+					iframe.height = 200;
+				})
+				.catch(err => {
+					console.error('failed load SoundCloud:', widget.props, err);
+					outer.classList.add('thumbnail-widget-missing');
+				})
+
+			return outer;
 		},
 	});
 }

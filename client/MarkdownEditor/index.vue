@@ -111,6 +111,12 @@
 	margin: .5em 0;
 }
 
+.thumbnail-widget {
+	margin: 0;
+	padding: 0;
+	border: none;
+	max-width: 100%;
+}
 .thumbnail-widget-missing {
 	display: inline-block;
 	width: 6em;
