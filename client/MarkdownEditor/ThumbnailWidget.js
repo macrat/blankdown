@@ -31,6 +31,8 @@ export default function() {
 				return this.createYoutubeElement(widget);
 			} else if (widget.props.src.startsWith('https://soundcloud.com/')) {
 				return this.createSoundCloudElement(widget);
+			} else if (widget.props.src.startsWith('https://vimeo.com/')) {
+				return this.createVimeoElement(widget);
 			} else {
 				return this.createImageElement(widget);
 			}
@@ -97,6 +99,25 @@ export default function() {
 				})
 
 			return outer;
+		},
+		createVimeoElement(widget) {
+			const iframe = document.createElement('iframe');
+			iframe.innerText = widget.props.alt;
+			iframe.title = widget.props.alt;
+			iframe.width = 640;
+			iframe.height = 360;
+
+			iframe.classList.add('thumbnail-widget');
+			iframe.classList.add('thumbnail-widget-video');
+
+			const url = new URL(widget.props.src);
+
+			iframe.src = 'https://player.vimeo.com/video' + url.pathname;
+			iframe.gesture = 'media';
+			iframe.allow = 'encrypted-media';
+			iframe.allowFullscreen = true;
+
+			return iframe;
 		},
 	});
 }
