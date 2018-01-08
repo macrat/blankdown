@@ -117,7 +117,6 @@ a:focus {
 <script>
 import axios from 'axios';
 
-import Auth from './Auth.js';
 import DrawerView from './DrawerView.vue';
 
 
@@ -134,26 +133,6 @@ export default {
 		files() {
 			return this.filtered !== null ? this.filtered : this.$store.state.recent;
 		},
-		auth() {
-			return new Auth(AUTH0_CLIENT_ID, AUTH0_DOMAIN);
-		},
-	},
-	created() {
-		this.auth.on('login', token => {
-			const profile = this.auth.profile;
-			if (profile) {
-				this.$store.commit('loggedin', {
-					name: profile.name,
-					icon: profile.picture,
-					token: token,
-				});
-			}
-		});
-		this.auth.on('error', error => {
-			alert('failed to login');
-			console.error(error);
-		});
-		this.auth.checkLoggedIn();
 	},
 	methods: {
 		update() {
@@ -176,10 +155,10 @@ export default {
 				.catch(console.error)
 		},
 		login() {
-			this.auth.login();
+			this.$store.dispatch('login');
 		},
 		logout() {
-			this.auth.logout();
+			this.$store.dispatch('logout');
 		},
 	},
 };

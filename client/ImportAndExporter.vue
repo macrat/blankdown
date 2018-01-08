@@ -99,7 +99,7 @@ export default {
 			this.startDownload(this.$store.getters.current_name + '.md', 'text/markdown', this.$store.state.current.markdown);
 		},
 		exportHTML() {
-			this.$store.getters.currentHTML().then(html => {
+			this.$store.getters.currentHTML.then(html => {
 				this.startDownload(this.$store.getters.current_name + '.html', 'text/html', html);
 			});
 		},

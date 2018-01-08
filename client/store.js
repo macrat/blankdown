@@ -5,6 +5,7 @@ import debounce from 'lodash/debounce';
 import Markdown from '../common/Markdown.js';
 
 import APIClient from './APIClient.js';
+import Auth from './Auth.js';
 
 Vue.use(Vuex);
 
@@ -16,6 +17,23 @@ This is yet yet yet another **markdown** editor.
 
 
 const client = new APIClient(null);
+const auth = new Auth(AUTH0_CLIENT_ID, AUTH0_DOMAIN);
+
+
+auth.on('login', token => {
+	const profile = auth.profile;
+	if (profile) {
+		store.commit('loggedin', {
+			name: profile.name,
+			icon: profile.picture,
+			token: token,
+		});
+	}
+});
+auth.on('error', error => {
+	alert('failed to login');
+	console.error(error);
+});
 
 
 async function load_data(id) {
@@ -41,12 +59,12 @@ async function load_data(id) {
 }
 
 
-async function save_current(state) {
-	if (!state.current.readonly) {
+async function save(file) {
+	if (!file.readonly) {
 		const timestamp = new Date().getTime() / 1000.0;
-		await client.save(state.current.id, {
-			id: state.current.id,
-			markdown: state.current.markdown,
+		await client.save({
+			id: file.id,
+			markdown: file.markdown,
 			accessed: timestamp,
 			modified: timestamp,
 		});
@@ -151,7 +169,7 @@ const store = new Vuex.Store({
 				this.commit('created', file)
 			});
 		},
-		'import': function(context, markdown) {
+		import(context, markdown) {
 			client.create(markdown).then(file => store.commit('loaded', file));
 		},
 		update(context, markdown) {
@@ -160,16 +178,16 @@ const store = new Vuex.Store({
 		},
 		save(context) {
 			this.commit('start_save');
-			save_current(this.state).then(() => {
+			save(context.state.current).then(() => {
 				this.commit('saved');
 			});
 		},
 		load(context, id) {
-			save_current(this.state).then(() => load_data(id));
+			save(context.state.current).then(() => load_data(id));
 		},
 		remove(context, id) {
 			client.load(id).then(target => {
-				const removeCurrent = target.id === this.state.current.id;
+				const removeCurrent = target.id === context.state.current.id;
 
 				client.remove(target.id).then(() => {
 					this.commit('removed', target);
@@ -194,6 +212,15 @@ const store = new Vuex.Store({
 			client.create(file.markdown).then(file => {
 				store.commit('restored', file);
 			});
+		},
+		checkLoggedIn() {
+			auth.checkLoggedIn();
+		},
+		login() {
+			auth.login();
+		},
+		logout() {
+			auth.logout();
 		},
 	},
 	getters: {

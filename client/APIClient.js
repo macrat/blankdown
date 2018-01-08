@@ -115,7 +115,7 @@ export default class APIClient {
 			jwt: this.jwt,
 			file: file,
 		});
-		this.emitChangedFiles();
+		await this.emitChangedFiles();
 	}
 
 	async create(markdown='') {
@@ -141,7 +141,7 @@ export default class APIClient {
 			jwt: this.jwt,
 			id: id,
 		});
-		this.emitChangedFiles();
+		await this.emitChangedFiles();
 	}
 
 	async markAccess(id, timestamp=null) {
@@ -158,6 +158,6 @@ export default class APIClient {
 			id: id,
 			timestamp: timestamp,
 		});
-		this.emitChangedFiles();
+		await this.emitChangedFiles();
 	}
 };
