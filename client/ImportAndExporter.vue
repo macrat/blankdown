@@ -17,11 +17,7 @@
 </template>
 
 <script>
-import APIClient from './APIClient.js';
 import ImageCompressor from './ImageCompressor.js';
-
-
-const client = new APIClient(null);
 
 
 export default {
@@ -103,8 +99,9 @@ export default {
 			this.startDownload(this.$store.getters.current_name + '.md', 'text/markdown', this.$store.state.current.markdown);
 		},
 		exportHTML() {
-			client.getHTML(this.$store.state.current.id)
-				.then(html => this.startDownload(this.$store.getters.current_name + '.html', 'text/html', html));
+			this.$store.getters.currentHTML().then(html => {
+				this.startDownload(this.$store.getters.current_name + '.html', 'text/html', html);
+			});
 		},
 	},
 };

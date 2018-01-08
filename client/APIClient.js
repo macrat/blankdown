@@ -36,6 +36,10 @@ export default class APIClient {
 		return files;
 	}
 
+	async emitChangedFiles() {
+		this.eventHandler.$emit('changed-files', await this.getFiles());
+	}
+
 	async load(id) {
 		if (!id) {
 			this.eventHandler.$emit('load-fail', {
@@ -111,6 +115,7 @@ export default class APIClient {
 			jwt: this.jwt,
 			file: file,
 		});
+		this.emitChangedFiles();
 	}
 
 	async create(markdown='') {
@@ -124,6 +129,7 @@ export default class APIClient {
 			jwt: this.jwt,
 			file: file,
 		});
+		await this.emitChangedFiles();
 
 		return file;
 	}
@@ -135,6 +141,7 @@ export default class APIClient {
 			jwt: this.jwt,
 			id: id,
 		});
+		this.emitChangedFiles();
 	}
 
 	async markAccess(id, timestamp=null) {
@@ -151,5 +158,6 @@ export default class APIClient {
 			id: id,
 			timestamp: timestamp,
 		});
+		this.emitChangedFiles();
 	}
 };

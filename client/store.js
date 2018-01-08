@@ -1,18 +1,91 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import debounce from 'lodash/debounce';
 
-import StorageManagerPlugin from './StorageManagerPlugin.js';
 import Markdown from '../common/Markdown.js';
+
+import APIClient from './APIClient.js';
 
 Vue.use(Vuex);
 
 
+const welcomeDocument = `# welcome to blankdown
+
+This is yet yet yet another **markdown** editor.
+`;
+
+
+const client = new APIClient(null);
+
+
+async function load_data(id) {
+	if (!id) {
+		return;
+	}
+
+	const data = await client.load(id);
+	if (data) {
+		if (!data.readonly) {
+			await client.markAccess(id);
+		}
+
+		store.commit('loaded', {
+			id: id,
+			markdown: data.markdown,
+			readonly: data.readonly,
+		});
+		return true;
+	}
+
+	return false;
+}
+
+
+async function save_current(state) {
+	if (!state.current.readonly) {
+		const timestamp = new Date().getTime() / 1000.0;
+		await client.save(state.current.id, {
+			id: state.current.id,
+			markdown: state.current.markdown,
+			accessed: timestamp,
+			modified: timestamp,
+		});
+	}
+}
+
+
+const autosave = debounce(() => {
+	store.dispatch('save');
+}, 5000);
+
+
 const store = new Vuex.Store({
 	plugins: [
-		StorageManagerPlugin,
-		store => {
+		async store => {
 			window.addEventListener('beforeunload', () => {
 				store.dispatch('save');
+			});
+
+			client.getFiles().then(files => store.commit('changed_recent_files', files));
+
+			client.on('changed-files', files => store.commit('changed_recent_files', files));
+
+			const pathes = ((await client.getFiles()) || []).map(x => x.id);
+			if (location.pathname.slice(1) in pathes) {
+				pathes.unshift(location.pathname.slice(1));
+			}
+			for (let id of pathes) {
+				if (await load_data(id)) {
+					if (location.pathname.slice(1) !== id) {
+						history.replaceState(null, '', '/' + id + location.search);
+					}
+					return id;
+				}
+			}
+
+			client.create(welcomeDocument).then(page => {
+				history.pushState(null, '', '/' + page.id + location.search);
+				store.commit('created', page);
 			});
 		},
 	],
@@ -66,6 +139,7 @@ const store = new Vuex.Store({
 		},
 		loggedin(state, profile) {
 			state.user = profile;
+			client.jwt = profile.token;
 		},
 		loggedout(state) {
 			state.user = null;
@@ -73,20 +147,53 @@ const store = new Vuex.Store({
 	},
 	actions: {
 		create() {
+			client.create().then(file => {
+				this.commit('created', file)
+			});
 		},
 		'import': function(context, markdown) {
+			client.create(markdown).then(file => store.commit('loaded', file));
 		},
 		update(context, markdown) {
+			autosave();
 			this.commit('updated', markdown);
 		},
-		save() {
+		save(context) {
 			this.commit('start_save');
+			save_current(this.state).then(() => {
+				this.commit('saved');
+			});
 		},
 		load(context, id) {
+			save_current(this.state).then(() => load_data(id));
 		},
 		remove(context, id) {
+			client.load(id).then(target => {
+				const removeCurrent = target.id === this.state.current.id;
+
+				client.remove(target.id).then(() => {
+					this.commit('removed', target);
+
+					if (removeCurrent) {
+						client.loadMostRecent().then(next => {
+							if (!next) {
+								this.dispatch('create');
+							} else {
+								this.commit('loaded', {
+									id: next.id,
+									markdown: next.markdown,
+									readonly: next.readonly,
+								});
+							}
+						});
+					}
+				});
+			});
 		},
-		restore(context) {
+		restore(context, file) {
+			client.create(file.markdown).then(file => {
+				store.commit('restored', file);
+			});
 		},
 	},
 	getters: {
@@ -111,6 +218,9 @@ const store = new Vuex.Store({
 		removed_name(state) {
 			return Markdown.getNameBy(state.removed.markdown);
 		},
+		currentHTML(state) {
+			return client.getHTML(state.current.id);
+		}
 	},
 });
 
