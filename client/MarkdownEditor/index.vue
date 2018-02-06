@@ -14,6 +14,10 @@
 	cursor: text;
 }
 
+.CodeMirror-line {
+	font-family: initial;
+}
+
 .CodeMirror-overlayscroll-vertical {
 	width: .8em;
 	background-color: transparent;
