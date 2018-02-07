@@ -1,19 +1,37 @@
 import CodeMirror from 'codemirror';
 
-import _ from 'codemirror/mode/gfm/gfm.js';
-import _ from 'codemirror/addon/mode/overlay.js';
+
+class TokenSet {
+	constructor() {
+		this.list = [];
+	}
+
+	append() {
+		Array.prototype.push.apply(this.list, arguments);
+	}
+
+	makeString() {
+		return Array.prototype.slice.call(arguments).concat(this.list).join(' ');
+	}
+
+	isEmpty() {
+		return this.list.length === 0;
+	}
+}
 
 
-CodeMirror.defineMode('blankdown', function(config, parserConfig) {
-	return CodeMirror.overlayMode(CodeMirror.getMode(config, parserConfig.backdrop || 'gfm'), {
+CodeMirror.defineMode('markdown', function(config, parserConfig) {
+	return {
 		startState: function() {
 			return {
 				imageLink: false,
 				blobImage: false,
 				nextHeader: null,
+				listItem: false,
 				fencedBlock: null,
 				localState: null,
 				fencedEnd: null,
+				tokens: new TokenSet(),
 			};
 		},
 		innerMode: function(state) {
@@ -24,6 +42,10 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 			}
 		},
 		token: function(stream, state) {
+			if (stream.sol()) {
+				state.tokens = new TokenSet();
+			}
+
 			if (state.fencedEnd && stream.sol() && stream.match(state.fencedEnd, true)) {
 				stream.skipToEnd();
 				state.fencedBlock = state.localState = state.fencedEnd = null;
@@ -40,14 +62,17 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 			}
 
 			if (state.nextHeader !== null) {
-				stream.skipToEnd();
-				const tokens = 'header mark header-' + state.nextHeader;
+				state.tokens.append('header', 'mark', 'header-' + state.nextHeader);
 				state.nextHeader = null;
-				return tokens;
+			}
+
+			if (state.listItem) {
+				state.listItem = false;
+				state.tokens.append('list', 'body');
 			}
 
 			if (stream.sol() && stream.match(/\[toc\]$/i, true)) {
-				return 'toc';
+				return state.tokens.makeString('toc');
 			}
 
 			let match;
@@ -70,46 +95,71 @@ CodeMirror.defineMode('blankdown', function(config, parserConfig) {
 			if (state.imageLink && stream.match(/\(data:(?=.*\))/, true)) {
 				state.imageLink = false;
 				state.blobImage = true;
-				return 'image string url blob-image mark';
+				return state.tokens.makeString('image', 'string', 'url', 'blob-image', 'mark');
 			}
 			if (state.blobImage && stream.eatWhile(x => x !== ')')) {
-				return 'image string url blob-image body';
+				return state.tokens.makeString('image', 'string', 'url', 'blob-image', 'body');
 			}
 			if (state.blobImage && stream.eat(')')) {
 				state.blobImage = false;
-				return 'image string url blob-image mark';
+				return state.tokens.makeString('image', 'string', 'url', 'blob-image', 'mark');
 			}
 
 			if (state.imageLink && stream.match(/\(.*\)/, true)) {
 				state.imageLink = false;
-				return 'image string url';
+				return state.tokens.makeString('image', 'string', 'url');
 			}
 			if (stream.match(/!\[.*?\](?=\(.*?\))/, true)) {
 				state.imageLink = true;
-				return 'image image-alt-text link';
+				return state.tokens.makeString('image', 'image-alt-text', 'link');
+			}
+
+			if (stream.sol() && stream.match(/\s*([-*+]|[0-9]+\.) /, true)) {
+				state.listItem = true;
+				return state.tokens.makeString('list', 'mark');
+			}
+
+			if (stream.match(/\*\*.*?\*\*|__.*?__/, true)) {
+				return state.tokens.makeString('strong')
+			}
+
+			if (stream.match(/\*.*?\*|_.*?_/, true)) {
+				return state.tokens.makeString('em')
+			}
+
+			if (stream.match(/~~.*?~~/, true)) {
+				return state.tokens.makeString('strikethrough')
 			}
 
 			if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 				const match = stream.match(/(#+) +/, true);
 				const id = stream.match(/.*$/, false)[0].trim().replace(/[^\w]+/g, '-');
-				return 'header mark header-' + match[1].length + ' ' + ('header--' + id);
+
+				state.tokens.append('header', 'header-' + match[1].length);
+				const token = state.tokens.makeString('mark', 'header--' + id);
+
+				state.tokens.append('body');
+
+				return token;
 			}
 
 			const nextLine = stream.lookAhead(1);
 			if (stream.sol() && !stream.eol() && nextLine) {
 				const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
-				if (match && stream.lookAhead(0).length <= match[1].length) {
+				if (match && (stream.lookAhead(0).length <= match[1].length || match[1].length >= 3)) {
 					state.nextHeader = match[1].startsWith('=') ? 1 : 2;
 					const id = stream.lookAhead(0).trim().toLowerCase().replace(/[^\w]+/g, '-');
 					stream.skipToEnd();
-					return 'header body header-' + state.nextHeader + ' ' + ('header--' + id);
+					return state.tokens.makeString('header', 'body', 'header-' + state.nextHeader, 'header--' + id);
 				}
 			}
 
 			if (stream.next() == null) {
 				return null;
 			}
-			return null;
+			return state.tokens.makeString();
 		},
-	});
+	};
 });
+
+CodeMirror.defineMIME('text/x-markdown', 'markdown');

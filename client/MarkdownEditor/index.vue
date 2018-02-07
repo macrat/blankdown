@@ -66,6 +66,13 @@
 	font-size: 10%;
 }
 
+.cm-list {
+	color: #622;
+}
+.cm-list.cm-mark {
+	font-weight: bold;
+}
+
 .cm-toc {
 	background-color: #eaf0f0;
 }
@@ -175,7 +182,7 @@ export default {
 	computed: {
 		options() {
 			return {
-				mode: 'blankdown',
+				mode: 'markdown',
 				theme: 'elegant',
 				dragDrop: false,
 				lineWrapping: true,
@@ -183,8 +190,6 @@ export default {
 				indentUnit: 4,
 				tabSize: 4,
 				indentWithTabs: true,
-				xml: false,
-				gitHubSpice: false,
 				readOnly: this.$store.state.current.readonly ? 'nocursor' : false,
 			};
 		},
