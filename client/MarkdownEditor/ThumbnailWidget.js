@@ -8,7 +8,7 @@ export default function() {
 	return widgets.createType({
 		mixins: [
 			new ReWidgetMixIn(/!\[(.*?)\]\((.*?)\)/g, (cm, match, tokens) => {
-				if (tokens.has('image')) {
+				if (tokens.has('media')) {
 					return {
 						alt: match[1],
 						src: match[2],
@@ -20,11 +20,10 @@ export default function() {
 		],
 		debounceWait: 10,
 		findEditRange(range) {
-			const ret = {
+			return {
 				from: { line: range.from.line - 1, ch: 0 },
 				to: { line: range.to.line + 1, ch: 0 },
 			};
-			return ret;
 		},
 		createElement(widget) {
 			if (widget.props.src.startsWith('https://www.youtube.com/watch')) {

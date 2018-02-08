@@ -43,7 +43,7 @@
 	word-break: break-all;
 }
 
-.cm-header.cm-mark {
+.cm-header-mark {
 	color: #bbb;
 }
 .cm-header {
@@ -62,14 +62,30 @@
 	font-size: 1.4em;
 }
 
-.cm-blob-image.cm-body {
+.cm-url.cm-blob-image {
 	font-size: 10%;
+}
+
+.cm-link {
+	color: mediumblue !important;
+}
+
+.cm-inline-code {
+	background-color: #eaeaea;
+}
+
+.cm-strong-mark, .cm-em-mark, .cm-strikethrough-mark, .cm-inline-code-mark {
+	color: #999;
+}
+
+.cm-strikethrough.cm-link {
+	text-decoration: underline line-through;
 }
 
 .cm-list {
 	color: #622;
 }
-.cm-list.cm-mark {
+.cm-list-mark {
 	font-weight: bold;
 }
 
@@ -135,6 +151,14 @@
 	background-color: #aaa;
 	color: white;
 }
+
+.hr-widget {
+	display: inline-block;
+	width: 99.9%;
+	height: 1px;
+	border: 0;
+	background-color: darkslategray;
+}
 </style>
 
 <template>
@@ -160,6 +184,8 @@ import widgets from 'codemirror-widgets';
 
 import ThumbnailWidget from './ThumbnailWidget.js';
 import TOCWidget from './TOCWidget.js';
+import CheckListWidget from './CheckListWidget.js';
+import HorizontalLineWidget from './HorizontalLineWidget.js';
 
 
 export default {
@@ -167,6 +193,8 @@ export default {
 	mounted() {
 		this.widgetManager.enable(new ThumbnailWidget());
 		this.widgetManager.enable(new TOCWidget(this.tocCreated));
+		this.widgetManager.enable(new CheckListWidget());
+		this.widgetManager.enable(new HorizontalLineWidget());
 
 		const timer = setInterval(() => {
 			this.focus();

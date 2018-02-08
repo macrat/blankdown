@@ -3,15 +3,45 @@ import CodeMirror from 'codemirror';
 
 class TokenSet {
 	constructor() {
-		this.list = [];
+		this.list = new Set();
+		this.stack = [];
 	}
 
-	append() {
-		Array.prototype.push.apply(this.list, arguments);
+	add() {
+		Array.prototype.forEach.apply(arguments, [x => this.list.add(x)]);
+	}
+
+	has(token) {
+		return this.list.has(token);
+	}
+
+	remove() {
+		const args = Array.prototype.slice.call(arguments);
+		this.list = this.list.filter(x => !args.includes(x));
+	}
+
+	addStack(token, closer) {
+		this.stack.push({
+			token: token,
+			closer: closer,
+		});
+	}
+
+	checkStack(stream) {
+		if (this.stack.length === 0) {
+			return null;
+		}
+
+		const top_ = this.stack[this.stack.length-1];
+		if (stream.match(top_.closer, true)) {
+			this.stack.pop();
+			return top_.token;
+		}
+		return null;
 	}
 
 	makeString() {
-		return Array.prototype.slice.call(arguments).concat(this.list).join(' ');
+		return Array.prototype.slice.call(arguments).concat([...this.list], this.stack.map(x => x.token)).join(' ');
 	}
 
 	isEmpty() {
@@ -24,13 +54,13 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 	return {
 		startState: function() {
 			return {
-				imageLink: false,
-				blobImage: false,
-				nextHeader: null,
-				listItem: false,
+				link: null,
+				linkMedia: false,
+				inlineCode: false,
 				fencedBlock: null,
 				localState: null,
 				fencedEnd: null,
+				headerMark: null,
 				tokens: new TokenSet(),
 			};
 		},
@@ -44,6 +74,8 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 		token: function(stream, state) {
 			if (stream.sol()) {
 				state.tokens = new TokenSet();
+				state.link = null;
+				state.inlineCode = false;
 			}
 
 			if (state.fencedEnd && stream.sol() && stream.match(state.fencedEnd, true)) {
@@ -61,14 +93,37 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				return 'comment fenced';
 			}
 
-			if (state.nextHeader !== null) {
-				state.tokens.append('header', 'mark', 'header-' + state.nextHeader);
-				state.nextHeader = null;
+			if (state.headerMark === null) {
+				const nextLine = stream.lookAhead(1);
+				if (nextLine && stream.sol() && !stream.eol()) {
+					const match = nextLine.match(/^(={1,}|-{1,})$/);
+					if (match && (stream.lookAhead(0).length <= match[1].length || match[1].length >= 3)) {
+						const level = match[1].startsWith('=') ? 1 : 2;
+						const id = stream.lookAhead(0).trim().toLowerCase().replace(/[^\w]+/g, '-');
+						state.headerMark = level;
+						state.tokens.add('header', 'header-' + level, 'header-body', 'header--' + id);
+					}
+				}
+			} else if (stream.sol()) {
+				stream.skipToEnd();
+				const token = state.tokens.makeString('header', 'header-' + state.headerMark, 'header-mark');
+				state.headerMark = null;
+				return token;
 			}
 
-			if (state.listItem) {
-				state.listItem = false;
-				state.tokens.append('list', 'body');
+			if (state.inlineCode) {
+				if (stream.eat('`')) {
+					state.inlineCode = false;
+					return state.tokens.makeString('inline-code', 'inline-code-mark');
+				} else {
+					stream.eatWhile(x => x !== '`');
+					return state.tokens.makeString('inline-code', 'inline-code-body');
+				}
+			}
+
+			let t;
+			if (t = state.tokens.checkStack(stream)) {
+				return state.tokens.makeString(t, t + '-mark');
 			}
 
 			if (stream.sol() && stream.match(/\[toc\]$/i, true)) {
@@ -77,7 +132,7 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 
 			let match;
 
-			if (stream.sol() && (match = stream.match(/^\s*(```+|~~~+)\s*([^\s]*)$/, true))) {
+			if (stream.sol() && (match = stream.match(/^\s*(```+|~~~+)\s*([a-zA-Z0-9]*)$/, true))) {
 				if (match[2] === 'markdown' || match[2] === 'md') {
 					match[2] = 'blankdown';
 				}
@@ -92,66 +147,72 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				return 'comment fenced fenced-start';
 			}
 
-			if (state.imageLink && stream.match(/\(data:(?=.*\))/, true)) {
-				state.imageLink = false;
-				state.blobImage = true;
-				return state.tokens.makeString('image', 'string', 'url', 'blob-image', 'mark');
+			if (match = stream.match(/(!?)\[(?=.*?\]\(.*?\))/, true)) {
+				state.link = 'text';
+				state.linkMedia = match[1] !== '';
+				state.tokens.add('link', 'media');
+				const token = state.tokens.makeString('link-mark');
+				state.tokens.add('link-text');
+				return token;
 			}
-			if (state.blobImage && stream.eatWhile(x => x !== ')')) {
-				return state.tokens.makeString('image', 'string', 'url', 'blob-image', 'body');
+			if (state.link === 'text' && (match = stream.match(/\]\((data:)?/i, false))) {
+				stream.eat(']');
+				stream.eat('(');
+				state.link = 'url';
+				state.tokens.remove('link-text');
+				const token = state.tokens.makeString('link-mark');
+				if (state.linkMedia && match[1]) {
+					state.tokens.add('blob-media');
+				}
+				return token;
 			}
-			if (state.blobImage && stream.eat(')')) {
-				state.blobImage = false;
-				return state.tokens.makeString('image', 'string', 'url', 'blob-image', 'mark');
+			if (state.link === 'url' && stream.eatWhile(x => x !== ')')) {
+				state.link = 'end';
+				return state.tokens.makeString('url');
 			}
-
-			if (state.imageLink && stream.match(/\(.*\)/, true)) {
-				state.imageLink = false;
-				return state.tokens.makeString('image', 'string', 'url');
-			}
-			if (stream.match(/!\[.*?\](?=\(.*?\))/, true)) {
-				state.imageLink = true;
-				return state.tokens.makeString('image', 'image-alt-text', 'link');
-			}
-
-			if (stream.sol() && stream.match(/\s*([-*+]|[0-9]+\.) /, true)) {
-				state.listItem = true;
-				return state.tokens.makeString('list', 'mark');
-			}
-
-			if (stream.match(/\*\*.*?\*\*|__.*?__/, true)) {
-				return state.tokens.makeString('strong')
-			}
-
-			if (stream.match(/\*.*?\*|_.*?_/, true)) {
-				return state.tokens.makeString('em')
+			if (state.link === 'end' && stream.eat(')')) {
+				state.link = null;
+				const token = state.tokens.makeString('link-mark');
+				state.tokens.remove('link', 'media', 'blob-media');
+				return token;
 			}
 
-			if (stream.match(/~~.*?~~/, true)) {
-				return state.tokens.makeString('strikethrough')
+			if (stream.sol() && stream.match(/\s*(?:[-*+](?: \[[ xX]\])?|[0-9]+\.) /, true)) {
+				const token = state.tokens.makeString('list', 'list-mark');
+				state.tokens.add('list', 'list-body');
+				return token;
+			}
+
+			if (match = stream.match(/\*\*(?=.*?\*\*)|__(?=.*?__)/, true)) {
+				state.tokens.addStack('strong', match[0]);
+				return state.tokens.makeString('strong-mark')
+			}
+
+			if (match = stream.match(/\*(?=.*?\*)|_(?=.*?_)/, true)) {
+				state.tokens.addStack('em', match[0]);
+				return state.tokens.makeString('em-mark')
+			}
+
+			if (match = stream.match(/~~(?=.*?~~)/, true)) {
+				state.tokens.addStack('strikethrough', match[0]);
+				return state.tokens.makeString('strikethrough-mark')
+			}
+
+			if (match = stream.match(/`(?=.*?`)/, true)) {
+				state.inlineCode = true;
+				return state.tokens.makeString('inline-code', 'inline-code-mark')
 			}
 
 			if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 				const match = stream.match(/(#+) +/, true);
-				const id = stream.match(/.*$/, false)[0].trim().replace(/[^\w]+/g, '-');
+				const id = stream.match(/.*$/, false)[0].trim().toLowerCase().replace(/[^\w]+/g, '-');
 
-				state.tokens.append('header', 'header-' + match[1].length);
-				const token = state.tokens.makeString('mark', 'header--' + id);
+				state.tokens.add('header', 'header-' + match[1].length);
+				const token = state.tokens.makeString('header-mark', 'header--' + id);
 
-				state.tokens.append('body');
+				state.tokens.add('header-body');
 
 				return token;
-			}
-
-			const nextLine = stream.lookAhead(1);
-			if (stream.sol() && !stream.eol() && nextLine) {
-				const match = nextLine.match(/^ *(={1,}|-{1,}) *$/);
-				if (match && (stream.lookAhead(0).length <= match[1].length || match[1].length >= 3)) {
-					state.nextHeader = match[1].startsWith('=') ? 1 : 2;
-					const id = stream.lookAhead(0).trim().toLowerCase().replace(/[^\w]+/g, '-');
-					stream.skipToEnd();
-					return state.tokens.makeString('header', 'body', 'header-' + state.nextHeader, 'header--' + id);
-				}
 			}
 
 			if (stream.next() == null) {
