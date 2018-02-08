@@ -7,10 +7,10 @@ export default function() {
 	return widgets.createType({
 		mixins: [
 			new ReWidgetMixIn(/^---+$/gm, (cm, match, tokens) => {
-				if (tokens.has('header-mark')) {
-					return null;
-				} else {
+				if (tokens.size === 0) {
 					return {};
+				} else {
+					return null;
 				}
 			}),
 		],
