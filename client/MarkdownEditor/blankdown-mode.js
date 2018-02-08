@@ -45,7 +45,7 @@ class TokenSet {
 	}
 
 	isEmpty() {
-		return this.list.length === 0;
+		return this.list.length === 0 && this.stack.list === 0;
 	}
 }
 
@@ -213,6 +213,10 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				state.tokens.add('header-body');
 
 				return token;
+			}
+
+			if (state.headerMark === null && stream.sol() && stream.match(/---+$/, true)) {
+				return state.tokens.makeString('horizontal-line');
 			}
 
 			if (stream.next() == null) {

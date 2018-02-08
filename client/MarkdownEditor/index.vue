@@ -152,7 +152,7 @@
 	color: white;
 }
 
-.hr-widget {
+.horizontal-line-widget {
 	display: inline-block;
 	width: 99.9%;
 	height: 1px;

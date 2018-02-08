@@ -7,14 +7,14 @@ export default function() {
 	return widgets.createType({
 		mixins: [
 			new ReWidgetMixIn(/^---+$/gm, (cm, match, tokens) => {
-				if (tokens.size === 0) {
+				if (tokens.has('horizontal-line')) {
 					return {};
 				} else {
 					return null;
 				}
 			}),
 		],
-		debounceWait: 10,
+		debounceWait: 500,
 		findEditRange(range) {
 			return {
 				from: { line: range.from.line - 1, ch: 0 },
@@ -23,7 +23,7 @@ export default function() {
 		},
 		createElement(widget) {
 			const hr = document.createElement('hr');
-			hr.classList.add('hr-widget');
+			hr.classList.add('horizontal-line-widget');
 			return hr;
 		},
 	});
