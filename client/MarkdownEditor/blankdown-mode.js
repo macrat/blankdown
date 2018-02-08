@@ -1,5 +1,7 @@
 import CodeMirror from 'codemirror';
 
+import 'codemirror/mode/meta';
+
 
 class TokenSet {
 	constructor() {
