@@ -16,8 +16,7 @@ class TokenSet {
 	}
 
 	remove() {
-		const args = Array.prototype.slice.call(arguments);
-		this.list = this.list.filter(x => !args.includes(x));
+		Array.prototype.forEach.apply(arguments, [x => this.list.delete(x)]);
 	}
 
 	addStack(token, closer) {
