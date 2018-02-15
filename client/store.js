@@ -5,7 +5,6 @@ import debounce from 'lodash/debounce';
 import Markdown from '../common/Markdown.js';
 
 import APIClient from './APIClient.js';
-import Auth from './Auth.js';
 
 Vue.use(Vuex);
 
@@ -17,23 +16,6 @@ This is yet yet yet another **markdown** editor.
 
 
 const client = new APIClient(null);
-const auth = new Auth(AUTH0_CLIENT_ID, AUTH0_DOMAIN);
-
-
-auth.on('login', token => {
-	const profile = auth.profile;
-	if (profile) {
-		store.commit('loggedin', {
-			name: profile.name,
-			icon: profile.picture,
-			token: token,
-		});
-	}
-});
-auth.on('error', error => {
-	alert('failed to login');
-	console.error(error);
-});
 
 
 async function load_data(id) {
@@ -155,13 +137,6 @@ const store = new Vuex.Store({
 			state.current.markdown = file.markdown;
 			state.current.readonly = file.readonly;
 		},
-		loggedin(state, profile) {
-			state.user = profile;
-			client.jwt = profile.token;
-		},
-		loggedout(state) {
-			state.user = null;
-		},
 	},
 	actions: {
 		create() {
@@ -212,15 +187,6 @@ const store = new Vuex.Store({
 			client.create(file.markdown).then(file => {
 				store.commit('restored', file);
 			});
-		},
-		checkLoggedIn() {
-			auth.checkLoggedIn();
-		},
-		login() {
-			auth.login();
-		},
-		logout() {
-			auth.logout();
 		},
 	},
 	getters: {

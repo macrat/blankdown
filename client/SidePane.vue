@@ -9,19 +9,6 @@ nav > div {
 	border-bottom: 1px solid white;
 }
 
-#profile {
-	display: flex;
-	align-items: center;
-}
-#profile img {
-	width: 2em;
-	height: 2em;
-}
-#username {
-	margin-left: .5em;
-	flex: 1 1 0;
-}
-
 input {
 	display: block;
 	background-color: #c8d3de;
@@ -65,15 +52,6 @@ a:focus {
 <template>
 	<drawer-view @open=$refs.newbutton.focus()>
 		<nav>
-			<div id=profile v-if=$store.state.user>
-				<img :src=$store.state.user.icon>
-				<a id=username href @click.prevent=logout>{{ $store.state.user.name }}</a>
-			</div>
-			<div id=profile v-else>
-				<img src="/icon.svg">
-				<a id=username a href @click.prevent=login>login</a>
-			</div>
-
 			<div>
 				<a href @click.prevent="$store.dispatch('create')" ref=newbutton>new</a>
 				<a href @click.prevent="$emit('import-request')">import</a>
@@ -153,12 +131,6 @@ export default {
 					this.filtered = response.data.result;
 				})
 				.catch(console.error)
-		},
-		login() {
-			this.$store.dispatch('login');
-		},
-		logout() {
-			this.$store.dispatch('logout');
 		},
 	},
 };

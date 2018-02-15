@@ -58,8 +58,6 @@ export default {
 		RemoveIndicator: RemoveIndicator,
 	},
 	created() {
-		this.$store.dispatch('checkLoggedIn');
-
 		window.addEventListener('keydown', ev => {
 			if (ev.ctrlKey) {
 				switch (ev.key) {
