@@ -183,6 +183,10 @@
 .table-widget--align-center {
 	text-align: center;
 }
+
+.CodeMirror-selected {
+	background-color: #d0e0f0 !important;
+}
 </style>
 
 <template>
