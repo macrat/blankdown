@@ -204,6 +204,10 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				return state.tokens.makeString('inline-code', 'inline-code-mark')
 			}
 
+			if (stream.match(/#[^ \t]+/, true)) {
+				return state.tokens.makeString('tag');
+			}
+
 			if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 				const match = stream.match(/(#+) +/, true);
 				const id = stream.match(/.*$/, false)[0].trim().toLowerCase().replace(/[^\w]+/g, '-');
