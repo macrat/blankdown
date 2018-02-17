@@ -89,6 +89,12 @@
 	font-weight: bold;
 }
 
+.cm-tag {
+	background-color: #eee;
+	border-radius: .2em;
+	padding: .1em .2em;
+}
+
 .cm-toc {
 	background-color: #eaf0f0;
 }
