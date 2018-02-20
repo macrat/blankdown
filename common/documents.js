@@ -4,7 +4,7 @@ const documents = {
 ## main menu
 ## file
 |key combination|what do                        |
-|:--------------|:------------------------------|
+|---------------|-------------------------------|
 |Ctrl-M         |Make new file                  |
 |Ctrl-O         |Open new file (with search)    |
 |Ctrl-S         |Save current file              |
