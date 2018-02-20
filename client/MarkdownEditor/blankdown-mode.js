@@ -229,9 +229,9 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 
 				if (!/^[ \t]*\|(?:.*\|)+[ \t]*$/.test(stream.lookAhead(-1))) {
 					state.tokens.add('table-header');
-				} else if (/^[ \t]*\|(-+\|)+[ \t]*$/.test(stream.lookAhead(-1))) {
+				} else if (/^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(-1))) {
 					state.tokens.add('table-first-body');
-				} else if (/^[ \t]*\|(-+\|)+[ \t]*$/.test(stream.lookAhead(0))) {
+				} else if (/^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(0))) {
 					state.tokens.add('table-separator');
 				}
 
