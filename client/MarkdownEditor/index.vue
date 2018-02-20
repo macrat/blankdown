@@ -99,6 +99,20 @@
 	background-color: #eaf0f0;
 }
 
+.cm-table {
+	border: 0 solid black;
+	border-width: 1px 0;
+}
+.cm-table.cm-table-header {
+	border-bottom-width: 0;
+}
+.cm-table.cm-table-first-body {
+	border-top-width: 0;
+}
+.cm-table.cm-table-mark, .cm-table.cm-table-separator {
+	border-width: 0;
+}
+
 .toc-widget {
 	display: inline-block;
 	background-color: #eaf0f0;
@@ -166,24 +180,6 @@
 	background-color: darkslategray;
 }
 
-.table-widget table {
-	display: inline-block;
-	border-collapse:  collapse;
-}
-.table-widget tr, .table-widget th, .table-widget td {
-	border: 1px solid gray;
-	border-collapse:  collapse;
-}
-.table-widget--align-left {
-	text-align: left;
-}
-.table-widget--align-right {
-	text-align: right;
-}
-.table-widget--align-center {
-	text-align: center;
-}
-
 .CodeMirror-selected {
 	background-color: #d0e0f0 !important;
 }
@@ -214,7 +210,6 @@ import ThumbnailWidget from './ThumbnailWidget.js';
 import TOCWidget from './TOCWidget.js';
 import CheckListWidget from './CheckListWidget.js';
 import HorizontalLineWidget from './HorizontalLineWidget.js';
-import TableWidget from './TableWidget.js';
 
 
 export default {
@@ -224,7 +219,6 @@ export default {
 		this.widgetManager.enable(new TOCWidget(this.tocCreated));
 		this.widgetManager.enable(new CheckListWidget());
 		this.widgetManager.enable(new HorizontalLineWidget());
-		this.widgetManager.enable(new TableWidget());
 
 		const timer = setInterval(() => {
 			this.focus();
