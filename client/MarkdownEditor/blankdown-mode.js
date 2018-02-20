@@ -221,18 +221,18 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 			}
 
 			if (/^[ \t]*\|(?:.*\|)+[ \t]*$/.test(stream.lookAhead(0))) {
-				if (stream.sol() && stream.match('[ \t]', true) || stream.match('[ \t]*$', true)) {
+				if (stream.sol() && stream.match(/[ \t]+/, true) || stream.match(/[ \t]*$/, true)) {
 					state.tokens.remove('table');
 					return state.tokens.makeString();
 				}
 				state.tokens.add('table');
 
-				if (!/^[ \t]*\|(?:.*\|)+[ \t]*$/.test(stream.lookAhead(-1))) {
+				if (!/^[ \t]*\|(?:.*\|)+[ \t]*$/.test(stream.lookAhead(-1)) && /^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(1))) {
 					state.tokens.add('table-header');
-				} else if (/^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(-1))) {
-					state.tokens.add('table-first-body');
 				} else if (/^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(0))) {
 					state.tokens.add('table-separator');
+				} else if (/^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(-1))) {
+					state.tokens.add('table-first-body');
 				}
 
 				if (stream.eat('|')) {
