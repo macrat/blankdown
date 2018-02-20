@@ -100,12 +100,13 @@
 }
 
 .cm-table {
-	border: 0 solid black;
+	border: 0 solid gray;
 	border-width: 1px 0;
 	display: inline-block;
 	padding: 4px 0;
 }
 .cm-table.cm-table-header {
+	font-weight: bold;
 	border-bottom-width: 0;
 	padding-bottom: 0;
 }
