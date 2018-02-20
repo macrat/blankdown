@@ -102,15 +102,20 @@
 .cm-table {
 	border: 0 solid black;
 	border-width: 1px 0;
+	display: inline-block;
+	padding: 4px 0;
 }
 .cm-table.cm-table-header {
 	border-bottom-width: 0;
+	padding-bottom: 0;
 }
 .cm-table.cm-table-first-body {
 	border-top-width: 0;
+	padding-top: 0;
 }
 .cm-table.cm-table-mark, .cm-table.cm-table-separator {
 	border-width: 0;
+	padding: 0;
 }
 
 .toc-widget {
