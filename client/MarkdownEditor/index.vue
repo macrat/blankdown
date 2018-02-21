@@ -119,6 +119,16 @@
 	padding: 0;
 }
 
+.cm-blockquote {
+	color: #777;
+}
+.cm-blockquote-mark {
+	background-color: #ddd;
+	color: #aaa;
+	display: inline-block;
+	padding: .25em 0;
+}
+
 .toc-widget {
 	display: inline-block;
 	background-color: #eaf0f0;

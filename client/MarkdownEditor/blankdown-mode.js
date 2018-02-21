@@ -148,6 +148,16 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				return 'comment fenced fenced-start';
 			}
 
+			if (stream.sol() && stream.match(/^[ \t]+(?=>)/, true)) {
+				const t = state.tokens.makeString();
+				state.tokens.add('blockquote');
+				return t;
+			}
+			if ((stream.sol() || state.tokens.has('blockquote')) && stream.eat('>')) {
+				state.tokens.add('blockquote');
+				return state.tokens.makeString('blockquote-mark');
+			}
+
 			if (match = stream.match(/(!?)\[(?=.*?\]\(.*?\))/, true)) {
 				state.link = 'text';
 				state.linkMedia = match[1] !== '';
