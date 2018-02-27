@@ -4,13 +4,14 @@
 	overflow: hidden;
 	height: 100%;
 	width: 100%;
+	cursor: text;
 }
 </style>
 
 <style src="./style.css"></style>
 
 <template>
-	<div class=markdown-editor>
+	<div class=markdown-editor @click=focusLast>
 		<vue-code-mirror
 			ref=codemirror
 			:value=$store.state.current.markdown
@@ -82,6 +83,12 @@ export default {
 	methods: {
 		focus() {
 			this.editor.focus();
+		},
+		focusLast() {
+			if (!this.editor.hasFocus()) {
+				this.editor.execCommand('goDocEnd');
+				this.focus();
+			}
 		},
 		update(markdown) {
 			this.$store.dispatch('update', markdown);
