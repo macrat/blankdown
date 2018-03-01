@@ -10,7 +10,7 @@ require('dotenv').config();
 const clientConfig = {
 	entry: {
 		app: './client/index.js',
-		ServiceWorker: './serviceworker/index.js',
+		ServiceWorker: './client/worker/index.js',
 	},
 	output: {
 		filename: '[name].js',
@@ -39,7 +39,7 @@ const clientConfig = {
 			AUTH0_DOMAIN: JSON.stringify(process.env.AUTH0_DOMAIN),
 		}),
 		new CopyWebpackPlugin([{
-			from: path.join(__dirname, 'static'),
+			from: path.join(__dirname, 'client/static'),
 			to: path.join(__dirname, 'build', 'public'),
 			ignore: ['.*'],
 		}]),
