@@ -6,11 +6,11 @@
   "scripts": {
     "start": "NODE_ENV=production node ./build/server.js",
     "test": "`npm bin`/mocha --require babel-core/register",
-    "build": "VERSION_CODE=`git rev-parse --short HEAD || date +%m%d%H%M` NODE_ENV=production `npm bin`/webpack",
+    "build": "NODE_ENV=production `npm bin`/webpack",
     "debug": "`npm bin`/npm-run-all --parallel debug:postgres debug:build debug:start-delay",
     "debug:start-delay": "sleep 5s; npm run debug:start",
     "debug:start": "nodemon -w ./build/ ./build/server.js",
-    "debug:build": "VERSION_CODE=`git rev-parse --short HEAD || date +%m%d%H%M` `npm bin`/webpack --watch",
+    "debug:build": "`npm bin`/webpack --watch",
     "debug:postgres": "docker run --rm -e POSTGRES_USER=test -e POSTGRES_PASSWORD=test -e POSTGRES_DB=blankdown -p 5432:5432 postgres",
     "postinstall": "npm run build"
   },

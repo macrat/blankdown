@@ -3,8 +3,34 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const fs = require('fs');
+const crypto = require('crypto');
 
 require('dotenv').config();
+
+
+const VERSION_CODE = (() => {
+	function walk(basePath, fun) {
+		const files = fs.readdirSync(basePath);
+		for (const fname of files) {
+			const fpath = path.join(basePath, fname);
+			if (fs.statSync(fpath).isDirectory()) {
+				walk(fpath, fun);
+			} else {
+				fun(fpath);
+			}
+		}
+	}
+	const cacheFiles = [];
+	walk(path.join(__dirname, 'client'), f => cacheFiles.push(f));
+	cacheFiles.sort();
+	const hashMaker = crypto.createHash('md5');
+	for (const file of cacheFiles) {
+		const data = fs.readFileSync(file);
+		hashMaker.update(data);
+	}
+	return hashMaker.digest('hex');
+})();
 
 
 const clientConfig = {
@@ -34,7 +60,7 @@ const clientConfig = {
 	},
 	plugins: [
 		new webpack.DefinePlugin({
-			VERSION_CODE: JSON.stringify(process.env.VERSION_CODE),
+			VERSION_CODE: JSON.stringify(VERSION_CODE),
 			AUTH0_CLIENT_ID: JSON.stringify(process.env.AUTH0_CLIENT_ID),
 			AUTH0_DOMAIN: JSON.stringify(process.env.AUTH0_DOMAIN),
 		}),
