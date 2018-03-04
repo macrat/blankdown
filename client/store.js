@@ -4,7 +4,7 @@ import IndexedFTS from 'indexedfts';
 import debounce from 'lodash/debounce';
 import uuid from 'uuid/v4';
 
-import Markdown from '../common/Markdown.js';
+import {makeTOCHTML} from './toc';
 
 Vue.use(Vuex);
 
@@ -53,19 +53,7 @@ const store = new Vuex.Store({
 			return state.current ? state.current.markdown.split('\n')[0] : '';
 		},
 		currentTOC(state) {
-			if (!state.current) {
-				return '';
-			}
-			function make_html_by(toc) {
-				return '<ul>' + toc.map(x => {
-					if (typeof x === 'string') {
-						return `<li><a href="#${x.replace(/[^\w]+/g, '-').toLowerCase()}">${ x }</a></li>`;
-					} else {
-						return make_html_by(x);
-					}
-				}).join('') + '</ul>';
-			}
-			return make_html_by(Markdown.getTOCBy(state.current.markdown));
+			return state.current ? makeTOCHTML(state.current.markdown) : '';
 		},
 	},
 	mutations: {

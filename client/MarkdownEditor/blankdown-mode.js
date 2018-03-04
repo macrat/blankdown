@@ -97,7 +97,7 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 			if (state.headerMark === null) {
 				const nextLine = stream.lookAhead(1);
 				if (nextLine && stream.sol() && !stream.eol()) {
-					const match = nextLine.match(/^(={1,}|-{1,})$/);
+					const match = nextLine.match(/^(=+|-+)$/);
 					if (match && (stream.lookAhead(0).length <= match[1].length || match[1].length >= 3)) {
 						const level = match[1].startsWith('=') ? 1 : 2;
 						const id = stream.lookAhead(0).trim().toLowerCase().replace(/[^\w]+/g, '-');

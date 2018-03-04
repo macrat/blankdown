@@ -29,16 +29,11 @@
     "css-loader": "^0.28.10",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
-    "express-async-router": "^0.1.13",
-    "highlight.js": "^9.12.0",
     "indexedfts": "0.0.1",
-    "jwt-decode": "^2.2.0",
     "lodash-es": "^4.17.5",
-    "marked": "^0.3.16",
     "morgan": "^1.9.0",
     "nodemon": "^1.15.1",
     "npm-run-all": "^4.1.2",
-    "pg": "^7.4.1",
     "uglifyjs-webpack-plugin": "^1.2.2",
     "uuid": "^3.2.1",
     "vue": "^2.5.9",
@@ -53,7 +48,6 @@
   },
   "devDependencies": {
     "mocha": "^4.1.0",
-    "power-assert": "^1.4.4",
-    "sleep": "^5.1.1"
+    "power-assert": "^1.4.4"
   }
 }
