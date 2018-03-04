@@ -17,14 +17,11 @@ nav {
 </style>
 
 <template>
-	<main :style="{ cursor: $store.state.saving ? 'progress' : 'auto' }">
+	<main>
 		<side-pane
 			@import-request=importRequest
 			@export-request=exportRequest />
 		<markdown-editor ref=editor />
-
-		<saving-indicator />
-		<remove-indicator />
 
 		<import-and-exporter
 			ref=importAndExporter
@@ -39,9 +36,6 @@ import ComponentLoading from './ComponentLoading.vue';
 
 import ImportAndExporter from './ImportAndExporter.vue';
 
-import SavingIndicator from './SavingIndicator.vue';
-import RemoveIndicator from './RemoveIndicator.vue';
-
 
 export default {
 	components: {
@@ -53,9 +47,6 @@ export default {
 		}),
 
 		ImportAndExporter: ImportAndExporter,
-
-		SavingIndicator: SavingIndicator,
-		RemoveIndicator: RemoveIndicator,
 	},
 	created() {
 		window.addEventListener('keydown', ev => {
@@ -64,10 +55,6 @@ export default {
 				case 'm':
 					ev.preventDefault();
 					this.$store.dispatch('create');
-					break;
-				case 's':
-					ev.preventDefault();
-					this.$store.dispatch('save');
 					break;
 
 				case 'O':
@@ -100,7 +87,7 @@ export default {
 	},
 	computed: {
 		currentID() {
-			return this.$store.state.current.id;
+			return this.$store.state.current && this.$store.state.current.ID;
 		},
 	},
 	watch: {

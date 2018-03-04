@@ -60,7 +60,7 @@ export default {
 						filename: files[0].name,
 						contents: reader.result,
 					});
-					this.$store.dispatch('import', reader.result);
+					this.$store.dispatch('create', reader.result);
 				});
 				reader.readAsText(files[0]);
 			}
@@ -95,13 +95,8 @@ export default {
 			elm.download = filename;
 			this.$el.querySelector('.import-and-exporter--download-link').click();
 		},
-		exportMarkdown() {
-			this.startDownload(this.$store.getters.current_name + '.md', 'text/markdown', this.$store.state.current.markdown);
-		},
-		exportHTML() {
-			this.$store.getters.currentHTML.then(html => {
-				this.startDownload(this.$store.getters.current_name + '.html', 'text/html', html);
-			});
+		export() {
+			this.startDownload(this.$store.getters.currentName + '.md', 'text/markdown', this.$store.state.current.markdown);
 		},
 	},
 };

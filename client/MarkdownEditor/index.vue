@@ -17,7 +17,7 @@
 	<div class=markdown-editor>
 		<vue-code-mirror
 			ref=codemirror
-			:value=$store.state.current.markdown
+			:value="$store.state.current ? $store.state.current.markdown : ''"
 			:options=options
 			@change=update />
 	</div>
@@ -70,7 +70,6 @@ export default {
 				indentUnit: 4,
 				tabSize: 4,
 				indentWithTabs: true,
-				readOnly: this.$store.state.current.readonly ? 'nocursor' : false,
 			};
 		},
 		editor() {

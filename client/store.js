@@ -1,10 +1,10 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import IndexedFTS from 'indexedfts';
 import debounce from 'lodash/debounce';
+import uuid from 'uuid/v4';
 
 import Markdown from '../common/Markdown.js';
-
-import APIClient from './APIClient.js';
 
 Vue.use(Vuex);
 
@@ -15,185 +15,47 @@ This is yet yet yet another **markdown** editor.
 `;
 
 
-const client = new APIClient(null);
+const db = new IndexedFTS('blankdown', 1, {
+	ID: 'primary',
+	markdown: 'fulltext',
+	updated: {},
+});
 
 
-async function load_data(id) {
-	if (!id) {
-		return;
-	}
-
-	const data = await client.load(id);
-	if (data) {
-		if (!data.readonly) {
-			await client.markAccess(id);
-		}
-
-		store.commit('loaded', {
-			id: id,
-			markdown: data.markdown,
-			readonly: data.readonly,
-		});
-		return true;
-	}
-
-	return false;
-}
-
-
-async function save(file) {
-	if (!file.readonly) {
-		const timestamp = new Date().getTime() / 1000.0;
-		await client.save({
-			id: file.id,
-			markdown: file.markdown,
-			accessed: timestamp,
-			modified: timestamp,
-		});
-	}
-}
-
-
-const autosave = debounce(() => {
+const saveReserve = debounce(() => {
 	store.dispatch('save');
-}, 5000);
+}, 100);
 
 
 const store = new Vuex.Store({
 	plugins: [
 		async store => {
-			window.addEventListener('beforeunload', () => {
-				store.dispatch('save');
-			});
+			window.addEventListener('beforeunload', () => store.dispatch('save'));
 
-			client.getFiles().then(files => store.commit('changed_recent_files', files));
-
-			client.on('changed-files', files => store.commit('changed_recent_files', files));
-
-			const pathes = ((await client.getFiles()) || []).map(x => x.id);
-			if (location.pathname.slice(1) in pathes) {
-				pathes.unshift(location.pathname.slice(1));
-			}
-			for (let id of pathes) {
-				if (await load_data(id)) {
-					if (location.pathname.slice(1) !== id) {
-						history.replaceState(null, '', '/' + id + location.search);
+			store.subscribe((action, state) => {
+				if (action === 'files-changed') {
+					if (state.files.length === 0) {
+						store.dispatch('create', welcomeDocument);
 					}
-					return id;
 				}
-			}
-
-			client.create(welcomeDocument).then(page => {
-				history.pushState(null, '', '/' + page.id + location.search);
-				store.commit('created', page);
 			});
+
+			await db.open();
+			await store.dispatch('loadFiles');
 		},
 	],
 	state: {
-		current: {
-			id: null,
-			markdown: '',
-			readonly: true,
-		},
-		recent: [],
-		saving: false,
-		removed: {
-			id: null,
-			markdown: '',
-			readonly: true,
-		},
-		user: null,
-	},
-	mutations: {
-		loaded(state, data) {
-			state.current.id = data.id;
-			state.current.markdown = data.markdown;
-			state.current.readonly = data.readonly;
-		},
-		changed_recent_files(state, files) {
-			state.recent = files;
-		},
-		start_save(state) {
-			state.saving = true;
-		},
-		saved(state) {
-			state.saving = false;
-		},
-		updated(state, markdown) {
-			state.current.markdown = markdown;
-		},
-		created(state, data) {
-			state.current.id = data.id;
-			state.current.markdown = data.markdown;
-			state.current.readonly = data.readonly;
-		},
-		removed(state, target) {
-			state.removed.id = target.id;
-			state.removed.markdown = target.markdown;
-			state.removed.readonly = target.readonly;
-		},
-		restored(state, file) {
-			state.current.id = file.id;
-			state.current.markdown = file.markdown;
-			state.current.readonly = file.readonly;
-		},
-	},
-	actions: {
-		create() {
-			client.create().then(file => {
-				this.commit('created', file)
-			});
-		},
-		import(context, markdown) {
-			client.create(markdown).then(file => store.commit('loaded', file));
-		},
-		update(context, markdown) {
-			autosave();
-			this.commit('updated', markdown);
-		},
-		save(context) {
-			this.commit('start_save');
-			save(context.state.current).then(() => {
-				this.commit('saved');
-			});
-		},
-		load(context, id) {
-			save(context.state.current).then(() => load_data(id));
-		},
-		remove(context, id) {
-			client.load(id).then(target => {
-				const removeCurrent = target.id === context.state.current.id;
-
-				client.remove(target.id).then(() => {
-					this.commit('removed', target);
-
-					if (removeCurrent) {
-						client.loadMostRecent().then(next => {
-							if (!next) {
-								this.dispatch('create');
-							} else {
-								this.commit('loaded', {
-									id: next.id,
-									markdown: next.markdown,
-									readonly: next.readonly,
-								});
-							}
-						});
-					}
-				});
-			});
-		},
-		restore(context, file) {
-			client.create(file.markdown).then(file => {
-				store.commit('restored', file);
-			});
-		},
+		current: null,
+		files: [],
 	},
 	getters: {
-		toc(state) {
-			return Markdown.getTOCBy(state.current.markdown);
+		currentName(state) {
+			return state.current ? state.current.markdown.split('\n')[0] : '';
 		},
-		toc_html(state) {
+		currentTOC(state) {
+			if (!state.current) {
+				return '';
+			}
 			function make_html_by(toc) {
 				return '<ul>' + toc.map(x => {
 					if (typeof x === 'string') {
@@ -203,19 +65,134 @@ const store = new Vuex.Store({
 					}
 				}).join('') + '</ul>';
 			}
-			return make_html_by(store.getters.toc);
+			return make_html_by(Markdown.getTOCBy(state.current.markdown));
 		},
-		current_name(state) {
-			return Markdown.getNameBy(state.current.markdown);
+	},
+	mutations: {
+		saved(state, file) {
+			for (const f of state.files) {
+				if (f.ID === file.ID) {
+					f.saved = true;
+					break;
+				}
+			}
 		},
-		removed_name(state) {
-			return Markdown.getNameBy(state.removed.markdown);
+		'files-changed': function(state, files) {
+			state.files = files;
 		},
-		currentHTML(state) {
-			return client.getHTML(state.current.id);
-		}
+		openIndex(state, index) {
+			this.dispatch('save');
+			state.current = state.files[index];
+		},
+		open(state, id) {
+			this.dispatch('save');
+			state.current = state.files.filter(x => x.ID === id)[0];
+		},
+		updated(state, markdown) {
+			state.current.markdown = markdown;
+			state.current.updated = new Date();
+			state.current.saved = false;
+
+			state.files.sort((x, y) => {
+				if (x.updated > y.updated) {
+					return -1;
+				} else if (x.updated < y.updated) {
+					return 1;
+				} else {
+					return 0;
+				}
+			});
+		},
+	},
+	actions: {
+		save(context) {
+			if (context.state.current && !context.state.current.saved) {
+				db.put({
+					ID: context.state.current.ID,
+					markdown: context.state.current.markdown,
+					updated: context.state.current.updated.getTime(),
+				})
+				.then(() => context.commit('saved', context.state.current))
+				.catch(console.error)
+			}
+		},
+		async loadFiles(context) {
+			const files = await db.sort('updated', 'desc');
+			context.commit('files-changed', files.map(x => ({
+				ID: x.ID,
+				markdown: x.markdown,
+				updated: new Date(x.updated),
+				saved: true,
+			})));
+		},
+		async search(context, query) {
+			const files = await db.search('markdown', query);
+			context.commit('files-changed', files.map(x => ({
+				ID: x.ID,
+				markdown: x.markdown,
+				updated: new Date(x.updated),
+				saved: true,
+			})));
+		},
+		async create(context, markdown='') {
+			const data = {
+				ID: uuid(),
+				markdown: markdown,
+				updated: new Date(),
+				saved: true,
+			};
+
+			await db.put({
+				ID: data.ID,
+				markdown: data.markdown,
+				updated: data.updated.getTime(),
+			});
+
+			const files = context.state.files.concat(data);
+			files.sort((x, y) => {
+				if (x.updated > y.updated) {
+					return -1;
+				} else if (x.updated < y.updated) {
+					return 1;
+				} else {
+					return 0;
+				}
+			});
+			context.commit('files-changed', files);
+			context.commit('open', data.ID);
+		},
+		async remove(context, id) {
+			await db.remove(id);
+			context.commit('files-changed', context.state.files.filter(x => x.ID !== id));
+		},
+		async open(context, id) {
+			for (const idx in context.state.files) {
+				if (context.state.files[idx].ID === id) {
+					context.commit('openIndex', idx);
+					return;
+				}
+			}
+
+			const files = await db.sort('updated', 'desc');
+			context.commit('files-changed', files.map(x => ({
+				ID: x.ID,
+				markdown: x.markdown,
+				updated: new Date(x.updated),
+				saved: true,
+			})));
+
+			for (const idx in context.state.files) {
+				if (context.state.files[idx].ID === id) {
+					context.commit('openIndex', idx);
+					return;
+				}
+			}
+		},
+		async update(context, markdown) {
+			context.commit('updated', markdown);
+			saveReserve();
+		},
 	},
 });
-
 
 export default store;

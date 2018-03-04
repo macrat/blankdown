@@ -70,24 +70,21 @@ a:focus {
 				<div
 					class=file
 					v-for="file in files"
-					:class="{ 'file-noname': file.name.trim() === '', 'file-current': file.id === $store.state.current.id }">
+					:class="{ 'file-noname': file.markdown.split('\n')[0].trim() === '', 'file-current': $store.state.current && file.ID === $store.state.current.ID }">
 
 					<a
 						class=file-name
 						draggable=false
-						@click.prevent="$store.dispatch('load', file.id)"
-						:href="'/' + file.id">{{ file.name || 'no name' }}</a>
+						@click.prevent="$store.dispatch('open', file.ID)"
+						:href="'/' + file.ID">{{ file.markdown.split('\n')[0] || 'no name' }}</a>
 
 					<a
 						class=file-remove
 						draggable=false
 						href
-						@click.prevent="$store.dispatch('remove', file.id)">remove</a>
+						@click.prevent="$store.dispatch('remove', file.ID)">remove</a>
 				</div>
 			</div>
-
-			<a href="/about" draggable=false @click.prevent="$store.dispatch('load', 'about')">about</a>
-			<a href="/shortcuts" draggable=false @click.prevent="$store.dispatch('load', 'shortcuts')">shortcuts</a>
 		</nav>
 	</drawer-view>
 </template>
@@ -109,7 +106,7 @@ export default {
 	},
 	computed: {
 		files() {
-			return this.filtered !== null ? this.filtered : this.$store.state.recent;
+			return this.filtered !== null ? this.filtered : this.$store.state.files;
 		},
 	},
 	methods: {
@@ -120,17 +117,10 @@ export default {
 			}
 
 			if (!query) {
-				this.currentFilter = query;
-				this.filtered = null;
-				return;
+				this.$store.dispatch('loadFiles');
+			} else {
+				this.$store.dispatch('search', query);
 			}
-
-			axios.get('/v1/search', { params: { q: query } })
-				.then(response => {
-					this.currentFilter = query;
-					this.filtered = response.data.result;
-				})
-				.catch(console.error)
 		},
 	},
 };

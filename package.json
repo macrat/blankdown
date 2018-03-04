@@ -31,6 +31,7 @@
     "express": "^4.16.2",
     "express-async-router": "^0.1.13",
     "highlight.js": "^9.12.0",
+    "indexedfts": "0.0.1",
     "jwt-decode": "^2.2.0",
     "lodash-es": "^4.17.5",
     "marked": "^0.3.16",
