@@ -51,10 +51,17 @@ const store = new Vuex.Store({
 	},
 	getters: {
 		currentName(state) {
-			return state.current ? state.current.markdown.split('\n')[0] : '';
-		},
-		currentTOC(state) {
-			return state.current ? makeTOCHTML(state.current.markdown) : '';
+			if (!state.current) {
+				return '';
+			}
+			const firstLine = state.current.markdown.split('\n')[0];
+
+			const heading = /^#+[ \t]+(.*)$/.exec(firstLine);
+			if (heading) {
+				return heading[1].trim();
+			}
+
+			return firstLine.trim();
 		},
 	},
 	mutations: {
@@ -74,13 +81,16 @@ const store = new Vuex.Store({
 		openIndex(state, index) {
 			this.dispatch('save', state.current);
 			state.current = state.files[index];
+			console.log(this.getters.currentName);
 		},
 		open(state, id) {
 			this.dispatch('save', state.current);
 			state.current = state.files.filter(x => x.ID === id)[0];
+			console.log(this.getters.currentName);
 		},
 		updated(state, markdown) {
 			state.current.markdown = markdown;
+			state.current.toc = makeTOCHTML(markdown);
 			state.current.updated = new Date();
 			state.current.saved = false;
 
@@ -114,6 +124,7 @@ const store = new Vuex.Store({
 			context.commit('files-changed', files.map(x => ({
 				ID: x.ID,
 				markdown: x.markdown,
+				toc: makeTOCHTML(x.markdown),
 				updated: new Date(x.updated),
 				saved: true,
 			})));
@@ -129,6 +140,7 @@ const store = new Vuex.Store({
 			context.commit('files-changed', files.map(x => ({
 				ID: x.ID,
 				markdown: x.markdown,
+				toc: makeTOCHTML(x.markdown),
 				updated: new Date(x.updated),
 				saved: true,
 			})));
@@ -137,6 +149,7 @@ const store = new Vuex.Store({
 			const data = {
 				ID: uuid(),
 				markdown: markdown,
+				toc: makeTOCHTML(markdown),
 				updated: new Date(),
 				saved: true,
 			};
@@ -176,6 +189,7 @@ const store = new Vuex.Store({
 			context.commit('files-changed', files.map(x => ({
 				ID: x.ID,
 				markdown: x.markdown,
+				toc: makeTOCHTML(x.markdown),
 				updated: new Date(x.updated),
 				saved: true,
 			})));

@@ -106,12 +106,12 @@ export default {
 		},
 		tocCreated(element, toc=null) {
 			if (element) {
-				element.innerHTML = toc || this.$store.getters.currentTOC;
+				element.innerHTML = toc || this.$store.state.current.toc;
 			}
 		},
 	},
 	watch: {
-		'$store.getters.currentTOC': function(toc) {
+		'$store.state.current.toc': function(toc) {
 			this.$el.querySelectorAll('.toc-widget').forEach(elm => this.tocCreated(elm, toc));
 		},
 	},
