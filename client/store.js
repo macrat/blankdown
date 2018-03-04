@@ -32,15 +32,16 @@ const store = new Vuex.Store({
 		async store => {
 			window.addEventListener('beforeunload', () => store.dispatch('save', store.state.current));
 
-			store.subscribe((action, state) => {
-				if (action === 'files-changed') {
-					if (state.files.length === 0) {
+			store.subscribe(ev => {
+				if (ev.type === 'files-changed') {
+					if (store.state.files.length === 0) {
 						store.dispatch('create', welcomeDocument);
 					}
 				}
 			});
 
 			await db.open();
+			store.commit('database-opened');
 			await store.dispatch('loadFiles');
 		},
 	],
@@ -57,6 +58,8 @@ const store = new Vuex.Store({
 		},
 	},
 	mutations: {
+		'database-opened': function() {
+		},
 		saved(state, file) {
 			for (const f of state.files) {
 				if (f.ID === file.ID) {

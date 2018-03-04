@@ -49,6 +49,20 @@ export default {
 		ImportAndExporter: ImportAndExporter,
 	},
 	created() {
+		this.$root.$on('open-address', url => {
+			const address = new URL(url);
+
+			const id = address.pathname.slice(1);
+			if (id && (!this.$store.state.current || id !== this.$store.state.current.ID)) {
+				this.$store.dispatch('open', id);
+			}
+
+			if (address.hash && this.$refs.editor.scrollInto) {
+				this.$refs.editor.scrollInto(address.hash.slice(1));
+			}
+		});
+	},
+	mounted() {
 		window.addEventListener('keydown', ev => {
 			if (ev.ctrlKey) {
 				switch (ev.key) {
@@ -69,20 +83,14 @@ export default {
 			}
 		});
 
-		this.$root.$on('open-address', url => {
-			const address = new URL(url);
-
-			const id = address.pathname.slice(1);
-			if (id && id !== this.$store.state.current.id) {
-				this.$store.dispatch('load', id);
-			}
-
-			if (address.hash && this.$refs.editor.scrollInto) {
-				this.$refs.editor.scrollInto(address.hash.slice(1));
-			}
-		});
 		window.addEventListener('popstate', () => {
 			this.$root.$emit('open-address', location.href);
+		});
+
+		this.$store.subscribe(ev => {
+			if (ev.type === 'database-opened') {
+				this.$root.$emit('open-address', location.href);
+			}
 		});
 	},
 	computed: {
