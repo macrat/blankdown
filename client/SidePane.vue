@@ -115,12 +115,9 @@ export default {
 			if (this.currentFilter === query) {
 				return;
 			}
+			this.currentFilter = query;
 
-			if (!query) {
-				this.$store.dispatch('loadFiles');
-			} else {
-				this.$store.dispatch('search', query);
-			}
+			this.$store.dispatch('search', query);
 		},
 	},
 };

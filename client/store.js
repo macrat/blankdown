@@ -23,14 +23,14 @@ const db = new IndexedFTS('blankdown', 1, {
 
 
 const saveReserve = debounce(() => {
-	store.dispatch('save');
+	store.dispatch('save', store.state.current);
 }, 100);
 
 
 const store = new Vuex.Store({
 	plugins: [
 		async store => {
-			window.addEventListener('beforeunload', () => store.dispatch('save'));
+			window.addEventListener('beforeunload', () => store.dispatch('save', store.state.current));
 
 			store.subscribe((action, state) => {
 				if (action === 'files-changed') {
@@ -69,11 +69,11 @@ const store = new Vuex.Store({
 			state.files = files;
 		},
 		openIndex(state, index) {
-			this.dispatch('save');
+			this.dispatch('save', state.current);
 			state.current = state.files[index];
 		},
 		open(state, id) {
-			this.dispatch('save');
+			this.dispatch('save', state.current);
 			state.current = state.files.filter(x => x.ID === id)[0];
 		},
 		updated(state, markdown) {
@@ -93,18 +93,20 @@ const store = new Vuex.Store({
 		},
 	},
 	actions: {
-		save(context) {
-			if (context.state.current && !context.state.current.saved) {
+		save(context, file) {
+			if (file && !file.saved) {
 				db.put({
-					ID: context.state.current.ID,
-					markdown: context.state.current.markdown,
-					updated: context.state.current.updated.getTime(),
+					ID: file.ID,
+					markdown: file.markdown,
+					updated: file.updated.getTime(),
 				})
-				.then(() => context.commit('saved', context.state.current))
+				.then(() => context.commit('saved', file))
 				.catch(console.error)
 			}
 		},
 		async loadFiles(context) {
+			context.dispatch('save', context.state.current);
+
 			const files = await db.sort('updated', 'desc');
 			context.commit('files-changed', files.map(x => ({
 				ID: x.ID,
@@ -114,6 +116,12 @@ const store = new Vuex.Store({
 			})));
 		},
 		async search(context, query) {
+			if (!query) {
+				context.dispatch('loadFiles');
+				return;
+			}
+			context.dispatch('save', context.state.current);
+
 			const files = await db.search('markdown', query);
 			context.commit('files-changed', files.map(x => ({
 				ID: x.ID,
