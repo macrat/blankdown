@@ -32,11 +32,13 @@ const store = new Vuex.Store({
 		async store => {
 			window.addEventListener('beforeunload', () => store.dispatch('save', store.state.current));
 
+			let firstLoad = true;
 			store.subscribe(ev => {
-				if (ev.type === 'files-changed') {
+				if (firstLoad && ev.type === 'files-changed') {
 					if (store.state.files.length === 0) {
 						store.dispatch('create', welcomeDocument);
 					}
+					firstLoad = false;
 				}
 			});
 
@@ -81,12 +83,14 @@ const store = new Vuex.Store({
 		openIndex(state, index) {
 			this.dispatch('save', state.current);
 			state.current = state.files[index];
-			console.log(this.getters.currentName);
 		},
 		open(state, id) {
 			this.dispatch('save', state.current);
 			state.current = state.files.filter(x => x.ID === id)[0];
-			console.log(this.getters.currentName);
+		},
+		close(state) {
+			this.dispatch('save', state.current);
+			state.current = null;
 		},
 		updated(state, markdown) {
 			state.current.markdown = markdown;

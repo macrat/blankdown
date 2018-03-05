@@ -17,7 +17,7 @@
 	<div class=markdown-editor>
 		<vue-code-mirror
 			ref=codemirror
-			:value="$store.state.current ? $store.state.current.markdown : ''"
+			:value=file.markdown
 			:options=options
 			@change=update />
 	</div>
@@ -41,6 +41,7 @@ import HorizontalLineWidget from './HorizontalLineWidget.js';
 
 
 export default {
+	props: ['file', 'cardmode'],
 	components: { VueCodeMirror },
 	mounted() {
 		this.widgetManager.enable(new ThumbnailWidget());
@@ -66,10 +67,11 @@ export default {
 				theme: 'elegant',
 				dragDrop: false,
 				lineWrapping: true,
-				scrollbarStyle: 'overlay',
+				scrollbarStyle: this.cardmode ? 'null' : 'overlay',
 				indentUnit: 4,
 				tabSize: 4,
 				indentWithTabs: true,
+				readOnly: this.cardmode ? 'nocursor' : false,
 			};
 		},
 		editor() {
@@ -106,12 +108,12 @@ export default {
 		},
 		tocCreated(element, toc=null) {
 			if (element) {
-				element.innerHTML = toc || this.$store.state.current.toc;
+				element.innerHTML = toc || this.file.toc;
 			}
 		},
 	},
 	watch: {
-		'$store.state.current.toc': function(toc) {
+		'file.toc': function(toc) {
 			this.$el.querySelectorAll('.toc-widget').forEach(elm => this.tocCreated(elm, toc));
 		},
 	},

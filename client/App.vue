@@ -1,27 +1,22 @@
 <style scoped>
 main {
-	height: 100vh;
-	overflow: auto;
 	display: flex;
-}
-</style>
-
-<style>
-nav {
-	flex: 0 0 auto;
+	margin: 0;
+	height: 100vh;
 }
 
-.markdown-writer {
-	flex: 1 1 0;
+@media (max-width: 780px) {
+	main {
+		flex-direction: column;
+		height: auto;
+	}
 }
 </style>
 
 <template>
 	<main>
-		<side-pane
-			@import-request=importRequest
-			@export-request=exportRequest />
-		<markdown-editor ref=editor />
+		<navigation-pane />
+		<filer-pane />
 
 		<import-and-exporter
 			ref=importAndExporter
@@ -30,22 +25,16 @@ nav {
 </template>
 
 <script>
-import SidePane from './SidePane.vue';
-
-import ComponentLoading from './ComponentLoading.vue';
+import NavigationPane from './NavigationPane.vue';
+import FilerPane from './FilerPane.vue';
 
 import ImportAndExporter from './ImportAndExporter.vue';
 
 
 export default {
 	components: {
-		SidePane: SidePane,
-		MarkdownEditor: () => ({
-			component: require.ensure([], require => require('./MarkdownEditor/index.vue'), 'MarkdownEditor'),
-			loading: ComponentLoading,
-			delay: 0,
-		}),
-
+		NavigationPane: NavigationPane,
+		FilerPane: FilerPane,
 		ImportAndExporter: ImportAndExporter,
 	},
 	created() {
@@ -55,6 +44,8 @@ export default {
 			const id = address.pathname.slice(1);
 			if (id && (!this.$store.state.current || id !== this.$store.state.current.ID)) {
 				this.$store.dispatch('open', id);
+			} else {
+				this.$store.commit('close');
 			}
 
 			if (address.hash && this.$refs.editor.scrollInto) {
