@@ -78,7 +78,7 @@ nav {
 	display: block;
 	box-sizing: border-box;
 	width: 100%;
-	height: 32px;
+	height: 36px;
 	margin-bottom: 12px;
 	padding: 4px 8px;
 	resize: none;
@@ -92,6 +92,10 @@ nav {
 #searchbox .CodeMirror-cursor {
 	border-color: white;
 }
+
+#searchbox .CodeMirror-placeholder {
+	color: #999;
+}
 </style>
 
 <template>
@@ -99,7 +103,7 @@ nav {
 		<div id=nav-inner :class="{ 'nav-inner-hide': !shown }">
 			<vue-code-mirror
 				id=searchbox
-				placeholder="search"
+				ref=searchbox
 				:options=options
 				@change=search />
 
@@ -140,6 +144,7 @@ nav {
 import { codemirror as VueCodeMirror } from 'vue-codemirror-lite';
 import 'codemirror/addon/scroll/simplescrollbars.css';
 import 'codemirror/addon/scroll/simplescrollbars.js';
+import 'codemirror/addon/display/placeholder.js';
 
 
 export default {
@@ -155,8 +160,16 @@ export default {
 				mode: 'text',
 				lineWrapping: false,
 				scrollbarStyle: 'null',
+				placeholder: 'search',
 			};
 		},
+	},
+	mounted() {
+		this.$refs.searchbox.editor.addKeyMap({
+			Enter: cm => {
+				this.search(cm.getDoc().getValue());
+			},
+		});
 	},
 	watch: {
 		'$store.state.current': function(current) {
