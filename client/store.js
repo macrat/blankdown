@@ -5,6 +5,7 @@ import debounce from 'lodash/debounce';
 import uuid from 'uuid/v4';
 
 import {makeTOCHTML} from './toc';
+import {findTags} from './tags';
 
 Vue.use(Vuex);
 
@@ -19,6 +20,7 @@ const db = new IndexedFTS('blankdown', 1, {
 	ID: 'primary',
 	markdown: 'fulltext',
 	updated: {},
+	tags: 'word',
 });
 
 
@@ -116,6 +118,7 @@ const store = new Vuex.Store({
 					ID: file.ID,
 					markdown: file.markdown,
 					updated: file.updated.getTime(),
+					tags: findTags(file.markdown).join(' '),
 				})
 				.then(() => context.commit('saved', file))
 				.catch(console.error)
@@ -155,14 +158,10 @@ const store = new Vuex.Store({
 				markdown: markdown,
 				toc: makeTOCHTML(markdown),
 				updated: new Date(),
-				saved: true,
+				saved: false,
 			};
 
-			await db.put({
-				ID: data.ID,
-				markdown: data.markdown,
-				updated: data.updated.getTime(),
-			});
+			await context.dispatch('save',data);
 
 			const files = context.state.files.concat(data);
 			files.sort((x, y) => {

@@ -58,6 +58,9 @@ const clientConfig = {
 			},
 		],
 	},
+	resolve: {
+		extensions: ['.mjs', '.js', '.vue'],
+	},
 	plugins: [
 		new webpack.DefinePlugin({
 			VERSION_CODE: JSON.stringify(VERSION_CODE),
