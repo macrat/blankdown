@@ -52,6 +52,7 @@ const store = new Vuex.Store({
 	state: {
 		current: null,
 		files: [],
+		tags: [],
 	},
 	getters: {
 		currentName(state) {
@@ -81,6 +82,9 @@ const store = new Vuex.Store({
 		},
 		'files-changed': function(state, files) {
 			state.files = files;
+		},
+		'tags-changed': function(state, tags) {
+			state.tags = tags;
 		},
 		openIndex(state, index) {
 			this.dispatch('save', state.current);
@@ -118,7 +122,7 @@ const store = new Vuex.Store({
 					ID: file.ID,
 					markdown: file.markdown,
 					updated: file.updated.getTime(),
-					tags: findTags(file.markdown).join(' '),
+					tags: [...findTags(file.markdown)].join(' '),
 				})
 				.then(() => context.commit('saved', file))
 				.catch(console.error)
@@ -135,6 +139,8 @@ const store = new Vuex.Store({
 				updated: new Date(x.updated),
 				saved: true,
 			})));
+
+			context.commit('tags-changed', [...await db.getWords('tags')]);
 		},
 		async search(context, query) {
 			if (!query) {
@@ -175,6 +181,12 @@ const store = new Vuex.Store({
 			});
 			context.commit('files-changed', files);
 			context.commit('open', data.ID);
+
+			const tags = new Map(context.state.tags);
+			findTags(data.markdown).forEach(x => {
+				tags.set(x, (tags.get(x) || 0) + 1);
+			});
+			context.commit('tags-changed', [...tags]);
 		},
 		async remove(context, id) {
 			await db.remove(id);
@@ -205,7 +217,29 @@ const store = new Vuex.Store({
 			}
 		},
 		async update(context, markdown) {
+			const oldTags = findTags(context.state.current.markdown);
+
 			context.commit('updated', markdown);
+
+			const tags = new Map(context.state.tags);
+			const newTags = findTags(markdown);
+			newTags.forEach(x => {
+				if (!oldTags.has(x)) {
+					tags.set(x, (tags.get(x) || 0) + 1);
+				}
+			});
+			oldTags.forEach(x => {
+				if (!newTags.has(x)) {
+					const val = (tags.get(x) || 0) - 1;
+					if (val > 0) {
+						tags.set(x, val);
+					} else {
+						tags.delete(x);
+					}
+				}
+			});
+			context.commit('tags-changed', [...tags]);
+
 			saveReserve();
 		},
 	},

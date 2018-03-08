@@ -104,37 +104,12 @@ nav {
 			<vue-code-mirror
 				id=searchbox
 				ref=searchbox
+				:value=query
 				:options=options
-				@change=search />
+				@change='query = $event' />
 
 			<ul id=tag-area>
-				<li>all</li>
-				<li><span class=tag>this</span></li>
-				<li><span class=tag>is</span></li>
-				<li><span class=tag>tag</span>
-					<ul>
-						<li><span class=tag><span class=tag-path>tag/</span>in</span>
-							<ul>
-								<li><span class=tag><span class=tag-path>tag/in/</span>tag</span></li>
-							</ul>
-						</li>
-					</ul>
-				</li>
-				<li><span class=tag>long_long_tag_name</span></li>
-				<li><span class=tag>t</span></li>
-				<li><span class=tag>tag-name</span></li>
-
-				<li><span class=tag>tagset</span>
-					<ul>
-						<li><span class=tag><span class=tag-path>tagset/</span>tagname</span></li>
-						<li><span class=tag><span class=tag-path>tagset/</span>foo</span></li>
-						<li><span class=tag><span class=tag-path>tagset/</span>bar</span>
-							<ul>
-								<li><span class=tag><span class=tag-path>tagset/bar/</span>baz</span></li>
-							</ul>
-						</li>
-					</ul>
-				</li>
+				<li v-for="tag in tags" @click="tagClicked(tag)">{{ tag }}</li>
 			</ul>
 		</div>
 	</nav>
@@ -152,6 +127,7 @@ export default {
 	data() {
 		return {
 			shown: true,
+			query: '',
 		};
 	},
 	computed: {
@@ -162,6 +138,9 @@ export default {
 				scrollbarStyle: 'null',
 				placeholder: 'search',
 			};
+		},
+		tags() {
+			return [...this.$store.state.tags].sort((x, y) => y[1] - x[1]).map(x => x[0]);
 		},
 	},
 	mounted() {
@@ -179,11 +158,18 @@ export default {
 				this.shown = true;
 			}
 		},
+		query() {
+			this.$emit('search', this.query);
+			this.$store.dispatch('search', this.query);
+		},
 	},
 	methods: {
-		search(query) {
-			this.$emit('search', query);
-			this.$store.dispatch('search', query);
+		tagClicked(tag) {
+			if (this.query.trim()) {
+				this.query += ' #' + tag;
+			} else {
+				this.query = '#' + tag;
+			}
 		},
 	},
 };

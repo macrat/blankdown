@@ -29,6 +29,7 @@
     "css-loader": "^0.28.10",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
+    "indexedfts": "github:macrat/indexedfts#master",
     "lodash-es": "^4.17.7",
     "morgan": "^1.9.0",
     "nodemon": "^1.17.1",
@@ -46,7 +47,6 @@
     "webpack-node-externals": "^1.6.0"
   },
   "devDependencies": {
-    "indexedfts": "^0.2.0",
     "mocha": "^4.1.0",
     "power-assert": "^1.4.4"
   }
