@@ -100,7 +100,8 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 					const match = nextLine.match(/^(=+|-+)$/);
 					if (match && (stream.lookAhead(0).length <= match[1].length || match[1].length >= 3)) {
 						const level = match[1].startsWith('=') ? 1 : 2;
-						const id = stream.lookAhead(0).trim().toLowerCase().replace(/\W+/g, '-');
+						const id = stream.lookAhead(0).trim().toLowerCase().replace(/\s+/g, '-');
+
 						state.headerMark = level;
 						state.tokens.add('header', 'header-' + level, 'header-body', 'header--' + id);
 					}
@@ -216,7 +217,7 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 
 			if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 				const match = stream.match(/(#+) +/, true);
-				const id = stream.match(/.*$/, false)[0].trim().toLowerCase().replace(/\W+/g, '-');
+				const id = stream.match(/.*$/, false)[0].trim().toLowerCase().replace(/\s+/g, '-');
 
 				state.tokens.add('header', 'header-' + match[1].length);
 				const token = state.tokens.makeString('header-mark', 'header--' + id);
