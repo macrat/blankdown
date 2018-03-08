@@ -1,7 +1,7 @@
 <style scoped>
 #filer-pane {
 	width: 100%;
-	overflow: scroll;
+	overflow: auto;
 }
 #filer-pane.filer-edit {
 	overflow: hidden !important;

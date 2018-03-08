@@ -2,7 +2,7 @@
 nav {
 	flex: 0 0 auto;
 	width: 200px;
-	overflow: scroll;
+	overflow: auto;
 	color: #eee;
 }
 #nav-inner {
