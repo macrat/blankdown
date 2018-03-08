@@ -100,7 +100,7 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 					const match = nextLine.match(/^(=+|-+)$/);
 					if (match && (stream.lookAhead(0).length <= match[1].length || match[1].length >= 3)) {
 						const level = match[1].startsWith('=') ? 1 : 2;
-						const id = stream.lookAhead(0).trim().toLowerCase().replace(/[^\w]+/g, '-');
+						const id = stream.lookAhead(0).trim().toLowerCase().replace(/\W+/g, '-');
 						state.headerMark = level;
 						state.tokens.add('header', 'header-' + level, 'header-body', 'header--' + id);
 					}
@@ -148,7 +148,7 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				return 'comment fenced fenced-start';
 			}
 
-			if (stream.sol() && stream.match(/^[ \t]+(?=>)/, true)) {
+			if (stream.sol() && stream.match(/^\s+(?=>)/, true)) {
 				const t = state.tokens.makeString();
 				state.tokens.add('blockquote');
 				return t;
@@ -216,7 +216,7 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 
 			if (stream.sol() && stream.match(/#+ +(?=.*)/, false)) {
 				const match = stream.match(/(#+) +/, true);
-				const id = stream.match(/.*$/, false)[0].trim().toLowerCase().replace(/[^\w]+/g, '-');
+				const id = stream.match(/.*$/, false)[0].trim().toLowerCase().replace(/\W+/g, '-');
 
 				state.tokens.add('header', 'header-' + match[1].length);
 				const token = state.tokens.makeString('header-mark', 'header--' + id);
@@ -226,22 +226,22 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				return token;
 			}
 
-			if (stream.match(/#[^ \t]+/, true)) {
+			if (stream.match(/#\S+/, true)) {
 				return state.tokens.makeString('tag');
 			}
 
-			if (/^[ \t]*\|(?:.*\|)+[ \t]*$/.test(stream.lookAhead(0))) {
-				if (stream.sol() && stream.match(/[ \t]+/, true) || stream.match(/[ \t]*$/, true)) {
+			if (/^\s*\|(?:.*\|)+\s*$/.test(stream.lookAhead(0))) {
+				if (stream.sol() && stream.match(/\s+/, true) || stream.match(/\s*$/, true)) {
 					state.tokens.remove('table');
 					return state.tokens.makeString();
 				}
 				state.tokens.add('table');
 
-				if (!/^[ \t]*\|(?:.*\|)+[ \t]*$/.test(stream.lookAhead(-1)) && /^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(1))) {
+				if (!/^\s*\|(?:.*\|)+\s*$/.test(stream.lookAhead(-1)) && /^\s*\|(:?-+:?\|)+\s*$/.test(stream.lookAhead(1))) {
 					state.tokens.add('table-header');
-				} else if (/^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(0))) {
+				} else if (/^\s*\|(:?-+:?\|)+\s*$/.test(stream.lookAhead(0))) {
 					state.tokens.add('table-separator');
-				} else if (/^[ \t]*\|(:?-+:?\|)+[ \t]*$/.test(stream.lookAhead(-1))) {
+				} else if (/^\s*\|(:?-+:?\|)+\s*$/.test(stream.lookAhead(-1))) {
 					state.tokens.add('table-first-body');
 				}
 
