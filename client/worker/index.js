@@ -4,7 +4,7 @@ const CACHE_NAME = 'blankdown-' + VERSION_CODE;
 self.addEventListener('install', ev => {
 	ev.waitUntil(
 		caches.open(CACHE_NAME)
-			.then(cache => cache.addAll(['/', '/app.js', '/MarkdownEditor.js'].map(x => new Request(location.origin + x, { cache: 'no-cache', redirect: 'follow' }))))
+			.then(cache => cache.addAll(['/', '/app.js'].map(x => new Request(location.origin + x, { cache: 'no-cache', redirect: 'follow' }))))
 			.then(() => self.skipWaiting())
 	);
 });
