@@ -7,7 +7,7 @@ describe('client', () => {
 	describe('tags', () => {
 		describe('findTags', () => {
 			it('simple', () => {
-				const markdown = '#first-tag\nthis is #tag\n#tag_line #japanese_タグ\t#tab.tag\r#include#sharp';
+				const markdown = '#first-tag\nthis is #tag\n#tag_line #japanese_タグ\t#tab.tag\r#include#sharp word#in-tag-like\n## heading\n';
 				const tags = findTags(markdown);
 
 				assert.deepStrictEqual(tags, new Set(['first-tag', 'tag', 'tag_line', 'japanese_タグ', 'tab.tag', 'include#sharp']));

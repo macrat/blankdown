@@ -227,8 +227,10 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 				return token;
 			}
 
-			if (stream.match(/#\S+/, true)) {
-				return state.tokens.makeString('tag');
+			if (match = stream.match(/#\S+/, true)) {
+				if (!Array.prototype.every.call(match[0], x => x === '#')) {
+					return state.tokens.makeString('tag');
+				}
 			}
 
 			if (/^\s*\|(?:.*\|)+\s*$/.test(stream.lookAhead(0))) {
