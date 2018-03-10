@@ -185,11 +185,7 @@ export default {
 	},
 	methods: {
 		tagClicked(tag) {
-			if (this.query.trim()) {
-				this.query += ' #' + tag;
-			} else {
-				this.query = '#' + tag;
-			}
+			this.query = '#' + tag;
 		},
 	},
 };
