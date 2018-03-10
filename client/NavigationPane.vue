@@ -27,12 +27,15 @@ nav {
 	display: block;
 	cursor: pointer;
 	padding: 1px 0;
+	margin: 4px 0;
+	font-size: 110%;
 }
 #tag-area ul {
 	padding-left: 16px;
 }
 .tag:before {
-	content: '# ';
+	content: '#';
+	margin-right: .1em;
 	color: #888;
 }
 .tag-path {
@@ -56,12 +59,14 @@ nav {
 	#tag-area {
 		text-align: center;
 	}
-	#tag-area ul, #tag-area li {
+	#tag-area ul {
 		display: inline;
-		padding: 0;
 	}
-	.tag {
+	#tag-area li {
 		display: inline-block;
+	}
+	#tag-area ul, #tag-area li {
+		padding: 0;
 		margin: 0 .5em;
 	}
 	.tag:before {
@@ -124,7 +129,7 @@ nav {
 				@change='query = $event' />
 
 			<ul id=tag-area>
-				<li v-for="tag in tags" @click="tagClicked(tag)">{{ tag }}</li>
+				<li class=tag v-for="tag in tags" @click="tagClicked(tag)">{{ tag }}</li>
 			</ul>
 		</div>
 	</nav>
