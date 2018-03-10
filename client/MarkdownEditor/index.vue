@@ -44,10 +44,13 @@ export default {
 	props: ['file', 'cardmode'],
 	components: { VueCodeMirror },
 	mounted() {
-		this.widgetManager.enable(new ThumbnailWidget());
 		this.widgetManager.enable(new TOCWidget(this.tocCreated));
 		this.widgetManager.enable(new CheckListWidget());
 		this.widgetManager.enable(new HorizontalLineWidget());
+
+		if (!this.cardmode) {
+			this.widgetManager.enable(this.thumbWidget);
+		}
 
 		const timer = setInterval(() => {
 			this.focus();
@@ -82,6 +85,9 @@ export default {
 		},
 		widgetManager() {
 			return widgets.createManager(this.editor);
+		},
+		thumbWidget() {
+			return new ThumbnailWidget();
 		},
 	},
 	methods: {
@@ -118,6 +124,13 @@ export default {
 	watch: {
 		'file.toc': function(toc) {
 			this.$el.querySelectorAll('.toc-widget').forEach(elm => this.tocCreated(elm, toc));
+		},
+		cardmode(on) {
+			if (on) {
+				this.widgetManager.disable(this.thumbWidget);
+			} else {
+				this.widgetManager.enable(this.thumbWidget);
+			}
 		},
 	},
 };
