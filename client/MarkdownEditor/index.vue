@@ -111,6 +111,9 @@ export default {
 				element.innerHTML = toc || this.file.toc;
 			}
 		},
+		refresh() {
+			this.editor.refresh();
+		},
 	},
 	watch: {
 		'file.toc': function(toc) {

@@ -46,9 +46,9 @@
 	left: 0;
 	width: 100%;
 	height: 100%;
-	padding: 32px;
+	padding: 0;
 	border: 0 solid #505e60;
-	transition: .2s width, .2s height, .2s top, .2s left, .2s border-width, .2s padding;
+	transition: .2s width, .2s height, .2s top, .2s left, .2s border-width;
 	z-index: 20;
 }
 .card-inner.card-mode {
@@ -58,7 +58,6 @@
 	left: 0;
 	width: auto;
 	height: auto;
-	padding: 0;
 	border-width: 0;
 	z-index: 0;
 }
@@ -111,6 +110,14 @@
 <style>
 .card-mode .CodeMirror, .card-mode .CodeMirror-lines {
 	cursor: pointer;
+}
+
+.card-inner .CodeMirror-sizer {
+	padding: 32px;
+	transition: .2s padding;
+}
+.card-inner.card-mode .CodeMirror-sizer {
+	padding: 0;
 }
 </style>
 
@@ -192,6 +199,15 @@ export default {
 				inner.style.padding = '';
 				inner.style.borderWidth = '0px';
 			});
+
+			setTimeout(() => {
+				this.$children.forEach(x => {
+					if (x.file.ID === file.ID) {
+						x.refresh();
+						x.focus();
+					}
+				});
+			}, 250);
 		},
 		close() {
 			history.back();
