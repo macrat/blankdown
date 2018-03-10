@@ -166,7 +166,7 @@ export default {
 	mounted() {
 		this.$refs.searchbox.editor.addKeyMap({
 			Enter: cm => {
-				this.search(cm.getDoc().getValue());
+				this.query = cm.getDoc().getValue();
 			},
 		});
 	},
