@@ -2,18 +2,19 @@
 nav {
 	flex: 0 0 auto;
 	width: 200px;
-	overflow: auto;
 	color: #eee;
 }
 #nav-inner {
 	position: relative;
 	height: 100%;
 	padding: 16px 12px;
+	box-sizing: border-box;
 	background-color: #303e40;
 	top: 0;
 	left: 0;
 	transition: .2s top, .2s left;
 	z-index: 23;
+	overflow: auto;
 }
 #nav-inner.nav-inner-hide {
 	left: -200px;
@@ -70,6 +71,20 @@ nav {
 		display: inline;
 		color: #888;
 	}
+}
+
+::-webkit-scrollbar {
+	width: 8px;
+}
+::-webkit-scrollbar-track {
+	background-color: #303e40;
+	border: none;
+}
+::-webkit-scrollbar-thumb {
+	background-color: #ddd;
+}
+::-webkit-scrollbar-thumb:hover {
+	background-color: #eee;
 }
 </style>
 

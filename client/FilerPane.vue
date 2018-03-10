@@ -105,6 +105,10 @@
 		margin-top: -20px;
 	}
 }
+
+::-webkit-scrollbar {
+	width: 8px;
+}
 </style>
 
 <style>
