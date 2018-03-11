@@ -141,6 +141,8 @@ import 'codemirror/addon/scroll/simplescrollbars.css';
 import 'codemirror/addon/scroll/simplescrollbars.js';
 import 'codemirror/addon/display/placeholder.js';
 
+import debounce from 'lodash-es/debounce';
+
 
 export default {
 	components: { VueCodeMirror },
@@ -148,6 +150,7 @@ export default {
 		return {
 			shown: true,
 			query: '',
+			lastQuery: '',
 		};
 	},
 	computed: {
@@ -162,11 +165,17 @@ export default {
 		tags() {
 			return [...this.$store.state.tags].sort((x, y) => y[1] - x[1]).map(x => x[0]);
 		},
+		search() {
+			return debounce(() => {
+				this.searchNow();
+			}, 100);
+		},
 	},
 	mounted() {
 		this.$refs.searchbox.editor.addKeyMap({
 			Enter: cm => {
 				this.query = cm.getDoc().getValue();
+				this.searchNow();
 			},
 		});
 	},
@@ -179,13 +188,19 @@ export default {
 			}
 		},
 		query() {
-			this.$emit('search', this.query);
-			this.$store.dispatch('search', this.query);
+			this.search();
 		},
 	},
 	methods: {
 		tagClicked(tag) {
 			this.query = '#' + tag;
+		},
+		searchNow() {
+			if (this.lastQuery !== this.query) {
+				this.$emit('search', this.query);
+				this.$store.dispatch('search', this.query);
+			}
+			this.lastQuery = this.query;
 		},
 	},
 };
