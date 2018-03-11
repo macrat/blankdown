@@ -27,7 +27,7 @@
 import Vue from 'vue';
 
 import { codemirror as VueCodeMirror } from 'vue-codemirror-lite';
-import 'codemirror/theme/elegant.css';
+import 'codemirror/lib/codemirror.css';
 import 'codemirror/addon/scroll/simplescrollbars.css';
 import 'codemirror/addon/scroll/simplescrollbars.js';
 import './modes.js';
@@ -56,7 +56,6 @@ export default {
 		options() {
 			return {
 				mode: 'markdown',
-				theme: 'elegant',
 				dragDrop: false,
 				lineWrapping: true,
 				scrollbarStyle: this.cardmode ? 'null' : 'overlay',

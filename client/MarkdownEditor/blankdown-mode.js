@@ -229,7 +229,7 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 
 			if (match = stream.match(/#\S+/, true)) {
 				if (!Array.prototype.every.call(match[0], x => x === '#')) {
-					return state.tokens.makeString('tag');
+					return state.tokens.makeString('file-tag');
 				}
 			}
 

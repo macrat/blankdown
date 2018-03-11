@@ -33,86 +33,90 @@
 	word-break: break-all;
 }
 
-.cm-header-mark {
+.markdown-editor .cm-header.cm-header-mark {
 	color: #bbb;
 }
-.cm-header {
+.markdown-editor .cm-header {
 	margin: 1em 0 .5em;
 	font-size: 1.3em;
+	color: black;
 }
-.cm-header.cm-header-1 {
+.markdown-editor .cm-header.cm-header-1 {
 	font-size: 1.8em;
 	margin: .7em 0 .3em;
 }
-.cm-header.cm-header-2 {
+.markdown-editor .cm-header.cm-header-2 {
 	font-size: 1.6em;
 	margin: .8em 0 .4em;
 }
-.cm-header.cm-header-3 {
+.markdown-editor .cm-header.cm-header-3 {
 	font-size: 1.4em;
 }
 
-.cm-url.cm-blob-image {
+.markdown-editor .cm-url.cm-blob-image {
 	font-size: 10%;
 }
 
-.cm-link {
+.markdown-editor .cm-link {
 	color: mediumblue !important;
 }
 
-.cm-inline-code {
+.markdown-editor .cm-inline-code {
 	background-color: #eaeaea;
 }
 
-.cm-strong-mark, .cm-em-mark, .cm-strikethrough-mark, .cm-inline-code-mark {
+.markdown-editor .cm-strong-mark,
+.markdown-editor .cm-em-mark,
+.markdown-editor .cm-strikethrough-mark,
+.markdown-editor .cm-inline-code-mark {
 	color: #999;
 }
 
-.cm-strikethrough.cm-link {
+.markdown-editor .cm-strikethrough.cm-link {
 	text-decoration: underline line-through;
 }
 
-.cm-list {
+.markdown-editor .cm-list {
 	color: #622;
 }
-.cm-list-mark {
+.markdown-editor .cm-list-mark {
 	font-weight: bold;
 }
 
-.cm-tag {
+.markdown-editor .cm-file-tag {
 	background-color: #eee;
 	border-radius: .2em;
 	padding: .1em .2em;
 }
 
-.cm-toc {
+.markdown-editor .cm-toc {
 	background-color: #eaf0f0;
 }
 
-.cm-table {
+.markdown-editor .cm-table {
 	border: 0 solid gray;
 	border-width: 1px 0;
 	display: inline-block;
 	padding: 4px 0;
 }
-.cm-table.cm-table-header {
+.markdown-editor .cm-table.cm-table-header {
 	font-weight: bold;
 	border-bottom-width: 0;
 	padding-bottom: 0;
 }
-.cm-table.cm-table-first-body {
+.markdown-editor .cm-table.cm-table-first-body {
 	border-top-width: 0;
 	padding-top: 0;
 }
-.cm-table.cm-table-mark, .cm-table.cm-table-separator {
+.markdown-editor .cm-table.cm-table-mark, .markdown-editor .cm-table.cm-table-separator {
 	border-width: 0;
 	padding: 0;
 }
 
-.cm-blockquote {
+.markdown-editor .cm-blockquote {
 	color: #777;
 }
-.cm-blockquote-mark {
+.markdown-editor .cm-blockquote-mark {
 	background-color: #ddd;
 	color: #aaa;
 	display: inline-block;
