@@ -14,6 +14,9 @@ main {
 </style>
 
 <style>
+body.edit-mode {
+	overflow: hidden;
+}
 ::-webkit-scrollbar {
 	width: 6px;
 }
@@ -69,6 +72,8 @@ export default {
 			if (address.hash && this.$refs.editor.scrollInto) {
 				this.$refs.editor.scrollInto(address.hash.slice(1));
 			}
+
+			this.currentUpdated();
 		});
 	},
 	mounted() {
@@ -113,6 +118,9 @@ export default {
 				history.pushState(null, '', '/' + id);
 			}
 		},
+		'$store.state.current': function() {
+			this.currentUpdated();
+		},
 	},
 	methods: {
 		importRequest() {
@@ -126,6 +134,13 @@ export default {
 			case 'html':
 				this.$refs.importAndExporter.exportHTML();
 				break;
+			}
+		},
+		currentUpdated() {
+			if (this.$store.state.current === null) {
+				document.body.classList.remove('edit-mode');
+			} else {
+				document.body.classList.add('edit-mode');
 			}
 		},
 	},
