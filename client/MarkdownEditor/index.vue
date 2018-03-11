@@ -51,17 +51,6 @@ export default {
 		if (!this.cardmode) {
 			this.widgetManager.enable(this.thumbWidget);
 		}
-
-		const timer = setInterval(() => {
-			this.focus();
-			if (this.editor.hasFocus()) {
-				clearInterval(timer);
-
-				if (location.hash) {
-					this.scrollInto(location.hash.slice(1));
-				}
-			}
-		}, 10);
 	},
 	computed: {
 		options() {
