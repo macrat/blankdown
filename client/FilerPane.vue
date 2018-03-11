@@ -62,6 +62,9 @@
 	z-index: 0;
 }
 
+#create-button, #close-button {
+	pointer-events: none;
+}
 #close-button {
 	position: fixed;
 	top: 0;
@@ -80,6 +83,7 @@
 }
 #create-button *, #close-button * {
 	cursor: pointer;
+	pointer-events: visiblePainted;
 }
 
 @media (max-width: 780px) {
