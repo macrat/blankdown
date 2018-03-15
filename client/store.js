@@ -18,9 +18,9 @@ This is yet yet yet another **markdown** editor.
 
 const db = new IndexedFTS('blankdown', 1, {
 	ID: 'primary',
-	markdown: 'fulltext',
-	updated: {},
-	tags: 'word',
+	markdown: {fulltext: true, normal: false},
+	updated: 'normal',
+	tags: {word: true, normal: false},
 });
 
 
@@ -140,7 +140,7 @@ const store = new Vuex.Store({
 				saved: true,
 			})));
 
-			context.commit('tags-changed', [...await db.getWords('tags')]);
+			context.commit('tags-changed', [...await db.getWords('tags', {ignoreCase: true})]);
 		},
 		async search(context, query) {
 			if (!query) {
@@ -149,7 +149,7 @@ const store = new Vuex.Store({
 			}
 			context.dispatch('save', context.state.current);
 
-			const files = await db.search('markdown', query);
+			const files = await db.search('markdown', query, {ignoreCase: true});
 			context.commit('files-changed', files.map(x => ({
 				ID: x.ID,
 				markdown: x.markdown,
