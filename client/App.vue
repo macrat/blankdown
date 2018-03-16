@@ -90,6 +90,17 @@ export default {
 		});
 	},
 	watch: {
+		'$store.getters.currentName': function(name) {
+			if (this.$store.state.current) {
+				if (name) {
+					document.title = name + ' - blankdown';
+				} else {
+					document.title = 'no title - blankdown';
+				}
+			} else {
+				document.title = 'blankdown';
+			}
+		},
 		'$store.state.current': function(current, previous) {
 			if (current === null) {
 				document.body.classList.remove('edit-mode');
@@ -97,7 +108,7 @@ export default {
 				document.body.classList.add('edit-mode');
 			}
 
-			if (current.ID !== location.pathname.slice(1)) {
+			if (current ? (current.ID !== location.pathname.slice(1)) : (location.pathname.slice(1))) {
 				history.pushState({prev: {
 					isFiler: !previous,
 					ID: previous ? previous.ID : null,
