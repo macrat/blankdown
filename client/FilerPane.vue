@@ -218,7 +218,11 @@ export default {
 			}, 250);
 		},
 		close() {
-			history.back();
+			if (history.state && history.state.prev.isFiler) {
+				history.back();
+			} else {
+				this.$store.commit('close');
+			}
 		},
 		create() {
 			this.$store.dispatch('create');

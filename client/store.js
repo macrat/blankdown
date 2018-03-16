@@ -88,11 +88,22 @@ const store = new Vuex.Store({
 		},
 		openIndex(state, index) {
 			this.dispatch('save', state.current);
-			state.current = state.files[index];
+			if (index in state.files) {
+				state.current = state.files[index];
+			} else {
+				this.commit('failed-to-open', {index});
+			}
 		},
 		open(state, id) {
 			this.dispatch('save', state.current);
-			state.current = state.files.filter(x => x.ID === id)[0];
+			const target = state.files.filter(x => x.ID === id);
+			if (target.length === 1) {
+				state.current = target[0];
+			} else {
+				this.commit('failed-to-open', {id});
+			}
+		},
+		'failed-to-open': function(state, info) {
 		},
 		close(state) {
 			this.dispatch('save', state.current);
@@ -215,6 +226,8 @@ const store = new Vuex.Store({
 					return;
 				}
 			}
+
+			context.commit('failed-to-open', {id});
 		},
 		async update(context, markdown) {
 			const oldTags = findTags(context.state.current.markdown);
@@ -241,6 +254,16 @@ const store = new Vuex.Store({
 			context.commit('tags-changed', [...tags]);
 
 			saveReserve();
+		},
+		async openAddress(context, address) {
+			const url = new URL(address);
+
+			const id = url.pathname.slice(1);
+			if (id && (!context.state.current || id !== context.state.current.ID)) {
+				context.dispatch('open', id);
+			} else {
+				context.commit('close');
+			}
 		},
 	},
 });

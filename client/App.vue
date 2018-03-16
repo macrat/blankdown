@@ -58,24 +58,6 @@ export default {
 		FilerPane: FilerPane,
 		ImportAndExporter: ImportAndExporter,
 	},
-	created() {
-		this.$root.$on('open-address', url => {
-			const address = new URL(url);
-
-			const id = address.pathname.slice(1);
-			if (id && (!this.$store.state.current || id !== this.$store.state.current.ID)) {
-				this.$store.dispatch('open', id);
-			} else {
-				this.$store.commit('close');
-			}
-
-			if (address.hash && this.$refs.editor.scrollInto) {
-				this.$refs.editor.scrollInto(address.hash.slice(1));
-			}
-
-			this.currentUpdated();
-		});
-	},
 	mounted() {
 		window.addEventListener('keydown', ev => {
 			if (ev.ctrlKey) {
@@ -98,28 +80,29 @@ export default {
 		});
 
 		window.addEventListener('popstate', () => {
-			this.$root.$emit('open-address', location.href);
+			this.$store.dispatch('openAddress', location.href);
 		});
 
 		this.$store.subscribe(ev => {
 			if (ev.type === 'database-opened') {
-				this.$root.$emit('open-address', location.href);
+				this.$store.dispatch('openAddress', location.href);
 			}
 		});
 	},
-	computed: {
-		currentID() {
-			return this.$store.state.current && this.$store.state.current.ID;
-		},
-	},
 	watch: {
-		currentID(id) {
-			if (id && id !== location.pathname.slice(1)) {
-				history.pushState(null, '', '/' + id);
+		'$store.state.current': function(current, previous) {
+			if (current === null) {
+				document.body.classList.remove('edit-mode');
+			} else {
+				document.body.classList.add('edit-mode');
 			}
-		},
-		'$store.state.current': function() {
-			this.currentUpdated();
+
+			if (current.ID !== location.pathname.slice(1)) {
+				history.pushState({prev: {
+					isFiler: !previous,
+					ID: previous ? previous.ID : null,
+				}}, '', '/' + current.ID);
+			}
 		},
 	},
 	methods: {
@@ -134,13 +117,6 @@ export default {
 			case 'html':
 				this.$refs.importAndExporter.exportHTML();
 				break;
-			}
-		},
-		currentUpdated() {
-			if (this.$store.state.current === null) {
-				document.body.classList.remove('edit-mode');
-			} else {
-				document.body.classList.add('edit-mode');
 			}
 		},
 	},
