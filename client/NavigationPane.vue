@@ -4,6 +4,11 @@ nav {
 	width: 200px;
 	color: #eee;
 }
+#nav-scroll-fix-area {
+	background-color: #303e40;
+	padding-bottom: 16px;
+	border-bottom: 1px solid gray;
+}
 #nav-inner {
 	position: relative;
 	height: 100%;
@@ -19,11 +24,11 @@ nav {
 #nav-inner.nav-inner-hide {
 	left: -200px;
 }
-#tag-area {
+#tag-area, #document-area {
 	margin: 0;
 	padding: 0;
 }
-#tag-area li {
+#tag-area li, #document-area li {
 	display: block;
 	cursor: pointer;
 	padding: 1px 0;
@@ -40,6 +45,9 @@ nav {
 }
 .tag-path {
 	display: none;
+}
+#document-area {
+	padding-top: 12px;
 }
 
 @media (max-width: 780px) {
@@ -121,15 +129,22 @@ nav {
 <template>
 	<nav>
 		<div id=nav-inner :class="{ 'nav-inner-hide': !shown }">
-			<vue-code-mirror
-				id=searchbox
-				ref=searchbox
-				:value=query
-				:options=options
-				@change='query = $event' />
+			<div id=nav-scroll-fix-area>
+				<vue-code-mirror
+					id=searchbox
+					ref=searchbox
+					:value=query
+					:options=options
+					@change='query = $event' />
 
-			<ul id=tag-area>
-				<li class=tag v-for="tag in tags" @click="tagClicked(tag)">{{ tag }}</li>
+				<ul id=tag-area>
+					<li class=tag v-for="tag in tags" @click="tagClicked(tag)">{{ tag }}</li>
+				</ul>
+			</div>
+
+			<ul id=document-area>
+				<li>about</li>
+				<li>login</li>
 			</ul>
 		</div>
 	</nav>
@@ -151,6 +166,7 @@ export default {
 			shown: true,
 			query: '',
 			lastQuery: '',
+			scroll: 0,
 		};
 	},
 	computed: {
@@ -178,6 +194,10 @@ export default {
 				this.searchNow();
 			},
 		});
+
+		window.addEventListener('scroll', ev => {
+			this.scroll = window.scrollY;
+		});
 	},
 	watch: {
 		'$store.state.current': function(current) {
@@ -189,6 +209,25 @@ export default {
 		},
 		query() {
 			this.search();
+		},
+		scroll(scroll) {
+			const fixArea = this.$el.querySelector('#nav-scroll-fix-area');
+			const searchbox = this.$el.querySelector('#searchbox');
+
+			if (scroll === 0) {
+				fixArea.style.position = 'initial';
+				fixArea.style.top = null;
+				searchbox.style.position = 'initial';
+				searchbox.style.top = null;
+			} else {
+				const docArea = this.$el.querySelector('#document-area');
+				const tagArea = this.$el.querySelector('#tag-area');
+
+				fixArea.style.position = 'relative';
+				fixArea.style.top = Math.min(scroll, docArea.scrollHeight)+ 'px';
+				searchbox.style.position = 'relative';
+				searchbox.style.top = Math.min(Math.max(0, scroll - docArea.scrollHeight), tagArea.scrollHeight + 16) + 'px';
+			}
 		},
 	},
 	methods: {
