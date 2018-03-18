@@ -10,4 +10,34 @@ function findTags(markdown) {
 }
 
 
-export {findTags};
+function makeTagTree(tags) {
+	const tree = new Map();
+
+	for (const tag of tags) {
+		let target = {num: 0, children: tree};
+		const parents = [target];
+
+		const subtags = tag[0].split('/');
+		for (let i=0; i<subtags.length; i++) {
+			const subtag = subtags[i];
+			if (!subtag.trim()) {
+				continue;
+			}
+
+			if (!target.children.has(subtag)) {
+				target.children.set(subtag, {num: 0, children: new Map()});
+			}
+			target = target.children.get(subtag);
+			parents.push(target);
+		}
+
+		for (let i=0; i<parents.length; i++) {
+			parents[i].num += tag[1];
+		}
+	}
+
+	return tree;
+}
+
+
+export {findTags, makeTagTree};

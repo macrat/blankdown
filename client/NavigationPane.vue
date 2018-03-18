@@ -28,27 +28,19 @@ nav {
 	margin: 0;
 	padding: 0;
 }
-#tag-area li, #document-area li {
+li {
 	display: block;
 	cursor: pointer;
 	padding: 1px 0;
 	margin: 4px 0;
 	font-size: 110%;
 }
-#tag-area ul {
+ul {
 	padding-left: 16px;
-}
-.tag:before {
-	content: '#';
-	margin-right: .1em;
-	color: #888;
 }
 li a {
 	text-decoration: none;
 	color: #eee;
-}
-.tag-path {
-	display: none;
 }
 #document-area {
 	padding-top: 12px;
@@ -69,24 +61,8 @@ li a {
 		margin-bottom: 8px;
 	}
 	#tag-area {
+		display: block;
 		text-align: center;
-	}
-	#tag-area ul {
-		display: inline;
-	}
-	#tag-area li {
-		display: inline-block;
-	}
-	#tag-area ul, #tag-area li {
-		padding: 0;
-		margin: 0 .5em;
-	}
-	.tag:before {
-		content: '#';
-	}
-	.tag-path {
-		display: inline;
-		color: #888;
 	}
 }
 
@@ -141,9 +117,10 @@ li a {
 					:options=options
 					@change='query = $event' />
 
-				<ul id=tag-area>
-					<li class=tag v-for="tag in tags"><a @click.prevent="tagClicked(tag)">{{ tag }}</a></li>
-				</ul>
+				<tag-list
+					id=tag-area
+					:tags=$store.getters.tagTree
+					@tag-click="tagClicked($event)" />
 			</div>
 
 			<ul id=document-area>
@@ -162,9 +139,11 @@ import 'codemirror/addon/display/placeholder.js';
 
 import debounce from 'lodash-es/debounce';
 
+import TagList from './TagList';
+
 
 export default {
-	components: { VueCodeMirror },
+	components: { VueCodeMirror, TagList },
 	data() {
 		return {
 			shown: true,
@@ -181,9 +160,6 @@ export default {
 				scrollbarStyle: 'null',
 				placeholder: 'search',
 			};
-		},
-		tags() {
-			return [...this.$store.state.tags].sort((x, y) => y[1] - x[1]).map(x => x[0]);
 		},
 		search() {
 			return debounce(() => {

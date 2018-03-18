@@ -5,7 +5,7 @@ import debounce from 'lodash/debounce';
 import uuid from 'uuid/v4';
 
 import {makeTOCHTML} from './toc';
-import {findTags} from './tags';
+import {findTags, makeTagTree} from './tags';
 
 Vue.use(Vuex);
 
@@ -67,6 +67,9 @@ const store = new Vuex.Store({
 			}
 
 			return firstLine.trim();
+		},
+		tagTree(state) {
+			return makeTagTree(state.tags);
 		},
 	},
 	mutations: {
