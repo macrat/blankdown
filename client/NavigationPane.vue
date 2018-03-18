@@ -43,6 +43,10 @@ nav {
 	margin-right: .1em;
 	color: #888;
 }
+li a {
+	text-decoration: none;
+	color: #eee;
+}
 .tag-path {
 	display: none;
 }
@@ -138,13 +142,13 @@ nav {
 					@change='query = $event' />
 
 				<ul id=tag-area>
-					<li class=tag v-for="tag in tags" @click="tagClicked(tag)">{{ tag }}</li>
+					<li class=tag v-for="tag in tags"><a @click.prevent="tagClicked(tag)">{{ tag }}</a></li>
 				</ul>
 			</div>
 
 			<ul id=document-area>
-				<li>about</li>
-				<li>login</li>
+				<li><a @click.prevent="">about</a></li>
+				<li><a @click.prevent="">login</a></li>
 			</ul>
 		</div>
 	</nav>
