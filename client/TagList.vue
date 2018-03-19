@@ -74,7 +74,6 @@ export default {
 			return Boolean(this.path);
 		},
 		tagsArray() {
-			console.log([...this.tags.entries()].sort((x, y) => y[1].num - x[1].num));
 			return [...this.tags.entries()].sort((x, y) => y[1].num - x[1].num);
 		},
 	},
