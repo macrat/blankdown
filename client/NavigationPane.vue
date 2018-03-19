@@ -24,6 +24,9 @@ nav {
 #nav-inner.nav-inner-hide {
 	left: -200px;
 }
+#searchbox {
+	margin-bottom: 12px;
+}
 #tag-area, #document-area {
 	margin: 0;
 	padding: 0;

@@ -1,10 +1,12 @@
 <style>
+.search-box div, .search-box pre {
+	height: auto;
+}
+
 .search-box .CodeMirror {
 	display: block;
 	box-sizing: border-box;
 	width: 100%;
-	height: 36px;
-	margin-bottom: 12px;
 	padding: 4px 8px;
 	resize: none;
 	overflow: hidden;
@@ -20,6 +22,13 @@
 
 .search-box .CodeMirror-placeholder {
 	color: #999;
+}
+
+.search-box .cm-searchbox-tag {
+	color: #e0e0f0;
+	border: 1px solid #aaa;
+	border-radius: .2em;
+	padding: .1em .2em;
 }
 </style>
 
@@ -38,6 +47,8 @@ import 'codemirror/addon/scroll/simplescrollbars.css';
 import 'codemirror/addon/scroll/simplescrollbars.js';
 import 'codemirror/addon/display/placeholder.js';
 
+import './searchbox-mode';
+
 
 export default {
 	props: ['value'],
@@ -45,7 +56,7 @@ export default {
 	computed: {
 		options() {
 			return {
-				mode: 'text',
+				mode: 'searchbox',
 				lineWrapping: false,
 				scrollbarStyle: 'null',
 				placeholder: 'search',
