@@ -81,41 +81,14 @@ li a {
 }
 </style>
 
-<style>
-#searchbox .CodeMirror {
-	display: block;
-	box-sizing: border-box;
-	width: 100%;
-	height: 36px;
-	margin-bottom: 12px;
-	padding: 4px 8px;
-	resize: none;
-	overflow: hidden;
-	background-color: #505e60;
-	color: white;
-	border: none;
-	border-radius: 0;
-	font: initial;
-}
-#searchbox .CodeMirror-cursor {
-	border-color: white;
-}
-
-#searchbox .CodeMirror-placeholder {
-	color: #999;
-}
-</style>
-
 <template>
 	<nav>
 		<div id=nav-inner :class="{ 'nav-inner-hide': !shown }">
 			<div id=nav-scroll-fix-area>
-				<vue-code-mirror
+				<search-box
 					id=searchbox
-					ref=searchbox
-					:value=query
-					:options=options
-					@change='query = $event' />
+					v-model=query
+					@search=searchNow />
 
 				<tag-list
 					id=tag-area
@@ -132,18 +105,14 @@ li a {
 </template>
 
 <script>
-import { codemirror as VueCodeMirror } from 'vue-codemirror-lite';
-import 'codemirror/addon/scroll/simplescrollbars.css';
-import 'codemirror/addon/scroll/simplescrollbars.js';
-import 'codemirror/addon/display/placeholder.js';
-
 import debounce from 'lodash-es/debounce';
 
+import SearchBox from './SearchBox';
 import TagList from './TagList';
 
 
 export default {
-	components: { VueCodeMirror, TagList },
+	components: { SearchBox, TagList },
 	data() {
 		return {
 			shown: true,
@@ -153,28 +122,13 @@ export default {
 		};
 	},
 	computed: {
-		options() {
-			return {
-				mode: 'text',
-				lineWrapping: false,
-				scrollbarStyle: 'null',
-				placeholder: 'search',
-			};
-		},
 		search() {
 			return debounce(() => {
-				this.searchNow();
-			}, 100);
+				this.searchNow(this.query);
+			}, 300);
 		},
 	},
 	mounted() {
-		this.$refs.searchbox.editor.addKeyMap({
-			Enter: cm => {
-				this.query = cm.getDoc().getValue();
-				this.searchNow();
-			},
-		});
-
 		window.addEventListener('scroll', ev => {
 			this.scroll = window.scrollY;
 		});
@@ -214,10 +168,10 @@ export default {
 		tagClicked(tag) {
 			this.query = '#' + tag;
 		},
-		searchNow() {
-			if (this.lastQuery !== this.query) {
-				this.$emit('search', this.query);
-				this.$store.dispatch('search', this.query);
+		searchNow(query) {
+			if (this.lastQuery !== query) {
+				this.$emit('search', query);
+				this.$store.dispatch('search', query);
 			}
 			this.lastQuery = this.query;
 		},
