@@ -5,7 +5,7 @@ nav {
 	color: #eee;
 }
 #nav-scroll-fix-area {
-	background-color: #303e40;
+	background-color: #871c40;
 	padding-bottom: 16px;
 	border-bottom: 1px solid gray;
 }
@@ -14,7 +14,7 @@ nav {
 	height: 100%;
 	padding: 16px 12px;
 	box-sizing: border-box;
-	background-color: #303e40;
+	background-color: #871c40;
 	top: 0;
 	left: 0;
 	transition: .2s top, .2s left;
@@ -73,14 +73,11 @@ li a {
 	width: 8px;
 }
 ::-webkit-scrollbar-track {
-	background-color: #303e40;
+	background-color: #871c40;
 	border: none;
 }
 ::-webkit-scrollbar-thumb {
-	background-color: #ddd;
-}
-::-webkit-scrollbar-thumb:hover {
-	background-color: #eee;
+	background-color: #491022;
 }
 </style>
 

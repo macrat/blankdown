@@ -10,7 +10,7 @@
 	padding: 4px 8px;
 	resize: none;
 	overflow: hidden;
-	background-color: #505e60;
+	background-color: #491022;
 	color: white;
 	border: none;
 	border-radius: 0;
