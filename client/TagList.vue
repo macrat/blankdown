@@ -1,4 +1,4 @@
-<style>
+<style scoped>
 li {
 	display: block;
 	cursor: pointer;
