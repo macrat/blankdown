@@ -83,7 +83,9 @@ export default {
 			this.editor.focus();
 		},
 		update(markdown) {
-			this.$store.dispatch('update', markdown);
+			const newFile = Object.assign({}, this.file);
+			newFile.markdown = markdown;
+			this.$emit('update:file', newFile);
 		},
 		scrollInto(id) {
 			const lineCount = this.editor.getDoc().lineCount();
@@ -103,6 +105,7 @@ export default {
 		tocCreated(element, toc=null) {
 			if (element) {
 				element.innerHTML = toc || this.file.toc;
+				this.refresh();
 			}
 		},
 		refresh() {

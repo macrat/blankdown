@@ -112,11 +112,13 @@ const store = new Vuex.Store({
 			this.dispatch('save', state.current);
 			state.current = null;
 		},
-		updated(state, markdown) {
-			state.current.markdown = markdown;
-			state.current.toc = makeTOCHTML(markdown);
-			state.current.updated = new Date();
-			state.current.saved = false;
+		updated(state, file) {
+			if (file.ID === state.current.ID) {
+				state.current.markdown = file.markdown;
+				state.current.toc = file.toc;
+				state.current.updated = file.updated;
+				state.current.saved = file.saved;
+			}
 
 			state.files.sort((x, y) => {
 				if (x.updated > y.updated) {
@@ -127,6 +129,13 @@ const store = new Vuex.Store({
 					return 0;
 				}
 			});
+
+			if (state.files[0].ID === file.ID) {
+				state.files[0].markdown = file.markdown;
+				state.files[0].toc = file.toc;
+				state.files[0].updated = file.updated;
+				state.files[0].saved = file.saved;
+			}
 		},
 	},
 	actions: {
@@ -232,13 +241,17 @@ const store = new Vuex.Store({
 
 			context.commit('failed-to-open', {id});
 		},
-		async update(context, markdown) {
-			const oldTags = findTags(context.state.current.markdown);
+		async update(context, file) {
+			const oldTags = findTags((file.ID === context.state.current.ID ? context.state.current : await db.get(file.ID)).markdown);
 
-			context.commit('updated', markdown);
+			file.toc = makeTOCHTML(file.markdown);
+			file.updated = new Date();
+			file.saved = false;
+
+			context.commit('updated', file);
 
 			const tags = new Map(context.state.tags);
-			const newTags = findTags(markdown);
+			const newTags = findTags(file.markdown);
 			newTags.forEach(x => {
 				if (!oldTags.has(x)) {
 					tags.set(x, (tags.get(x) || 0) + 1);

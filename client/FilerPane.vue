@@ -145,6 +145,7 @@
 					class="card-inner card-file"
 					:class="{ 'card-mode': !$store.state.current || $store.state.current.ID !== file.ID }"
 					:file=file
+					@update:file="$store.dispatch('update', $event)"
 					:cardmode="!$store.state.current || $store.state.current.ID !== file.ID" />
 			</div>
 
