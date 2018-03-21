@@ -120,21 +120,14 @@ const store = new Vuex.Store({
 				state.current.saved = file.saved;
 			}
 
-			state.files.sort((x, y) => {
-				if (x.updated > y.updated) {
-					return -1;
-				} else if (x.updated < y.updated) {
-					return 1;
-				} else {
-					return 0;
+			for (let i=0; i<state.files.length; i++) {
+				if (state.files[i].ID === file.ID) {
+					state.files[i].markdown = file.markdown;
+					state.files[i].toc = file.toc;
+					state.files[i].updated = file.updated;
+					state.files[i].saved = file.saved;
+					break;
 				}
-			});
-
-			if (state.files[0].ID === file.ID) {
-				state.files[0].markdown = file.markdown;
-				state.files[0].toc = file.toc;
-				state.files[0].updated = file.updated;
-				state.files[0].saved = file.saved;
 			}
 		},
 	},
@@ -192,16 +185,7 @@ const store = new Vuex.Store({
 
 			await context.dispatch('save',data);
 
-			const files = context.state.files.concat(data);
-			files.sort((x, y) => {
-				if (x.updated > y.updated) {
-					return -1;
-				} else if (x.updated < y.updated) {
-					return 1;
-				} else {
-					return 0;
-				}
-			});
+			const files = [data].concat(context.state.files);
 			context.commit('files-changed', files);
 			context.commit('open', data.ID);
 

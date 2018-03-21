@@ -137,7 +137,7 @@
 		<div id=card-area>
 			<div
 				class=card
-				v-for="file in $store.state.files"
+				v-for="file in sortedFiles"
 				@click="openFile(file)"
 				:data-file-id=file.ID>
 
@@ -178,6 +178,20 @@ import MarkdownEditor from './MarkdownEditor/index.vue';
 
 export default {
 	components: {MarkdownEditor},
+	data() {
+		return {
+			sortedFiles: this.$store.state.files,
+		};
+	},
+	mounted() {
+		this.$store.subscribe(ev => {
+			if (ev.type === 'database-opened' || ev.type === 'close') {
+				this.update();
+			} else if (!this.$store.state.current && (ev.type === 'updated' || ev.type === 'files-changed')) {
+				this.update();
+			}
+		});
+	},
 	methods: {
 		openFile(file) {
 			if (this.$store.state.current && this.$store.state.current.ID === file.ID) {
@@ -227,6 +241,9 @@ export default {
 		},
 		create() {
 			this.$store.dispatch('create');
+		},
+		update() {
+			this.sortedFiles = [].concat(this.$store.state.files).sort((x, y) => y.updated - x.updated);
 		},
 	},
 };
