@@ -187,13 +187,18 @@ const store = new Vuex.Store({
 
 			const files = [data].concat(context.state.files);
 			context.commit('files-changed', files);
-			context.commit('open', data.ID);
 
 			const tags = new Map(context.state.tags);
 			findTags(data.markdown).forEach(x => {
 				tags.set(x, (tags.get(x) || 0) + 1);
 			});
 			context.commit('tags-changed', [...tags]);
+
+			return data;
+		},
+		async createAndOpen(context, markdown='') {
+			const data = await context.dispatch('create', markdown);
+			context.commit('open', data.ID);
 		},
 		async remove(context, id) {
 			await db.remove(id);

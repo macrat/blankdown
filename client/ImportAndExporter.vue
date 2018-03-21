@@ -60,7 +60,7 @@ export default {
 						filename: files[0].name,
 						contents: reader.result,
 					});
-					this.$store.dispatch('create', reader.result);
+					this.$store.dispatch('createAndOpen', reader.result);
 				});
 				reader.readAsText(files[0]);
 			}

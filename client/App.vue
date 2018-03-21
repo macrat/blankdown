@@ -64,7 +64,7 @@ export default {
 				switch (ev.key) {
 				case 'm':
 					ev.preventDefault();
-					this.$store.dispatch('create');
+					this.$store.dispatch('createAndOpen');
 					break;
 
 				case 'O':

@@ -240,7 +240,7 @@ export default {
 			}
 		},
 		create() {
-			this.$store.dispatch('create');
+			this.$store.dispatch('createAndOpen');
 		},
 		update() {
 			this.sortedFiles = [].concat(this.$store.state.files).sort((x, y) => y.updated - x.updated);
