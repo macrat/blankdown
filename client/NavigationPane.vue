@@ -169,13 +169,14 @@ export default {
 	},
 	methods: {
 		tagClicked(tag) {
-			this.query = '#' + tag;
+			this.searchNow('#' + tag);
 		},
 		searchNow(query) {
 			if (this.lastQuery !== query) {
 				this.$emit('search', query);
 				this.$store.dispatch('search', query);
 			}
+			this.query = query;
 			this.lastQuery = this.query;
 		},
 	},
