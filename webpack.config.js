@@ -1,12 +1,9 @@
 const path = require('path');
 const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const nodeExternals = require('webpack-node-externals');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const fs = require('fs');
 const crypto = require('crypto');
-
-require('dotenv').config();
 
 
 const VERSION_CODE = (() => {
@@ -33,7 +30,7 @@ const VERSION_CODE = (() => {
 })();
 
 
-const clientConfig = {
+module.exports = {
 	entry: {
 		app: './client/index.js',
 		ServiceWorker: './client/worker/index.js',
@@ -77,9 +74,9 @@ const clientConfig = {
 };
 
 if (process.env.NODE_ENV === 'production') {
-	clientConfig.devtool = '#source-map',
+	module.exports.devtool = '#source-map',
 
-	clientConfig.plugins = (clientConfig.plugins || []).concat([
+	module.exports.plugins = (module.exports.plugins || []).concat([
 		new webpack.DefinePlugin({
 			'process.env': {
 				NODE_ENV: '"production"'
@@ -93,29 +90,3 @@ if (process.env.NODE_ENV === 'production') {
 		}),
 	]);
 };
-
-
-const serverConfig = {
-	entry: './server/index.js',
-	output: {
-		filename: 'server.js',
-		path: path.join(__dirname, 'build'),
-	},
-	module: {
-		rules: [
-			{
-				test: /\.js$/,
-				loader: 'babel-loader',
-			},
-		],
-	},
-	target: 'node',
-	node: {
-		__dirname: false,
-	},
-	externals: [nodeExternals()],
-	devtool: '#eval-source-map',
-};
-
-
-module.exports = [clientConfig, serverConfig];

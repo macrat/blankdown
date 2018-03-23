@@ -4,11 +4,10 @@
   "description": "yet yet yet another markdown editor",
   "main": "server/index.js",
   "scripts": {
-    "start": "NODE_ENV=production node ./build/server.js",
+    "start": "`npm bin`/firebase serve -p 8000",
     "test": "`npm bin`/mocha --require babel-core/register",
     "build": "NODE_ENV=production `npm bin`/webpack",
-    "debug": "`npm bin`/npm-run-all --parallel debug:build debug:start",
-    "debug:start": "nodemon -w ./build/ ./build/server.js",
+    "debug": "`npm bin`/npm-run-all --parallel debug:build start",
     "debug:build": "`npm bin`/webpack --watch",
     "postinstall": "npm run build"
   },
@@ -25,12 +24,10 @@
     "codemirror-widgets": "github:macrat/codemirror-widgets",
     "copy-webpack-plugin": "^4.5.1",
     "css-loader": "^0.28.10",
-    "dotenv": "^4.0.0",
     "express": "^4.16.3",
+    "firebase-tools": "^3.17.7",
     "indexedfts": "^0.3.1",
     "lodash-es": "^4.17.7",
-    "morgan": "^1.9.0",
-    "nodemon": "^1.17.2",
     "npm-run-all": "^4.1.2",
     "uglifyjs-webpack-plugin": "^1.2.3",
     "uuid": "^3.2.1",
@@ -40,8 +37,7 @@
     "vue-style-loader": "^3.1.2",
     "vue-template-compiler": "^2.5.16",
     "vuex": "^3.0.1",
-    "webpack": "^3.11.0",
-    "webpack-node-externals": "^1.6.0"
+    "webpack": "^3.11.0"
   },
   "devDependencies": {
     "mocha": "^4.1.0",
