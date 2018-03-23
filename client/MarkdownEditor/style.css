@@ -9,22 +9,14 @@
 }
 
 .CodeMirror-overlayscroll-vertical {
-	width: .8em;
-	background-color: transparent;
+	width: 8px;
+	background-color: #eee;
+	border-left: 1px solid #e6e6e6;
 	transition: background .1s ease;
-}
-.CodeMirror-overlayscroll-vertical:hover {
-	background-color: rgba(112, 128, 144, 0.1);
 }
 .CodeMirror-overlayscroll-vertical > div {
 	border-radius: 0;
-	background: lightslategray;
-	transition: background .1s ease, width .1s ease;
-	width: .4em;
-}
-.CodeMirror-overlayscroll-vertical:hover > div, .CodeMirror-overlayscroll-vertical > div:active {
-	background: slategray;
-	width: .8em;
+	background-color: #491022;
 }
 
 .CodeMirror span {
@@ -90,7 +82,7 @@
 }
 
 .markdown-editor .cm-toc {
-	background-color: #eaf0f0;
+	background-color: #eaf0ea;
 }
 
 .markdown-editor .cm-table {
@@ -125,7 +117,7 @@
 
 .toc-widget {
 	display: inline-block;
-	background-color: #eaf0f0;
+	background-color: #eaf0ea;
 	padding: .5em 1em;
 	min-width: 20em;
 	max-width: 100%;

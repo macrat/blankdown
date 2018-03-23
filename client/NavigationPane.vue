@@ -5,16 +5,16 @@ nav {
 	color: #eee;
 }
 #nav-scroll-fix-area {
-	background-color: #303e40;
+	background-color: #3c4721;
 	padding-bottom: 16px;
-	border-bottom: 1px solid gray;
+	border-bottom: 2px solid #6b842a;
 }
 #nav-inner {
 	position: relative;
 	height: 100%;
 	padding: 16px 12px;
 	box-sizing: border-box;
-	background-color: #303e40;
+	background-color: #3c4721;
 	top: 0;
 	left: 0;
 	transition: .2s top, .2s left;
@@ -26,6 +26,7 @@ nav {
 }
 #searchbox {
 	margin-bottom: 12px;
+	background-color: #3c4721;
 }
 #tag-area, #document-area {
 	margin: 0;
@@ -55,12 +56,14 @@ li a {
 	}
 	#nav-inner {
 		padding: 12px;
+		padding-top: 0;
 	}
 	#nav-inner.nav-inner-hide {
 		top: -400px;
 		left: 0;
 	}
 	#searchbox {
+		padding-top: 12px;
 		margin-bottom: 8px;
 	}
 	#tag-area {
@@ -73,14 +76,11 @@ li a {
 	width: 8px;
 }
 ::-webkit-scrollbar-track {
-	background-color: #303e40;
+	background-color: #3c4721;
 	border: none;
 }
 ::-webkit-scrollbar-thumb {
-	background-color: #ddd;
-}
-::-webkit-scrollbar-thumb:hover {
-	background-color: #eee;
+	background-color: #a6c45c;
 }
 </style>
 
@@ -163,7 +163,7 @@ export default {
 				fixArea.style.position = 'relative';
 				fixArea.style.top = Math.min(scroll, docArea.scrollHeight)+ 'px';
 				searchbox.style.position = 'relative';
-				searchbox.style.top = Math.min(Math.max(0, scroll - docArea.scrollHeight), tagArea.scrollHeight + 16) + 'px';
+				searchbox.style.top = Math.min(Math.max(0, scroll - docArea.scrollHeight), tagArea.scrollHeight + 16 + 8 + 2) + 'px';
 			}
 		},
 	},

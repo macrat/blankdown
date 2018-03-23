@@ -20,17 +20,11 @@ body.edit-mode {
 ::-webkit-scrollbar {
 	width: 6px;
 }
-::-webkit-scrollbar-track {
-	background-color: #eeeeee;
-}
 ::-webkit-scrollbar-track:vertical {
 	border-left: 1px solid #e6e6e6;
 }
 ::-webkit-scrollbar-thumb {
-	background-color: #404e50;
-}
-::-webkit-scrollbar-thumb:hover {
-	background-color: #303e40;
+	background-color: #6B842A;
 }
 </style>
 

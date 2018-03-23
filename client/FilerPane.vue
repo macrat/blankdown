@@ -2,6 +2,7 @@
 #filer-pane {
 	width: 100%;
 	overflow: auto;
+	background-color: #fdfdfd;
 }
 #filer-pane.filer-edit {
 	overflow: hidden !important;
@@ -18,7 +19,8 @@
 	width: 260px;
 	height: 220px;
 	margin: 6px;
-	border: 1px solid #505e60;
+	border: 1px solid #3c4721;
+	background-color: white;
 	cursor: pointer;
 	overflow: hidden;
 }
@@ -33,8 +35,8 @@
 	right: 0;
 	z-index: 10;
 	border: 10px solid transparent;
-	border-top-color: #303e40;
-	border-right-color: #303e40;
+	border-top-color: #3c4721;
+	border-right-color: #3c4721;
 }
 
 .card-inner {
@@ -47,7 +49,7 @@
 	width: 100%;
 	height: 100%;
 	padding: 0;
-	border: 0 solid #505e60;
+	border: 0 solid #3c4721;
 	transition: .2s width, .2s height, .2s top, .2s left, .2s border-width;
 	z-index: 20;
 }
@@ -151,7 +153,7 @@
 
 			<div id=create-card class=card @click=create>
 				<svg width="260" height="220">
-					<path style="stroke: #505e60; stroke-width: 8px; stroke-opacity: .3;" d="m -28,0 l 56,0 m -28,-28 l 0,56" transform="translate(130, 110)" />
+					<path style="stroke: #5e6050; stroke-width: 8px; stroke-opacity: .3;" d="m -28,0 l 56,0 m -28,-28 l 0,56" transform="translate(130, 110)" />
 				</svg>
 			</div>
 		</div>
@@ -162,12 +164,12 @@
 			id=close-button
 			:class="{ 'close-button-hide': !$store.state.current }">
 
-			<path @click=close style="fill: #303e40; stroke: none;" d="m 0,0 l 64,0 l -64,64" />
-			<path @click=close style="stroke: white; stroke-width: 4px;" d="m 10,0 l -10,10 l 10,10 m -10,-10 l 20,0" transform="translate(10, 10)" />
+			<path @click=close style="fill: #3c4721; stroke: none;" d="m 0,0 l 64,0 l -64,64" />
+			<path @click=close style="fill: none; stroke: white; stroke-width: 4px;" d="m 10,0 l -10,10 l 10,10 m -10,-10 l 20,0" transform="translate(10, 10)" />
 		</svg>
 		<svg width="64" height="64" id=create-button>
-			<path @click=create style="fill: #303e40; stroke: none;" d="m 64,0 l 0,64 l -64,0" />
-			<path @click=create style="stroke: white; stroke-width: 4px;" d="m -20,-10 l 20,0 m -10,-10 l 0,20" transform="translate(54, 54)" />
+			<path @click=create style="fill: #3c4721; stroke: none;" d="m 64,0 l 0,64 l -64,0" />
+			<path @click=create style="fill: none; stroke: white; stroke-width: 4px;" d="m -20,-10 l 20,0 m -10,-10 l 0,20" transform="translate(54, 54)" />
 		</svg>
 	</div>
 </template>
