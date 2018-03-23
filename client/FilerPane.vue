@@ -18,7 +18,7 @@
 	width: 260px;
 	height: 220px;
 	margin: 6px;
-	border: 1px solid #491022;
+	border: 1px solid #38422d;
 	cursor: pointer;
 	overflow: hidden;
 }
@@ -33,8 +33,8 @@
 	right: 0;
 	z-index: 10;
 	border: 10px solid transparent;
-	border-top-color: #491022;
-	border-right-color: #491022;
+	border-top-color: #38422d;
+	border-right-color: #38422d;
 }
 
 .card-inner {
@@ -150,7 +150,7 @@
 
 			<div id=create-card class=card @click=create>
 				<svg width="260" height="220">
-					<path style="stroke: #505050; stroke-width: 8px; stroke-opacity: .3;" d="m -28,0 l 56,0 m -28,-28 l 0,56" transform="translate(130, 110)" />
+					<path style="stroke: #605e50; stroke-width: 8px; stroke-opacity: .3;" d="m -28,0 l 56,0 m -28,-28 l 0,56" transform="translate(130, 110)" />
 				</svg>
 			</div>
 		</div>
@@ -161,11 +161,11 @@
 			id=close-button
 			:class="{ 'close-button-hide': !$store.state.current }">
 
-			<path @click=close style="fill: #491022; stroke: none;" d="m 0,0 l 64,0 l -64,64" />
+			<path @click=close style="fill: #38422d; stroke: none;" d="m 0,0 l 64,0 l -64,64" />
 			<path @click=close style="stroke: white; stroke-width: 4px;" d="m 10,0 l -10,10 l 10,10 m -10,-10 l 20,0" transform="translate(10, 10)" />
 		</svg>
 		<svg width="64" height="64" id=create-button>
-			<path @click=create style="fill: #491022; stroke: none;" d="m 64,0 l 0,64 l -64,0" />
+			<path @click=create style="fill: #38422d; stroke: none;" d="m 64,0 l 0,64 l -64,0" />
 			<path @click=create style="stroke: white; stroke-width: 4px;" d="m -20,-10 l 20,0 m -10,-10 l 0,20" transform="translate(54, 54)" />
 		</svg>
 	</div>

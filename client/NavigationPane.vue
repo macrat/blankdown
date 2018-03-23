@@ -2,19 +2,19 @@
 nav {
 	flex: 0 0 auto;
 	width: 200px;
-	color: #eee;
+	color: #38422d;
 }
 #nav-scroll-fix-area {
-	background-color: #871c40;
+	background-color: #a6c486;
 	padding-bottom: 16px;
-	border-bottom: 1px solid gray;
+	border-bottom: 1px solid #38422d;
 }
 #nav-inner {
 	position: relative;
 	height: 100%;
 	padding: 16px 12px;
 	box-sizing: border-box;
-	background-color: #871c40;
+	background-color: #a6c486;
 	top: 0;
 	left: 0;
 	transition: .2s top, .2s left;
@@ -43,7 +43,7 @@ ul {
 }
 li a {
 	text-decoration: none;
-	color: #eee;
+	color: #38422d;
 }
 #document-area {
 	padding-top: 12px;
