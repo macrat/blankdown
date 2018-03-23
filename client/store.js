@@ -84,9 +84,21 @@ const store = new Vuex.Store({
 			}
 		},
 		'files-changed': function(state, files) {
+			if (files._fromAnotherTab !== true && navigator.serviceWorker && navigator.serviceWorker.controller) {
+				navigator.serviceWorker.controller.postMessage({type: 'files-changed', payload: files});
+			}
+			delete files._fromAnotherTab;
+
 			state.files = files;
 		},
 		'tags-changed': function(state, tags) {
+			if (tags._fromAnotherTab !== true && navigator.serviceWorker && navigator.serviceWorker.controller) {
+				if (tags.length !== state.tags.length && state.tags.some((x, i) => x !== tags[i])) {
+					navigator.serviceWorker.controller.postMessage({type: 'tags-changed', payload: tags});
+				}
+			}
+			delete tags._fromAnotherTab;
+
 			state.tags = tags;
 		},
 		openIndex(state, index) {
@@ -113,7 +125,12 @@ const store = new Vuex.Store({
 			state.current = null;
 		},
 		updated(state, file) {
-			if (file.ID === state.current.ID) {
+			if (file._fromAnotherTab !== true && navigator.serviceWorker && navigator.serviceWorker.controller) {
+				navigator.serviceWorker.controller.postMessage({type: 'updated', payload: file});
+			}
+			delete file._fromAnotherTab;
+
+			if (state.current && file.ID === state.current.ID) {
 				state.current.markdown = file.markdown;
 				state.current.toc = file.toc;
 				state.current.updated = file.updated;
@@ -272,5 +289,13 @@ const store = new Vuex.Store({
 		},
 	},
 });
+
+
+if (navigator.serviceWorker) {
+	navigator.serviceWorker.addEventListener('message', ev => {
+		store.commit(ev.data.type, Object.assign(ev.data.payload, {_fromAnotherTab: true}));
+	});
+}
+
 
 export default store;
