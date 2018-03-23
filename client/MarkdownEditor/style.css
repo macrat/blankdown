@@ -82,7 +82,7 @@
 }
 
 .markdown-editor .cm-toc {
-	background-color: #eaf0f0;
+	background-color: #eaf0ea;
 }
 
 .markdown-editor .cm-table {
@@ -117,7 +117,7 @@
 
 .toc-widget {
 	display: inline-block;
-	background-color: #eaf0f0;
+	background-color: #eaf0ea;
 	padding: .5em 1em;
 	min-width: 20em;
 	max-width: 100%;

@@ -10,7 +10,7 @@ ul {
 a {
 	display: inline-block;
 	text-decoration: none;
-	color: #38422d;
+	color: #eee;
 	padding: 1px 0;
 	margin: 4px 0;
 }

@@ -10,7 +10,7 @@
 	padding: 4px 8px;
 	resize: none;
 	overflow: hidden;
-	background-color: #38422d;
+	background-color: #6b842a;
 	color: white;
 	border: none;
 	border-radius: 0;
@@ -21,11 +21,10 @@
 }
 
 .search-box .CodeMirror-placeholder {
-	color: #999;
+	color: #b0e825;
 }
 
 .search-box .cm-searchbox-tag {
-	color: #e0e0f0;
 	border: 1px solid #aaa;
 	border-radius: .2em;
 	padding: .1em .2em;
