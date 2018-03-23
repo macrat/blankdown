@@ -20,8 +20,8 @@
 			"type": "images/x-icon"
 		}
 	],
-	"background_color": "white",
-	"theme_color": "darkslategray",
+	"background_color": "#fdfdfd",
+	"theme_color": "#3c4721",
 	"display": "standalone",
 	"orientation": "any",
 	"scope": "/"

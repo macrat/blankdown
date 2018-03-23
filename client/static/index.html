@@ -25,6 +25,7 @@ if ('serviceWorker' in navigator) {
 				display: flex;
 				width: 100vw;
 				height: 100vh;
+				background-color: #fdfdfd;
 			}
 
 			#loading-dummy-nav {
@@ -53,6 +54,12 @@ if ('serviceWorker' in navigator) {
 				to {
 					stroke-dashoffset: 780;
 					stroke-dasharray: 20;
+				}
+			}
+
+			@media (max-width: 780px) {
+				#loading-dummy-nav {
+					display: none;
 				}
 			}
 		</style>
