@@ -20,6 +20,7 @@ const VERSION_CODE = (() => {
 	}
 	const cacheFiles = [];
 	walk(path.join(__dirname, 'client'), f => cacheFiles.push(f));
+	walk(path.join(__dirname, 'static'), f => cacheFiles.push(f));
 	cacheFiles.sort();
 	const hashMaker = crypto.createHash('md5');
 	for (const file of cacheFiles) {
