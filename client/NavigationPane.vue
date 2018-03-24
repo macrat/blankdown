@@ -4,12 +4,9 @@ nav {
 	width: 200px;
 	color: #eee;
 }
-#nav-scroll-fix-area {
-	background-color: #3c4721;
-	padding-bottom: 16px;
-	border-bottom: 2px solid #6b842a;
-}
 #nav-inner {
+	display: flex;
+	flex-direction: column;
 	position: relative;
 	height: 100%;
 	padding: 16px 12px;
@@ -23,6 +20,12 @@ nav {
 }
 #nav-inner.nav-inner-hide {
 	left: -200px;
+}
+#nav-scroll-fix-area {
+	flex: 1 1 0;
+	background-color: #3c4721;
+	padding-bottom: 16px;
+	border-bottom: 2px solid #6b842a;
 }
 #searchbox {
 	margin-bottom: 12px;
@@ -69,6 +72,13 @@ li a {
 	#tag-area {
 		display: block;
 		text-align: center;
+	}
+	#document-area {
+		display: flex;
+		justify-content: center;
+	}
+	#document-area li {
+		margin: 0 16px;
 	}
 }
 
