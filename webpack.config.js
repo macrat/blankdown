@@ -33,12 +33,12 @@ const VERSION_CODE = (() => {
 module.exports = {
 	entry: {
 		app: './client/index.js',
-		ServiceWorker: './client/worker/index.js',
+		ServiceWorker: './worker/index.js',
 	},
 	output: {
 		filename: '[name].js',
 		chunkFilename: '[name].js',
-		path: path.join(__dirname, 'build', 'public'),
+		path: path.join(__dirname, 'build'),
 	},
 	module: {
 		rules: [
@@ -61,12 +61,10 @@ module.exports = {
 	plugins: [
 		new webpack.DefinePlugin({
 			VERSION_CODE: JSON.stringify(VERSION_CODE),
-			AUTH0_CLIENT_ID: JSON.stringify(process.env.AUTH0_CLIENT_ID),
-			AUTH0_DOMAIN: JSON.stringify(process.env.AUTH0_DOMAIN),
 		}),
 		new CopyWebpackPlugin([{
-			from: path.join(__dirname, 'client/static'),
-			to: path.join(__dirname, 'build', 'public'),
+			from: path.join(__dirname, 'static'),
+			to: path.join(__dirname, 'build'),
 			ignore: ['.*'],
 		}]),
 	],
