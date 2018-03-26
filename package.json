@@ -1,5 +1,5 @@
 {
-  "name": "blankdown",
+  "name": "peridot",
   "version": "1.0.0",
   "description": "yet yet yet another markdown editor",
   "main": "server/index.js",

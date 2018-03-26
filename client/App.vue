@@ -87,12 +87,12 @@ export default {
 		'$store.getters.currentName': function(name) {
 			if (this.$store.state.current) {
 				if (name) {
-					document.title = name + ' - blankdown';
+					document.title = name + ' - Peridot.';
 				} else {
-					document.title = 'no title - blankdown';
+					document.title = 'no title - Peridot.';
 				}
 			} else {
-				document.title = 'blankdown';
+				document.title = 'Peridot.';
 			}
 		},
 		'$store.state.current': function(current, previous) {

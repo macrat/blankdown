@@ -1,11 +1,11 @@
 {
-	"short_name": "blankdown",
-	"name": "blankdown",
+	"short_name": "Peridot.",
+	"name": "Peridot.",
 	"description": "yet yet yet another markdown editor",
 	"start_url": "/",
 	"icons": [
 		{
-			"sizes": "256x256",
+			"sizes": "192x192",
 			"src": "/icon.svg",
 			"type": "image/svg+xml"
 		},

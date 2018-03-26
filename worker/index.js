@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blankdown-' + VERSION_CODE;
+const CACHE_NAME = 'peridot-' + VERSION_CODE;
 
 
 self.addEventListener('install', ev => {

@@ -117,4 +117,4 @@ import 'codemirror/mode/yaml-frontmatter/yaml-frontmatter';
 import 'codemirror/mode/yaml/yaml';
 import 'codemirror/mode/z80/z80';
 
-import './blankdown-mode.js';
+import './markdown-mode.js';

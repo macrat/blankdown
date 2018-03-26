@@ -135,9 +135,6 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 			let match;
 
 			if (stream.sol() && (match = stream.match(/^\s*(```+|~~~+)\s*([a-zA-Z0-9]*)$/, true))) {
-				if (match[2] === 'markdown' || match[2] === 'md') {
-					match[2] = 'blankdown';
-				}
 				const found = CodeMirror.findModeByName(match[2]);
 				state.fencedBlock = CodeMirror.getMode(config, found ? (found.mime || found.mimes[0]) : match[2]);
 				state.fencedEnd = new RegExp('^\\s*' + match[1] + '\\s*$');
@@ -265,4 +262,5 @@ CodeMirror.defineMode('markdown', function(config, parserConfig) {
 	};
 });
 
+CodeMirror.defineMIME('text/x-markdown', 'markdown');
 CodeMirror.defineMIME('text/x-markdown', 'markdown');

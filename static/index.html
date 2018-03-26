@@ -2,7 +2,7 @@
 
 <html>
 	<head>
-		<title>blankdown</title>
+		<title>Peridot.</title>
 		<meta name=viewport content="width=device-width,initial-scale=1">
 		<meta charset=utf-8>
 
@@ -13,7 +13,9 @@ if ('serviceWorker' in navigator) {
 		</script>
 
 		<link rel=manifest href="/manifest.json">
-		<meta name=theme-color content=darkslategray>
+		<link rel=icon type=image/xml+svg href="/icon.ico">
+		<link rel=icon type=image/x-icon href="/favicon.ico">
+		<meta name=theme-color content=#3c4721>
 
 		<style>
 			body {
@@ -33,29 +35,6 @@ if ('serviceWorker' in navigator) {
 				background-color: #3c4721;
 			}
 
-			#loading-animation-outer {
-				flex: 1 1 0;
-				display: flex;
-				justify-content: center;
-				align-items: center;
-			}
-			#loading-svg {
-				width: 10em;
-				max-width: 100%;
-			}
-			#loading-circle {
-				animation: loading-animation 10s ease 1s infinite alternate;
-			}
-			@keyframes loading-animation {
-				from {
-					stroke-dashoffset: 0;
-					stroke-dasharray: 780;
-				}
-				to {
-					stroke-dashoffset: 780;
-					stroke-dasharray: 20;
-				}
-			}
 
 			@media (max-width: 780px) {
 				#loading-dummy-nav {
@@ -71,25 +50,6 @@ if ('serviceWorker' in navigator) {
 		<div type=module id=app>
 			<div id=loading>
 				<div id=loading-dummy-nav></div>
-				<div id=loading-animation-outer>
-					<svg id="loading-svg" viewBox="0 0 256 256" width="256" height="256">
-						<g transform="translate(0,-796.36216)">
-							<g transform="matrix(1,0,0,1,128,924.36218)">
-								<circle
-									id="loading-circle"
-									r="123"
-									style="fill:none;stroke:#2f4f4f;stroke-width:10;transform:rotate(-90deg)" />
-							</g>
-							<path
-								d="m 32.377217,984.36218 140.000003,0"
-								style="fill:none;stroke:#2f4f4f;stroke-width:20;stroke-linecap:butt" />
-							<path
-								transform="matrix(0.42857141,0,0,1.1547005,118.47575,-139.49821)"
-								d="m 175.3431,981.9519 -70.00001,-121.24355 140.00001,-10e-6 z"
-								style="fill:#2f4f4f;stroke:none" />
-						</g>
-					</svg>
-				</div>
 			</div>
 		</div>
 	</body>

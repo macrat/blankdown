@@ -10,13 +10,13 @@ import {findTags, makeTagTree} from './tags';
 Vue.use(Vuex);
 
 
-const welcomeDocument = `# welcome to blankdown
+const welcomeDocument = `# welcome to Peridot.
 
 This is yet yet yet another **markdown** editor.
 `;
 
 
-const db = new IndexedFTS('blankdown', 1, {
+const db = new IndexedFTS('peridot', 1, {
 	ID: 'primary',
 	markdown: {fulltext: true, normal: false},
 	updated: 'normal',
