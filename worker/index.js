@@ -4,7 +4,13 @@ const CACHE_NAME = 'peridot-' + VERSION_CODE;
 self.addEventListener('install', ev => {
 	ev.waitUntil(
 		caches.open(CACHE_NAME)
-			.then(cache => cache.addAll(['/', '/app.js'].map(x => new Request(location.origin + x, { cache: 'no-cache', redirect: 'follow' }))))
+			.then(cache => cache.addAll([
+				'/',
+				'/app.js',
+				'/__/fierbase/4.9.0/firebase-app.js',
+				'/__/fierbase/4.9.0/firebase-auth.js',
+				'/__/fierbase/init.js',
+			].map(x => new Request(location.origin + x, { cache: 'no-cache', redirect: 'follow' }))))
 			.then(() => self.skipWaiting())
 	);
 });
@@ -26,6 +32,10 @@ self.addEventListener('fetch', ev => {
 		}
 
 		const url = new URL(ev.request.url);
+
+		if (url.origin === 'https://www.googleapis.com' || url.origin === 'https://apis.google.com') {
+			return fetch(ev.request);
+		}
 
 		if (url.origin !== location.origin) {
 			return fetch(ev.request, {

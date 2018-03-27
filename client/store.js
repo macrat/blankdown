@@ -10,6 +10,9 @@ import {findTags, makeTagTree} from './tags';
 Vue.use(Vuex);
 
 
+const firestore = firebase.firestore();
+
+
 const welcomeDocument = `# welcome to Peridot.
 
 This is yet yet yet another **markdown** editor.
@@ -20,6 +23,7 @@ const db = new IndexedFTS('peridot', 1, {
 	ID: 'primary',
 	markdown: {fulltext: true, normal: false},
 	updated: 'normal',
+	synced: 'normal',
 	tags: {word: true, normal: false},
 });
 
@@ -45,6 +49,7 @@ const store = new Vuex.Store({
 			});
 
 			await db.open();
+			db.opened = true;
 			store.commit('database-opened');
 			await store.dispatch('loadFiles');
 		},
@@ -162,6 +167,7 @@ const store = new Vuex.Store({
 					ID: file.ID,
 					markdown: file.markdown,
 					updated: file.updated.getTime(),
+					synced: file.synced.getTime(),
 					tags: [...findTags(file.markdown)].join(' '),
 				})
 				.then(() => context.commit('saved', file))
@@ -177,6 +183,7 @@ const store = new Vuex.Store({
 				markdown: x.markdown,
 				toc: makeTOCHTML(x.markdown),
 				updated: new Date(x.updated),
+				synced: new Date(x.synced),
 				saved: true,
 			})));
 
@@ -195,30 +202,35 @@ const store = new Vuex.Store({
 				markdown: x.markdown,
 				toc: makeTOCHTML(x.markdown),
 				updated: new Date(x.updated),
+				synced: new Date(x.synced),
 				saved: true,
 			})));
 		},
-		async create(context, markdown='') {
+		async appendFile(context, file) {
+			await context.dispatch('save', file);
+
+			const files = [file].concat(context.state.files);
+			context.commit('files-changed', files);
+
+			const tags = new Map(context.state.tags);
+			findTags(file.markdown).forEach(x => {
+				tags.set(x, (tags.get(x) || 0) + 1);
+			});
+			context.commit('tags-changed', [...tags]);
+
+			return file;
+		},
+		create(context, markdown='') {
 			const data = {
 				ID: uuid(),
 				markdown: markdown,
 				toc: makeTOCHTML(markdown),
 				updated: new Date(),
+				synced: new Date(0),
 				saved: false,
 			};
 
-			await context.dispatch('save',data);
-
-			const files = [data].concat(context.state.files);
-			context.commit('files-changed', files);
-
-			const tags = new Map(context.state.tags);
-			findTags(data.markdown).forEach(x => {
-				tags.set(x, (tags.get(x) || 0) + 1);
-			});
-			context.commit('tags-changed', [...tags]);
-
-			return data;
+			return context.dispatch('appendFile', data);
 		},
 		async createAndOpen(context, markdown='') {
 			const data = await context.dispatch('create', markdown);
@@ -236,14 +248,7 @@ const store = new Vuex.Store({
 				}
 			}
 
-			const files = await db.sort('updated', 'desc');
-			context.commit('files-changed', files.map(x => ({
-				ID: x.ID,
-				markdown: x.markdown,
-				toc: makeTOCHTML(x.markdown),
-				updated: new Date(x.updated),
-				saved: true,
-			})));
+			await context.dispatch('loadFiles');
 
 			for (const idx in context.state.files) {
 				if (context.state.files[idx].ID === id) {
@@ -255,7 +260,12 @@ const store = new Vuex.Store({
 			context.commit('failed-to-open', {id});
 		},
 		async update(context, file) {
-			const oldTags = findTags((file.ID === context.state.current.ID ? context.state.current : await db.get(file.ID)).markdown);
+			const oldFile = context.state.current && file.ID === context.state.current.ID ? context.state.current : await db.get(file.ID);
+			if (oldFile.markdown === file.markdown) {
+				return;
+			}
+
+			const oldTags = findTags(oldFile.markdown);
 
 			file.toc = makeTOCHTML(file.markdown);
 			file.updated = new Date();
@@ -294,11 +304,88 @@ const store = new Vuex.Store({
 				context.commit('close');
 			}
 		},
-		loggedIn(context, user) {
-			this.commit('loggedIn', user);
+		async syncDatabase(context) {
+			if (!context.state.user) {
+				return;
+			}
+			if (!db.opened) {
+				setTimeout(() => context.dispatch('syncDatabase'), 10);
+				return;
+			}
+
+			const synced = new Date();
+			const lastSynced = ((await db.sort('synced', 0, 1))[0] || {synced: 0}).synced;
+			console.log('last synced', new Date(lastSynced));
+
+			const collection = firestore.collection('files');
+			const query = await collection
+				.where('uid', '==', context.state.user.uid)
+				.where('updated', '>', lastSynced)
+				.get();
+
+			query.forEach(async doc => {
+				const remote = doc.data();
+				console.log('check remote', remote.id);
+				const local = await db.get(remote.id);
+
+				const file = {
+					ID: remote.id,
+					markdown: remote.markdown,
+					toc: makeTOCHTML(remote.markdown),
+					updated: remote.updated,
+					synced: synced,
+					saved: false,
+				};
+
+				if (!local) {
+					console.log('get by remote', file.ID);
+					await context.dispatch('appendFile', file);
+				} else if (remote.updated > local.updated) {
+					console.log('update with remote', file.ID);
+					await context.dispatch('update', file);
+				}
+			});
+
+			await db.greater('updated', lastSynced).then(localUpdatets => {
+				return Promise.all(localUpdatets.map(async local => {
+					console.log('check local', local.ID);
+
+					let needToUpdate = false;
+					try {
+						const doc = await collection.doc(local.ID).get();
+						needToUpdate = doc.exists && local.updated >= doc.data().updated;
+					} catch(err) {
+						needToUpdate = true;
+					}
+
+					if (needToUpdate) {
+						console.log('put to remote', local.ID);
+
+						await collection.doc(local.ID).set({
+							uid: context.state.user.uid,
+							id: local.ID,
+							markdown: local.markdown,
+							updated: new Date(local.updated),
+						});
+
+						await context.dispatch('save', {
+							ID: local.ID,
+							markdown: local.markdown,
+							toc: makeTOCHTML(local.markdown),
+							updated: new Date(local.updated),
+							synced: synced,
+							saved: false,
+						});
+					}
+				}));
+			});
+		},
+		async loggedIn(context, user) {
+			context.commit('loggedIn', user);
+			context.dispatch('syncDatabase');
 		},
 		loggedOut(context) {
-			this.commit('loggedOut');
+			context.commit('loggedOut');
 		},
 	},
 });
