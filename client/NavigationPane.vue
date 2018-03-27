@@ -110,8 +110,7 @@ li a {
 			</div>
 
 			<ul id=document-area>
-				<li><a @click.prevent="">about</a></li>
-				<li><a @click.prevent="">login</a></li>
+				<firebase-auth ref=auth />
 			</ul>
 		</div>
 	</nav>
@@ -122,10 +121,11 @@ import debounce from 'lodash-es/debounce';
 
 import SearchBox from './SearchBox';
 import TagList from './TagList';
+import FirebaseAuth from './FirebaseAuth';
 
 
 export default {
-	components: { SearchBox, TagList },
+	components: {SearchBox, TagList, FirebaseAuth},
 	data() {
 		return {
 			shown: true,

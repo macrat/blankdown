@@ -53,6 +53,7 @@ const store = new Vuex.Store({
 		current: null,
 		files: [],
 		tags: [],
+		user: undefined,
 	},
 	getters: {
 		currentName(state) {
@@ -146,6 +147,12 @@ const store = new Vuex.Store({
 					break;
 				}
 			}
+		},
+		loggedIn(state, user) {
+			state.user = user;
+		},
+		loggedOut(state) {
+			state.user = null;
 		},
 	},
 	actions: {
@@ -286,6 +293,12 @@ const store = new Vuex.Store({
 			} else {
 				context.commit('close');
 			}
+		},
+		loggedIn(context, user) {
+			this.commit('loggedIn', user);
+		},
+		loggedOut(context) {
+			this.commit('loggedOut');
 		},
 	},
 });

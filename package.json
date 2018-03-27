@@ -21,7 +21,7 @@
     "babel-preset-env": "^1.6.1",
     "body-parser": "^1.18.2",
     "codemirror": "^5.36.0",
-    "codemirror-widgets": "macrat/codemirror-widgets",
+    "codemirror-widgets": "github:macrat/codemirror-widgets",
     "copy-webpack-plugin": "^4.5.1",
     "css-loader": "^0.28.11",
     "express": "^4.16.3",
