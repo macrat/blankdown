@@ -6,11 +6,9 @@ import uuid from 'uuid/v4';
 
 import {makeTOCHTML} from './toc';
 import {findTags, makeTagTree} from './tags';
+import FirestoreSynchronizer from './FirestoreSynchronizer';
 
 Vue.use(Vuex);
-
-
-const firestore = firebase.firestore();
 
 
 const welcomeDocument = `# welcome to Peridot.
@@ -313,72 +311,7 @@ const store = new Vuex.Store({
 				return;
 			}
 
-			const synced = new Date();
-			const lastSynced = ((await db.sort('synced', 0, 1))[0] || {synced: 0}).synced;
-			console.log('last synced', new Date(lastSynced));
-
-			const collection = firestore.collection('files');
-			const query = await collection
-				.where('uid', '==', context.state.user.uid)
-				.where('updated', '>', lastSynced)
-				.get();
-
-			query.forEach(async doc => {
-				const remote = doc.data();
-				console.log('check remote', remote.id);
-				const local = await db.get(remote.id);
-
-				const file = {
-					ID: remote.id,
-					markdown: remote.markdown,
-					toc: makeTOCHTML(remote.markdown),
-					updated: remote.updated,
-					synced: synced,
-					saved: false,
-				};
-
-				if (!local) {
-					console.log('get by remote', file.ID);
-					await context.dispatch('appendFile', file);
-				} else if (remote.updated > local.updated) {
-					console.log('update with remote', file.ID);
-					await context.dispatch('update', file);
-				}
-			});
-
-			await db.greater('updated', lastSynced).then(localUpdatets => {
-				return Promise.all(localUpdatets.map(async local => {
-					console.log('check local', local.ID);
-
-					let needToUpdate = false;
-					try {
-						const doc = await collection.doc(local.ID).get();
-						needToUpdate = doc.exists && local.updated >= doc.data().updated;
-					} catch(err) {
-						needToUpdate = true;
-					}
-
-					if (needToUpdate) {
-						console.log('put to remote', local.ID);
-
-						await collection.doc(local.ID).set({
-							uid: context.state.user.uid,
-							id: local.ID,
-							markdown: local.markdown,
-							updated: new Date(local.updated),
-						});
-
-						await context.dispatch('save', {
-							ID: local.ID,
-							markdown: local.markdown,
-							toc: makeTOCHTML(local.markdown),
-							updated: new Date(local.updated),
-							synced: synced,
-							saved: false,
-						});
-					}
-				}));
-			});
+			await FirestoreSynchronizer.sync(context, db);
 		},
 		async loggedIn(context, user) {
 			context.commit('loggedIn', user);
