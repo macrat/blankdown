@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import {makeTOCHTML} from './toc';
 
 
@@ -5,6 +6,9 @@ export default {
 	firestore: firebase.firestore(),
 	get collection() {
 		return this.firestore.collection('files');
+	},
+	get $ga() {
+		return Vue.prototype.$ga;
 	},
 
 	async getLastSynced(db) {
@@ -20,6 +24,8 @@ export default {
 			.where('uid', '==', store.state.user.uid)
 			.where('updated', '>', await this.getLastSynced(db))
 			.get();
+
+		let count = 0;
 
 		query.forEach(async doc => {
 			const remote = doc.data();
@@ -37,18 +43,30 @@ export default {
 
 			if (!local) {
 				console.log('get by remote', file.ID);
+
 				await store.dispatch('appendFile', file);
+
+				count++;
+				this.$ga.event('sync', 'get', 'batch sync', {nonInteraction: true});
 			} else if (remote.updated > local.updated) {
 				console.log('update with remote', file.ID);
+
 				await store.dispatch('update', file);
+
+				count++;
+				this.$ga.event('sync', 'get', 'batch sync', {nonInteraction: true});
 			}
 		});
+
+		return count;
 	},
 
 	async upload(store, db, syncedDate=null) {
 		if (!syncedDate) {
 			syncedDate = new Date();
 		}
+
+		let count = 0;
 
 		await db.greater('updated', await this.getLastSynced(db)).then(localUpdatets => {
 			return Promise.all(localUpdatets.map(async local => {
@@ -80,9 +98,14 @@ export default {
 						synced: syncedDate,
 						saved: false,
 					});
+
+					count++;
+					this.$ga.event('sync', 'put', 'batch sync', {nonInteraction: true});
 				}
 			}));
 		});
+
+		return count;
 	},
 
 	async sync(store, db, syncedDate=null) {
@@ -92,7 +115,10 @@ export default {
 
 		console.log('last synced', new Date(await this.getLastSynced(db)));
 
-		await this.download(store, db, syncedDate);
-		await this.upload(store, db, syncedDate);
+		const downloaded = await this.download(store, db, syncedDate);
+		const uploaded = await this.upload(store, db, syncedDate);
+
+		this.$ga.event('sync', 'downloaded count', 'batch sync', downloaded, {nonInteraction: true});
+		this.$ga.event('sync', 'uploaded count', 'batch sync', uploaded, {nonInteraction: true});
 	},
 };

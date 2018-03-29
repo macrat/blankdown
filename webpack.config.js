@@ -5,6 +5,8 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const fs = require('fs');
 const crypto = require('crypto');
 
+require('dotenv').config();
+
 
 const VERSION_CODE = (() => {
 	function walk(basePath, fun) {
@@ -62,6 +64,8 @@ module.exports = {
 	plugins: [
 		new webpack.DefinePlugin({
 			VERSION_CODE: JSON.stringify(VERSION_CODE),
+			GOOGLE_ANALYTICS_ID: JSON.stringify(process.env.GOOGLE_ANALYTICS_ID || 'UA-XXX-X'),
+			GOOGLE_ANALYTICS_ENABLED: JSON.stringify(Boolean(process.env.GOOGLE_ANALYTICS_ID)),
 		}),
 		new CopyWebpackPlugin([{
 			from: path.join(__dirname, 'static'),

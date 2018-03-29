@@ -243,6 +243,7 @@ export default {
 		},
 		create() {
 			this.$store.dispatch('createAndOpen');
+			this.$ga.event('file', 'create');
 		},
 		update() {
 			this.sortedFiles = [].concat(this.$store.state.files).sort((x, y) => y.updated - x.updated);

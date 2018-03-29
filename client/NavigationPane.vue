@@ -182,12 +182,22 @@ export default {
 			this.searchNow('#' + tag);
 		},
 		searchNow(query) {
-			if (this.lastQuery !== query) {
-				this.$emit('search', query);
-				this.$store.dispatch('search', query);
+			if (this.lastQuery === query) {
+				return;
 			}
 			this.query = query;
 			this.lastQuery = this.query;
+
+			this.$emit('search', query);
+			this.$store.dispatch('search', query);
+
+			const queryNum = query.trim().split(/\s+/).length;
+			this.$ga.event(
+				'file',
+				'search',
+				queryNum === 1 && query.trim().startsWith('#') ? 'tag' : 'query',
+				queryNum,
+			);
 		},
 	},
 };

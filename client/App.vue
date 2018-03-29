@@ -75,6 +75,7 @@ export default {
 
 		window.addEventListener('popstate', () => {
 			this.$store.dispatch('openAddress', location.href);
+			this.$ga.page(location.pathname);
 		});
 
 		this.$store.subscribe(ev => {
@@ -82,6 +83,7 @@ export default {
 				this.$store.dispatch('openAddress', location.href);
 			}
 		});
+		this.$ga.page(location.pathname);
 	},
 	watch: {
 		'$store.getters.currentName': function(name) {
@@ -98,15 +100,19 @@ export default {
 		'$store.state.current': function(current, previous) {
 			if (current === null) {
 				document.body.classList.remove('edit-mode');
+				this.$ga.event('file', 'close');
 			} else {
 				document.body.classList.add('edit-mode');
+				this.$ga.event('file', 'open');
 			}
 
-			if (current ? (current.ID !== location.pathname.slice(1)) : (location.pathname.slice(1))) {
+			if (current ? (current.ID !== location.pathname.slice(1)) : (location.pathname !== '/')) {
 				history.pushState({prev: {
 					isFiler: !previous,
 					ID: previous ? previous.ID : null,
 				}}, '', '/' + current.ID);
+
+				this.$ga.page('/' + current.ID);
 			}
 		},
 	},
