@@ -33,7 +33,7 @@ self.addEventListener('fetch', ev => {
 
 		const url = new URL(ev.request.url);
 
-		if (url.origin === 'https://www.googleapis.com' || url.origin === 'https://apis.google.com') {
+		if (url.protocol === 'https:' && (url.hostname.endsWith('.googleapis.com') || url.hostname.endsWith('.google.com'))) {
 			return fetch(ev.request);
 		}
 
