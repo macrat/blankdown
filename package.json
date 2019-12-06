@@ -28,7 +28,7 @@
     "express": "^4.16.3",
     "firebase-tools": "^3.17.7",
     "indexedfts": "^0.3.1",
-    "lodash-es": "^4.17.7",
+    "lodash-es": "^4.17.14",
     "npm-run-all": "^4.1.2",
     "uglifyjs-webpack-plugin": "^1.2.4",
     "uuid": "^3.2.1",
